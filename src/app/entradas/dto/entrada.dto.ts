@@ -156,9 +156,9 @@ export class MovimientoDto {
 
 export class DetalleMovimientoDto {
 
-  @ApiProperty({ description: 'Cantidad' })
+/*   @ApiProperty({ description: 'Cantidad' })
   @IsNumber()
-  cant: number;
+  cant: number; */
 
   @IsOptional()
   @IsNumber()
@@ -186,10 +186,10 @@ export class DetalleMovimientoDto {
 
 export class ExisteDto {
 
-  @ApiProperty({ description: 'Existencia' })
+/*   @ApiProperty({ description: 'Existencia' })
   @IsNumber()
   existe: number;
-
+ */
   @ApiProperty({ description: 'Fecha inventario' })
   @Type(() => Date)
   @IsDate()

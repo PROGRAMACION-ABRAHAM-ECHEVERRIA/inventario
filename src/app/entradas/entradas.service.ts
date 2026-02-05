@@ -211,9 +211,7 @@ export class EntradasService {
       {
         FolMov,
         fecMov,
-        usuarioAlta: createEntradaDto.usuarioAlta,
-        totalArticulos: createEntradaDto.articulo.length,
-        totalExistencias: createEntradaDto.existencias.length,
+        usuarioAlta: createEntradaDto.usuarioAlta
       },
     );
   } catch (err) {
