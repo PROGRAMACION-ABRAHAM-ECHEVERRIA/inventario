@@ -5,10 +5,10 @@ import { UpdateEntradaDto } from './dto/update-entrada.dto';
 import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-@ApiBearerAuth()
+ @ApiBearerAuth() 
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Catalogo de bodega temporal')
-@UseAuth() 
+@UseAuth()  
 @Controller('entradas')
 export class EntradasController {
   constructor(private readonly entradasService: EntradasService) {}
@@ -16,7 +16,10 @@ export class EntradasController {
   @Post()
   @ApiOperation({summary: 'Endpoint Para hacer una entrada'})
   create(@Body() createEntradaDto: CreateEntradaDto) {
+    console.log('si entra')
+    console.log(createEntradaDto)
     return this.entradasService.crearEntrada(createEntradaDto);
+
   }
 
 
