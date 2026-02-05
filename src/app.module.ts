@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthGuardModule } from './guards/authGuard/authGuard.module';
 import { JwtServiceModule } from './globalServices/jwt-service/jwt-service.module';
 import { EntradasModule } from './app/entradas/entradas.module';
+import { SalidasModule } from './app/salidas/salidas.module';
 // se necesita para poder llamar las variables de entorno
 require('dotenv').config();
 
@@ -29,7 +30,8 @@ require('dotenv').config();
   }),   
   JwtServiceModule, 
   AuthGuardModule, 
-  EntradasModule
+  EntradasModule,
+  SalidasModule
 ],
   controllers: [AppController],
   providers: [AppService],
