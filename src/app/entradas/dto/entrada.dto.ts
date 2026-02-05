@@ -20,9 +20,9 @@ export class EntradaDto {
   @ApiProperty({ description: 'Usuario Alta' })
   usuarioAlta: string;
 
-   @IsString()
+/*    @IsString()
   @ApiProperty({ description: 'Login' })
-  login: string;
+  login: string; */
 
     @IsString()
   @ApiProperty({ description: 'Clave proveedor / cliente' })

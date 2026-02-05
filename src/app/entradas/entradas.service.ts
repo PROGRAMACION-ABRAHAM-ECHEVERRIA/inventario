@@ -104,7 +104,7 @@ export class EntradasService {
         0,
         0,
         movimiento.impTot,
-        createEntradaDto.login,
+        createEntradaDto.usuarioAlta,
         0,
         movimiento.observ ?? '',
         movimiento.impLet ?? '',

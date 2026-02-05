@@ -16,8 +16,6 @@ export class EntradasController {
   @Post()
   @ApiOperation({summary: 'Endpoint Para hacer una entrada'})
   create(@Body() createEntradaDto: CreateEntradaDto) {
-    console.log('si entra')
-    console.log(createEntradaDto)
     return this.entradasService.crearEntrada(createEntradaDto);
 
   }
