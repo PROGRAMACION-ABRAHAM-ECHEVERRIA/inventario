@@ -26,7 +26,7 @@ async function bootstrap() {
   }); 
 
      // valida los dtos y si encuentra un erro nos devuelve un error personalizado
-     app.useGlobalPipes(new ValidationPipe( { 
+/*      app.useGlobalPipes(new ValidationPipe( { 
       exceptionFactory: (errors) => {
         // Aquí puedes personalizar la respuesta de error
         const errorMessages = errors.map(error => Object.values(error.constraints as object)).join(', ');
@@ -37,7 +37,41 @@ async function bootstrap() {
           data: [],
         });
       }
-     } )); 
+     } ));  */
+
+app.useGlobalPipes(
+  new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    exceptionFactory: (errors) => {
+      const mensajes: string[] = [];
+
+      const recorrer = (errs: any[]) => {
+        for (const err of errs) {
+          if (err.constraints) {
+            // Convertimos cada valor a string explícitamente
+            mensajes.push(...Object.values(err.constraints).map(v => String(v)));
+          }
+          if (err.children && err.children.length > 0) {
+            recorrer(err.children);
+          }
+        }
+      };
+
+      if (Array.isArray(errors)) {
+        recorrer(errors);
+      }
+
+      return new BadRequestException({
+        status: 400,
+        message: mensajes.length ? mensajes : ['Error de validación'],
+        error: true,
+        data: [],
+      });
+    },
+  }),
+);
+
      
      const document = SwaggerModule.createDocument(app, config);
      SwaggerModule.setup('', app, document,{
