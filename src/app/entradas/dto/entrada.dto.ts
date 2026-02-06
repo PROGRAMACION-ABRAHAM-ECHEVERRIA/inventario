@@ -24,9 +24,9 @@ export class EntradaDto {
   @ApiProperty({ description: 'Login' })
   login: string; */
 
-    @IsString()
+/*     @IsString()
   @ApiProperty({ description: 'Clave proveedor / cliente' })
-  cveProvCli: string;
+  cveProvCli: string; */
 
 /* ===== ARTICULOS ===== */
   @ApiProperty({ type: () => ArticuloDto, isArray: true })
@@ -43,7 +43,7 @@ export class EntradaDto {
   movimiento: MovimientoDto[];
 
   /* ===== DETALLES ===== */
-  @ApiProperty({ type: () => DetalleMovimientoDto, isArray: true })
+  // @ApiProperty({ type: () => DetalleMovimientoDto, isArray: true }) 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => DetalleMovimientoDto)
@@ -89,10 +89,10 @@ export class MovimientoDto {
   @IsNumber()
   impFle: number;
 
-     @IsOptional() 
+/*      @IsOptional() 
     @ApiProperty({ description: 'ImpSub' })
   @IsNumber()
-  impSub: number;
+  impSub: number; */
 
   @IsOptional()
   @IsNumber()
@@ -156,9 +156,9 @@ export class MovimientoDto {
 
 export class DetalleMovimientoDto {
 
-/*   @ApiProperty({ description: 'Cantidad' })
+  @ApiProperty({ description: 'Cantidad' })
   @IsNumber()
-  cant: number; */
+  cant: number; 
 
   @IsOptional()
   @IsNumber()
@@ -168,15 +168,14 @@ export class DetalleMovimientoDto {
   @IsNumber()
   porcDesc: number;
 
-  @ApiProperty({ description: 'Precio unitario' })
+  @ApiProperty({ description: 'Precio unitario' }) 
   @IsNumber()
   preUni: number;
-
   @ApiProperty({ description: 'Importe subtotal' })
   @IsNumber()
   impSub: number;
 
-  @ApiProperty({ description: 'Descripción del producto' })
+   @ApiProperty({ description: 'Descripción del producto' }) 
   @IsString()
   desProd: string;
 }
@@ -195,7 +194,7 @@ export class ExisteDto {
   @IsDate()
   fecInv: Date;
 
-  @ApiProperty({ description: 'Último costo' })
+/*   @ApiProperty({ description: 'Último costo' })
   @IsNumber()
   ultCos: number;
 
@@ -205,7 +204,7 @@ export class ExisteDto {
 
   @ApiProperty({ description: 'Existencia física' })
   @IsNumber()
-  exiFis: number;
+  exiFis: number; */
 }
 
 
@@ -227,9 +226,9 @@ export class ArticuloDto {
   @IsNumber()
   preUni: number;
 
-  @ApiProperty({ description: 'Porcentaje' })
+/*   @ApiProperty({ description: 'Porcentaje' })
   @IsNumber()
-  porcentaje: number;
+  porcentaje: number; */
 
   @ApiProperty({ description: 'Importe total' })
   @IsNumber()

@@ -57,7 +57,7 @@ export class EntradasService {
     /* ================= INSERTAR MOVIMIENTO ================= */
 
     const resMovtos: Array<
-      response & { Folmov: number; fecmov: string }
+      response & { Folmov: number; fecmov: string; ImpSub : number}
     > = await entityManager.query(
       `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
         @CVEBOD        = @0,
@@ -94,13 +94,13 @@ export class EntradasService {
         createEntradaDto.serMov,
         0,
         0,
-        createEntradaDto.cveProvCli,
         0,
         0,
         0,
         0,
         0,
-        movimiento.impSub ?? movimiento.impTot, 
+        0,
+       movimiento.impTot, //impsub si es un articulo es el valor del articulo y si son muchos es el total
         0,
         0,
         movimiento.impTot,
@@ -129,6 +129,7 @@ export class EntradasService {
 
     const FolMov = resMovtos[0].Folmov;
     const fecMov = resMovtos[0].fecmov;
+    const ImpSub = resMovtos[0].ImpSub
 
     /* ================= DETALLE MOVIMIENTO ================= */
 
@@ -155,9 +156,9 @@ export class EntradasService {
           articulo.cveProd,
           articulo.cant,
           articulo.lisPre,
-          articulo.porcentaje,
+          0.00,
           articulo.preUni,
-          articulo.importeTotal,
+          ImpSub,
           articulo.desProd,
           createEntradaDto.usuarioAlta,
         ],
@@ -168,6 +169,7 @@ export class EntradasService {
           resDetMovtos.mensaje || 'Error al crear detalle de movimiento',
           resDetMovtos.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
         );
+       
       }
     }
 
@@ -189,9 +191,9 @@ export class EntradasService {
           createEntradaDto.cveBod,
           articulo.cant,
           existencia.fecInv,
-          existencia.ultCos,
-          existencia.cosPro,
-          existencia.exiFis,
+          0,
+          0,
+          0,
           createEntradaDto.usuarioAlta,
         ],
       );
@@ -201,6 +203,7 @@ export class EntradasService {
           resExiste.mensaje || 'Error al crear existencia',
           resExiste.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
         );
+             
       }
     }
 
@@ -215,6 +218,7 @@ export class EntradasService {
       },
     );
   } catch (err) {
+    console.log(err)
     if (queryRunner.isTransactionActive) {
       await queryRunner.rollbackTransaction();
     }
@@ -223,6 +227,8 @@ export class EntradasService {
       : new InternalServerErrorException(
           err?.message || 'Ocurrió un error interno',
         );
+
+        
   } finally {
     if (!queryRunner.isReleased) {
       await queryRunner.release();
