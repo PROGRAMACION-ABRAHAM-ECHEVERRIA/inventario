@@ -19,8 +19,6 @@ export class SalidasService {
     public ApiJson = new resJsonClass();
 
     async salidas(salidasDto: SalidaDTO) {
-        console.log(salidasDto);
-
         const { cvebod, cveProductos, cvemov, usuarioAlta, usuarioId, fechaSalida, observ, imptot } = salidasDto;
 
         try {
@@ -49,7 +47,7 @@ export class SalidasService {
                 }
             }
 
-            return this.ApiJson.customeHttpExeption('Salidas creada exitosamente', 200);
+            return this.ApiJson.customeResSuccess('Salidas creada exitosamente', [])
         } catch (error) {
             throw new InternalServerErrorException(
                 `Error ${error['message'] || 'Ocurrió un error interno'}`,
