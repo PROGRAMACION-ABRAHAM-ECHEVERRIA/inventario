@@ -16,6 +16,11 @@ export class EntradaDto {
   @ApiProperty({ description: 'Serie de movimiento' })
   serMov: string;
 
+
+  @IsNumber()
+    @ApiProperty({ description: 'Tipo de Movimeinto' })
+  tipMov:number;
+
   @IsString()
   @ApiProperty({ description: 'Usuario Alta' })
   usuarioAlta: string;
@@ -44,11 +49,11 @@ export class EntradaDto {
 
   /* ===== DETALLES ===== */
   // @ApiProperty({ type: () => DetalleMovimientoDto, isArray: true }) 
-  @IsArray()
+/*   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => DetalleMovimientoDto)
   detalles: DetalleMovimientoDto[];
-
+ */
   /* ===== EXISTENCIAS ===== */
   @ApiProperty({ type: () => ExisteDto, isArray: true })
   @IsArray()

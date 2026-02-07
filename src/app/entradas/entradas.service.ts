@@ -51,11 +51,17 @@ export class EntradasService {
       );
     }
 
+   if(createEntradaDto.tipMov !== 3){
+  throw new HttpException(
+        'El tipo de movimiento deber ser una entrada',
+        HttpStatus.BAD_REQUEST,
+      );
+   }
     const movimiento = createEntradaDto.movimiento[0];
     const existencia = createEntradaDto.existencias[0];
 
     /* ================= INSERTAR MOVIMIENTO ================= */
-
+   
     const resMovtos: Array<
       response & { Folmov: number; fecmov: string; ImpSub : number}
     > = await entityManager.query(
@@ -158,7 +164,7 @@ export class EntradasService {
           articulo.lisPre,
           0.00,
           articulo.preUni,
-          ImpSub,
+          articulo.preUni, //impsub
           articulo.desProd,
           createEntradaDto.usuarioAlta,
         ],
