@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateEntradaDto } from './dto/create-entrada.dto';
 import { UpdateEntradaDto } from './dto/update-entrada.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { JwtServiceCustom } from 'src/globalServices/jwt-service/jwt-service-custom';
 import { payLoadToken } from 'src/types/types';
 import { resJsonClass } from 'src/utils/resJsonClass';
@@ -15,7 +15,7 @@ interface response {
 
 @Injectable()
 export class EntradasService {
-  constructor(private readonly  dataSource: DataSource, private readonly jwtServiceCustom: JwtServiceCustom){}
+  constructor(private readonly  dataSource: DataSource, private readonly jwtServiceCustom: JwtServiceCustom, private readonly manager: EntityManager){}
     public ApiJson = new resJsonClass(); 
  async crearEntrada(createEntradaDto: CreateEntradaDto) {
   const queryRunner = this.dataSource.createQueryRunner();
@@ -242,6 +242,75 @@ export class EntradasService {
   }
 }
 
+
+async ObteneTotalProdMov(
+  CVEBOD: number,
+ pagina = 1,
+  limit = 30,
+) {
+  try {
+    const query = `
+      EXEC dbo.SP_GV_ObteneTotalProdMov @CVEBOD = @0
+    `;
+
+    const res: SpResponse = await this.manager.query(query, [CVEBOD]);
+
+  if (res[0].error) {
+        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
+      };
+
+    // PAGINACIÓN
+    const total = res.length;
+    const totalPginas = Math.ceil(total / limit);
+    const start = (pagina - 1) * limit;
+    const data = res.slice(start, start + limit);
+
+    return this.ApiJson.customeResSuccess(
+      res[0]?.mensaje || 'Consulta exitosa',
+      {
+       pagina,
+        limit,
+        total,
+        totalPginas,
+        data,
+      },
+    );
+
+  } catch (err) {
+    if (err instanceof HttpException) throw err;
+
+    throw new InternalServerErrorException(
+      `Error ${err?.message || 'Ocurrió un error interno'}`,
+    );
+  }
+}
+ async ObteneProdByMov(CVEBOD: number, CVEMOV: number, FOLMOV: number){
+  try {
+      const query = `
+      EXEC dbo.SP_GV_ObteneProdByMov
+        @CVEBOD = @0,
+        @CVEMOV = @1,
+        @FOLMOV = @2
+    `;
+       const res: SpResponse = await this.manager.query(query, [CVEBOD, CVEMOV, FOLMOV]);
+     
+     if (res[0].error) {
+        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
+      };
+     return this.ApiJson.customeResSuccess(res[0].mensaje, res); 
+
+  } catch (err) {
+
+     if(err instanceof HttpException){
+      throw err;
+    }
+    throw new InternalServerErrorException(
+      
+       `Error ${err ['mensaje'] || 'Ocurrió un error interno'}`,
+       
+    );
+  }
+ }
 
 
 }
