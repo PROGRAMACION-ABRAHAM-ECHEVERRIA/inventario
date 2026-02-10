@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateEntradaDto } from './dto/create-entrada.dto';
 import { UpdateEntradaDto } from './dto/update-entrada.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { JwtServiceCustom } from 'src/globalServices/jwt-service/jwt-service-custom';
 import { payLoadToken } from 'src/types/types';
 import { resJsonClass } from 'src/utils/resJsonClass';
@@ -15,7 +15,7 @@ interface response {
 
 @Injectable()
 export class EntradasService {
-  constructor(private readonly  dataSource: DataSource, private readonly jwtServiceCustom: JwtServiceCustom){}
+  constructor(private readonly  dataSource: DataSource, private readonly jwtServiceCustom: JwtServiceCustom, private readonly manager: EntityManager){}
     public ApiJson = new resJsonClass(); 
  async crearEntrada(createEntradaDto: CreateEntradaDto) {
   const queryRunner = this.dataSource.createQueryRunner();
@@ -51,13 +51,19 @@ export class EntradasService {
       );
     }
 
+   if(createEntradaDto.tipMov !== 3){
+  throw new HttpException(
+        'El tipo de movimiento deber ser una entrada',
+        HttpStatus.BAD_REQUEST,
+      );
+   }
     const movimiento = createEntradaDto.movimiento[0];
     const existencia = createEntradaDto.existencias[0];
 
     /* ================= INSERTAR MOVIMIENTO ================= */
-
+   
     const resMovtos: Array<
-      response & { Folmov: number; fecmov: string }
+      response & { Folmov: number; fecmov: string; ImpSub : number}
     > = await entityManager.query(
       `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
         @CVEBOD        = @0,
@@ -94,13 +100,13 @@ export class EntradasService {
         createEntradaDto.serMov,
         0,
         0,
-        createEntradaDto.cveProvCli,
         0,
         0,
         0,
         0,
         0,
-        movimiento.impSub ?? movimiento.impTot, 
+        0,
+       movimiento.impTot, //impsub si es un articulo es el valor del articulo y si son muchos es el total
         0,
         0,
         movimiento.impTot,
@@ -129,6 +135,7 @@ export class EntradasService {
 
     const FolMov = resMovtos[0].Folmov;
     const fecMov = resMovtos[0].fecmov;
+    const ImpSub = resMovtos[0].ImpSub
 
     /* ================= DETALLE MOVIMIENTO ================= */
 
@@ -155,9 +162,9 @@ export class EntradasService {
           articulo.cveProd,
           articulo.cant,
           articulo.lisPre,
-          articulo.porcentaje,
+          0.00,
           articulo.preUni,
-          articulo.importeTotal,
+          articulo.preUni, //impsub
           articulo.desProd,
           createEntradaDto.usuarioAlta,
         ],
@@ -168,6 +175,7 @@ export class EntradasService {
           resDetMovtos.mensaje || 'Error al crear detalle de movimiento',
           resDetMovtos.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
         );
+       
       }
     }
 
@@ -189,9 +197,9 @@ export class EntradasService {
           createEntradaDto.cveBod,
           articulo.cant,
           existencia.fecInv,
-          existencia.ultCos,
-          existencia.cosPro,
-          existencia.exiFis,
+          0,
+          0,
+          0,
           createEntradaDto.usuarioAlta,
         ],
       );
@@ -201,6 +209,7 @@ export class EntradasService {
           resExiste.mensaje || 'Error al crear existencia',
           resExiste.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
         );
+             
       }
     }
 
@@ -215,6 +224,7 @@ export class EntradasService {
       },
     );
   } catch (err) {
+    console.log(err)
     if (queryRunner.isTransactionActive) {
       await queryRunner.rollbackTransaction();
     }
@@ -223,6 +233,8 @@ export class EntradasService {
       : new InternalServerErrorException(
           err?.message || 'Ocurrió un error interno',
         );
+
+        
   } finally {
     if (!queryRunner.isReleased) {
       await queryRunner.release();
@@ -230,6 +242,75 @@ export class EntradasService {
   }
 }
 
+
+async ObteneTotalProdMov(
+  CVEBOD: number,
+ pagina = 1,
+  limit = 30,
+) {
+  try {
+    const query = `
+      EXEC dbo.SP_GV_ObteneTotalProdMov @CVEBOD = @0
+    `;
+
+    const res: SpResponse = await this.manager.query(query, [CVEBOD]);
+
+  if (res[0].error) {
+        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
+      };
+
+    // PAGINACIÓN
+    const total = res.length;
+    const totalPginas = Math.ceil(total / limit);
+    const start = (pagina - 1) * limit;
+    const data = res.slice(start, start + limit);
+
+    return this.ApiJson.customeResSuccess(
+      res[0]?.mensaje || 'Consulta exitosa',
+      {
+       pagina,
+        limit,
+        total,
+        totalPginas,
+        data,
+      },
+    );
+
+  } catch (err) {
+    if (err instanceof HttpException) throw err;
+
+    throw new InternalServerErrorException(
+      `Error ${err?.message || 'Ocurrió un error interno'}`,
+    );
+  }
+}
+ async ObteneProdByMov(CVEBOD: number, CVEMOV: number, FOLMOV: number){
+  try {
+      const query = `
+      EXEC dbo.SP_GV_ObteneProdByMov
+        @CVEBOD = @0,
+        @CVEMOV = @1,
+        @FOLMOV = @2
+    `;
+       const res: SpResponse = await this.manager.query(query, [CVEBOD, CVEMOV, FOLMOV]);
+     
+     if (res[0].error) {
+        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
+      };
+     return this.ApiJson.customeResSuccess(res[0].mensaje, res); 
+
+  } catch (err) {
+
+     if(err instanceof HttpException){
+      throw err;
+    }
+    throw new InternalServerErrorException(
+      
+       `Error ${err ['mensaje'] || 'Ocurrió un error interno'}`,
+       
+    );
+  }
+ }
 
 
 }
