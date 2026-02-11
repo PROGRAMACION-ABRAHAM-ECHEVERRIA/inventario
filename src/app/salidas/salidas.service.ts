@@ -18,7 +18,7 @@ export class SalidasService {
 
     public ApiJson = new resJsonClass();
 
-    async salidas(salidasDto: SalidaDTO) {
+    /*async salidas(salidasDto: SalidaDTO) {
         const { cvebod, cveProductos, cvemov, usuarioAlta, usuarioId, fechaSalida, observ, imptot, sermov } = salidasDto;
 
         console.log(sermov, cvebod, cvemov);
@@ -42,7 +42,7 @@ export class SalidasService {
         try {
             // recorrer cada producto
             for (const prod of cveProductos) {
-                const { cant, cveProd, impSub, precioUnidad} = prod;
+                const { cant, cveProd, impSub, precioUnidad } = prod;
 
                 const query = `
                 exec SP_GV_Salidas
@@ -62,16 +62,16 @@ export class SalidasService {
                 `;
 
                 const res = await this.dataSource.query(query, [
-                    cvebod, 
-                    cveProd, 
-                    cvemov, 
-                    resFolMov[0].FolMov, 
-                    sermov ?? '', 
-                    usuarioAlta, 
-                    fechaSalida, 
-                    observ, 
-                    imptot, 
-                    usuarioId, 
+                    cvebod,
+                    cveProd,
+                    cvemov,
+                    resFolMov[0].FolMov,
+                    sermov ?? '',
+                    usuarioAlta,
+                    fechaSalida,
+                    observ,
+                    imptot,
+                    usuarioId,
                     cant,
                     precioUnidad,
                     impSub]
@@ -86,6 +86,117 @@ export class SalidasService {
             }
 
             return this.ApiJson.customeResSuccess('Salidas creada exitosamente', [])
+        } catch (error) {
+            throw new InternalServerErrorException(
+                `Error ${error['message'] || 'Ocurrió un error interno'}`,
+            )
+        }
+    }*/
+
+    async salidas(salidasDto: SalidaDTO) {
+        const { cvebod, cveProductos, cvemov, usuarioAlta, usuarioId, fechaSalida, observ, imptot, sermov } = salidasDto;
+
+        const queryRunner = this.dataSource.createQueryRunner();
+
+        try {
+            // Abrimos la conexión y transacción
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+
+            const entityManager = queryRunner.manager; 
+
+            const queryFolMov = `
+            exec SP_GV_CrearFolMov
+                @cvebod = @0,
+                @cvemov = @1,
+                @sermov = @2;
+            `;
+
+            const resFolMov = await entityManager.query(queryFolMov, [cvebod, cvemov, sermov ?? '']);
+
+            if (resFolMov[0].error || !resFolMov[0].FolMov) {
+                // si falla uno, lanzamos excepción y detenemos el bucle
+                throw this.ApiJson.customeHttpExeption(resFolMov[0].mensaje, resFolMov[0].estatus);
+            }
+
+            // recorrer cada producto
+            for (const prod of cveProductos) {
+                const { cant, cveProd, impSub, precioUnidad } = prod;
+
+                const query = `
+                exec SP_GV_Salidas
+                    @cvebod = @0,
+                    @cveprod = @1,
+                    @cvemov = @2,
+                    @folmov = @3,
+                    @sermov = @4,
+                    @usuario = @5,
+                    @fechasalida = @6,
+                    @observ = @7,
+                    @imptot = @8,
+                    @usuarioid = @9,
+                    @cantidad = @10,
+                    @preuni = @11,
+                    @impsub = @12;
+                `;
+
+                const res = await entityManager.query(query, [
+                    cvebod,
+                    cveProd,
+                    cvemov,
+                    resFolMov[0].FolMov,
+                    sermov ?? '',
+                    usuarioAlta,
+                    fechaSalida,
+                    observ,
+                    imptot,
+                    usuarioId,
+                    cant,
+                    precioUnidad,
+                    impSub]
+                );
+
+                if (res[0].error) {
+                    // si falla uno, lanzamos excepción y detenemos el bucle
+                    throw this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus);
+                }
+            }
+
+            await queryRunner.commitTransaction();
+
+            return this.ApiJson.customeResSuccess('Salidas creada exitosamente', [])
+        } catch (error) {
+            // Rollback en caso de error
+            if (queryRunner.isTransactionActive) {
+                await queryRunner.rollbackTransaction();
+            }
+
+            throw new InternalServerErrorException(
+                `Error ${error['message'] || 'Ocurrió un error interno'}`,
+            )
+        } finally {
+            // Siempre liberar el queryRunner
+            if (!queryRunner.isReleased) {
+                await queryRunner.release();
+            }
+        }
+    }
+
+    async getSalidas(cvebod: number) {
+        const query = `
+            exec sp_gv_getsalidasporbodega
+                @cvebod = @0;
+        `;
+
+        try {
+            const res = await this.dataSource.query(query, [cvebod]);
+
+            // Si no hay filas
+            if (!res || res.length === 0) {
+                return this.ApiJson.customeResSuccess('No se encontraron salidas', []);
+            }
+
+            return this.ApiJson.customeResSuccess('Salidas obtenidas exitosamente', res)
         } catch (error) {
             throw new InternalServerErrorException(
                 `Error ${error['message'] || 'Ocurrió un error interno'}`,

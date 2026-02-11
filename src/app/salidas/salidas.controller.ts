@@ -12,4 +12,9 @@ export class SalidasController {
     salidas(@Body() salidaDTO: SalidaDTO) {
         return this.salidasService.salidas(salidaDTO);
     }
+
+    @Get(':cvebod')
+    getSalidas(@Param('cvebod') cvebod: number) {
+        return this.salidasService.getSalidas(cvebod);
+    }
 }
