@@ -5,10 +5,10 @@ import { UpdateEntradaDto } from './dto/update-entrada.dto';
 import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-/*  @ApiBearerAuth()  */
+  @ApiBearerAuth()  
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Entradas')
-/* @UseAuth()   */
+@UseAuth()   
 @Controller('entradas')
 export class EntradasController {
   constructor(private readonly entradasService: EntradasService) {}
