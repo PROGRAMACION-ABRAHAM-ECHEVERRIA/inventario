@@ -245,10 +245,11 @@ export class EntradasService {
 
 async ObteneTotalProdMov(
   CVEBOD: number,
- pagina = 1,
-  limit = 30,
+ pagina :number,
+  limit :number,
 ) {
   try {
+
     const query = `
       EXEC dbo.SP_GV_ObteneTotalProdMov @CVEBOD = @0
     `;
