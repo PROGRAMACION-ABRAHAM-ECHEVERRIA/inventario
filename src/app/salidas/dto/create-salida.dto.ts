@@ -6,7 +6,13 @@ export class cveProd {
     cveProd: string;
 
     @ApiProperty({ description: 'Cantidad del producto' })
-    cant: number; 
+    cant: number;
+    
+    @ApiProperty({ description: 'Total por productos' })
+    impSub: number;
+
+    @ApiProperty({ description: 'Precio del producto' })
+    precioUnidad: number;
 }
 
 export class SalidaDTO {
@@ -21,6 +27,9 @@ export class SalidaDTO {
     @IsNotEmpty()
     @ApiProperty({ description: 'usuarioAlta' })
 	usuarioAlta: string;
+
+    @ApiProperty({ description: 'sermov' })
+	sermov: string;
 	
     @IsNotEmpty()
     @ApiProperty({ description: 'Fecha salida', example: "2012-12-20 18:07:36.877" })
