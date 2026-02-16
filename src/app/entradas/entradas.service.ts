@@ -285,15 +285,16 @@ async ObteneTotalProdMov(
     );
   }
 }
- async ObteneProdByMov(CVEBOD: number, CVEMOV: number, FOLMOV: number){
+ async ObteneProdByMov(CVEBOD: number, CVEMOV: number, FOLMOV: number, SERMOV:string){
   try {
       const query = `
       EXEC dbo.SP_GV_ObteneProdByMov
         @CVEBOD = @0,
         @CVEMOV = @1,
-        @FOLMOV = @2
+        @FOLMOV = @2,
+        @SERMOV = @3
     `;
-       const res: SpResponse = await this.manager.query(query, [CVEBOD, CVEMOV, FOLMOV]);
+       const res: SpResponse = await this.manager.query(query, [CVEBOD, CVEMOV, FOLMOV, SERMOV]);
      
      if (res[0].error) {
         this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 

@@ -30,9 +30,9 @@ export class EntradasController {
     Number(limit) || 30,);
   }
 
-    @Get(':CVEBOD/:CVEMOV/:FOLMOV') 
-    ObteneProdByMov(@Param('CVEBOD') CVEBOD:number, @Param('CVEMOV') CVEMOV:number, @Param('FOLMOV') FOLMOV:number){
-        return this.entradasService.ObteneProdByMov(CVEBOD,CVEMOV,FOLMOV)
+    @Get(':CVEBOD/:CVEMOV/:FOLMOV/:SERMOV') 
+    ObteneProdByMov(@Param('CVEBOD') CVEBOD:number, @Param('CVEMOV') CVEMOV:number, @Param('FOLMOV') FOLMOV:number, @Param('SERMOV')SERMOV:string){
+        return this.entradasService.ObteneProdByMov(CVEBOD,CVEMOV,FOLMOV, SERMOV)
     }
 
 
