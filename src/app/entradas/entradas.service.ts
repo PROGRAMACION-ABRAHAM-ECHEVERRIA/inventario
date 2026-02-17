@@ -314,5 +314,91 @@ async ObteneTotalProdMov(
   }
  }
 
+async ObteneTotalProdMovFilter(
+  CVEBOD: number | null,
+  SERMOV: string | null,
+  DESMOV: string | null,
+  DESBOD: string | null,
+  FECHAALTA: string | null,
+  pagina: number = 1,
+  limit: number = 10,
+) {
+  try {
+    //console.log('Parámetros recibidos:', { CVEBOD, SERMOV, DESMOV, DESBOD, FECHAALTA, pagina, limit });
+
+    const query = `
+      EXEC dbo.SP_GV_ObteneTotalProdMovFilter
+        @CVEBOD = @0,
+        @SERMOV = @1,
+        @DESMOV = @2,
+        @DESBOD = @3,
+        @FECHAALTA = @4
+    `;
+
+    const res: any[] = await this.manager.query(query, [
+      CVEBOD ?? null,
+      SERMOV ?? null,
+      DESMOV ?? null,
+      DESBOD ?? null,
+      FECHAALTA ?? null,
+    ]);
+
+    //console.log('Resultado bruto del SP:', res);
+
+    if (!res || res.length === 0) {
+      return this.ApiJson.customeResSuccess('No se encontraron registros', []);
+    }
+
+    // Función para formatear Date a SQL Server sin conversión de zona horaria
+    const formatDateToSQL = (date: Date | string | null): string | null => {
+      if (!date) return null;
+      let d: Date;
+      if (typeof date === 'string') {
+        d = new Date(date);
+      } else {
+        d = date;
+      }
+      const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+             `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+    };
+
+    //Formateamos la fecha
+    const formattedRes = res.map(item => ({
+      ...item,
+      FechaAlta: formatDateToSQL(item.FechaAlta),
+    }));
+
+    // PAGINACIÓN
+  const total = formattedRes.length;
+    const totalPginas = Math.ceil(total / limit);
+    const start = (pagina - 1) * limit;
+    const data = formattedRes.slice(start, start + limit);
+    
+    //  Retornamos paginado con total
+   return this.ApiJson.customeResSuccess(
+      res[0]?.mensaje || 'Consulta exitosa',
+      {
+       pagina,
+        limit,
+        total,
+        totalPginas,
+        data,
+      },
+    );
+
+  } catch (err) {
+    console.log('Error atrapado en el servicio:', err);
+
+    if (err instanceof HttpException) {
+      throw err;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${err['mensaje'] || 'Ocurrió un error interno'}`
+    );
+  }
+}
+
 
 }
