@@ -254,19 +254,37 @@ async ObteneTotalProdMov(
       EXEC dbo.SP_GV_ObteneTotalProdMov @CVEBOD = @0
     `;
 
-    const res: SpResponse = await this.manager.query(query, [CVEBOD]);
+    const res: any[] = await this.manager.query(query, [CVEBOD]);
 
   if (res[0].error) {
         this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
       };
+          // Función para formatear Date a SQL Server sin conversión de zona horaria
+    const formatDateToSQL = (date: Date | string | null): string | null => {
+      if (!date) return null;
+      let d: Date;
+      if (typeof date === 'string') {
+        d = new Date(date);
+      } else {
+        d = date;
+      }
+      const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+             `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+    };
+        //Formateamos la fecha
+    const formattedRes = res.map(item => ({
+      ...item,
+      FechaAlta: formatDateToSQL(item.FechaAlta),
+    }));
 
     // PAGINACIÓN
-    const total = res.length;
+  const total = formattedRes.length;
     const totalPginas = Math.ceil(total / limit);
     const start = (pagina - 1) * limit;
-    const data = res.slice(start, start + limit);
+    const data = formattedRes.slice(start, start + limit);
 
-    return this.ApiJson.customeResSuccess(
+   return this.ApiJson.customeResSuccess(
       res[0]?.mensaje || 'Consulta exitosa',
       {
        pagina,
@@ -276,7 +294,6 @@ async ObteneTotalProdMov(
         data,
       },
     );
-
   } catch (err) {
     if (err instanceof HttpException) throw err;
 
