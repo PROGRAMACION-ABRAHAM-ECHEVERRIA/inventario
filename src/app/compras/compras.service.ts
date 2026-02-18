@@ -33,7 +33,19 @@ export class ComprasService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
       const entityManager = queryRunner.manager;
-      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
+      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken; 
+
+      // validando el CveProvCli 
+
+      if(!CreateCompraDto.CVEPROVCLI) { 
+        this.ApiJson.customeHttpExeption('Ingresa un proveedor', HttpStatus.BAD_REQUEST);
+      }; 
+
+      let findProv = await entityManager.query(`SELECT 1 FROM [dbo].[CATPROV] WHERE CVEPROV = @0`, [CreateCompraDto.CVEPROVCLI]) 
+
+      if(!findProv){ 
+        this.ApiJson.customeHttpExeption('No existe el proveedor', HttpStatus.NOT_FOUND)
+      }
 
 
 
