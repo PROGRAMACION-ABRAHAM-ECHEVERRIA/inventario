@@ -66,7 +66,7 @@ export class authGuard implements CanActivate {
 
         BearerToken = request.headers.authorization as string;  
 
-        let Token = this.ApiJson.parseToken(BearerToken); 
+        let Token = this.ApiJson.parseToken(BearerToken);  
         
         // si el token no existe no autorizamos la peticion
         if(!Token) this.ApiJson.customeHttpExeption('El token no es valido', HttpStatus.UNAUTHORIZED); 

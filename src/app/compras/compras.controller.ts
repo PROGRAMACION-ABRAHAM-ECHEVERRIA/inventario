@@ -1,8 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ComprasService } from './compras.service';
 import { CreateCompraDto } from './dto/create-compra.dto';
 import { UpdateCompraDto } from './dto/update-compra.dto';
+import { UseAuth } from 'src/guards/authGuard/authGuard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()  
+@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+@ApiTags('Compras')
+@UseAuth()
 @Controller('compras')
 export class ComprasController {
   constructor(private readonly comprasService: ComprasService) {}

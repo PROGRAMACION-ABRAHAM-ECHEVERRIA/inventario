@@ -34,10 +34,11 @@ export class ComprasService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
       const entityManager = queryRunner.manager;
-      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken; 
+      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;   
+
+      console.log(CreateCompraDto); 
 
       // validando el CveProvCli 
-
       if(!CreateCompraDto.CVEPROVCLI) { 
         this.ApiJson.customeHttpExeption('Ingresa un proveedor', HttpStatus.BAD_REQUEST);
       }; 
@@ -47,6 +48,8 @@ export class ComprasService {
       if(!findProv){ 
         this.ApiJson.customeHttpExeption('No existe el proveedor', HttpStatus.NOT_FOUND)
       }
+
+      console.log('se ejecuta')
 
 
 
@@ -114,9 +117,11 @@ export class ComprasService {
           CreateCompraDto.UsuarioAlta,
           payloadToken.UsuarioId,
         ],
-      );
+      ); 
 
-      if (!resMovtos[0] || resMovtos[0].error) {
+      console.log('sdafdsgfdgfhfg');
+
+      if (!resMovtos[0] || resMovtos[0].error) { 
         const mensaje = resMovtos[0]?.mensaje || 'Error al crear el movimiento';
         const estatus =resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
         this.ApiJson.customeHttpExeption(mensaje, estatus);
@@ -157,10 +162,13 @@ export class ComprasService {
             articulo.DesProd,
             CreateCompraDto.UsuarioAlta,
           ],
-        ); 
+        );  
+
+        console.log('se ejecuta detMovtos')
       
 
-        if (resDetmovtos?.error) {
+        if (resDetmovtos?.error) { 
+          console.log('se ejecuta el error detmovtos')
           const mensaje = resDetmovtos.mensaje || 'Error al crear detalle de movimiento';
           const estatus =resDetmovtos.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
           this.ApiJson.customeHttpExeption(mensaje, estatus);
@@ -170,8 +178,16 @@ export class ComprasService {
 
       // ============================================
       // 2. INSERTAR DETALLES DE COMPRA 
-      // ============================================
+      // ============================================ 
+
+      console.log('se ejecuta'); 
+      console.log( CreateCompraDto.SerMov) 
+      console.log(FolMov); 
+      console.log(CreateCompraDto.ImpTot); 
       for (const articulo of CreateCompraDto.Articulos) {
+        console.log('sdfdfgdfg'); 
+        console.log(articulo.porcentaje); 
+        console.log(articulo.importeTotal); 
         const [resDetCompra]: SpResponse = await entityManager.query(
           `EXEC [dbo].[SP_GV_AgregarDetalleCompra]
             @FolMov = @0,  
@@ -180,7 +196,7 @@ export class ComprasService {
             @CveMov = @3, 
             @FecCom = @4, 
             @Lote   = @5 , 
-            @CveProdFac @6, 
+            @CveProdFac = @6, 
             @CveProd = @7, 
             @PreUni = @8, 
             @Cant = @9, 
@@ -192,19 +208,22 @@ export class ComprasService {
             CreateCompraDto.CVEBOD, 
             CreateCompraDto.SerMov,
             CreateCompraDto.CveMov,
+            articulo.fecInv, 
             articulo.lote,  
             articulo.CveProdFac, 
             articulo.CveProd, 
             articulo.PreUni, 
-            articulo.Cant, 
             articulo.Cant, 
             articulo.importeTotal, 
             articulo.porcentaje, 
             CreateCompraDto.UsuarioAlta
           ],
         );  
+        
+        console.log('se ejecuta detalle compra')
 
-        if (resDetCompra?.error) {
+        if (resDetCompra?.error) { 
+          console.log('se ejecuta error del detalle de compra')
           const mensaje = resDetCompra.mensaje || 'Error al crear detalle de movimiento';
           const estatus =resDetCompra.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
           this.ApiJson.customeHttpExeption(mensaje, estatus);
@@ -222,13 +241,159 @@ export class ComprasService {
         // armando CVEPROD 
         const CVEPROD = `${CreateCompraDto.CVEBOD}-${articulo.lote}-${articulo.Generado}`; 
 
+        // const [resProducto]: SpResponse = await entityManager.query(
+        //   `EXEC dbo.SP_GV_AgregarProductoCompra
+        //       @CVEPROD = ?,
+        //       @DESPROD = ?,
+        //       @CVEUNI = ?,
+        //       @CVEFAM = ?,
+        //       @CVEMAR = ?,
+        //       @DESMOD = '',
+        //       @DESUBI = '',
+        //       @TIPPROD = 1,
+        //       @EDOPROD = 1,
+        //       @PAQPROD = 0,
+        //       @CODBAR = '',
+        //       @NUMOBJ = 0,
+        //       @OBSERVA = ?,
+        //       @FOTO = 0x,
+        //       @LISPRE1 = ?,
+        //       @LISPRE2 = 0,
+        //       @LISPRE3 = 0,
+        //       @LISPRE4 = 0,
+        //       @LISPRE5 = 0,
+        //       @LISPRE6 = ?,
+        //       @MINPROD = 0,
+        //       @MAXPROD = 0,
+        //       @CVEPRODPROV = '',
+        //       @MANSERIE = 0,
+        //       @MANKILOM = 0,
+        //       @MANRENTA = 0,
+        //       @DIAINI1 = 0,
+        //       @DIAFIN1 = 0,
+        //       @DIATOLER1 = 0,
+        //       @DIAPREC1 = 0,
+        //       @DIAINI2 = 0,
+        //       @DIAFIN2 = 0,
+        //       @DIATOLER2 = 0,
+        //       @DIAPREC2 = 0,
+        //       @DIAINI3 = 0,
+        //       @DIAFIN3 = 0,
+        //       @DIATOLER3 = 0,
+        //       @DIAPREC3 = 0,
+        //       @DIAINI4 = 0,
+        //       @DIAFIN4 = 0,
+        //       @DIATOLER4 = 0,
+        //       @DIAPREC4 = 0,
+        //       @DISPLUN = 0,
+        //       @DISPMAR = 0,
+        //       @DISPMIE = 0,
+        //       @DISPJUE = 0,
+        //       @DISPVIE = 0,
+        //       @DISPSAB = 0,
+        //       @DISPDOM = 0,
+        //       @KILOMMANTTO = 0,
+        //       @RENTASMANTTO = 0,
+        //       @NUMSEMMANTTO = 0,
+        //       @FECHAREAL = GETDATE(),
+        //       @FACTORACTPRECIO = 1,
+        //       @FLETEACTPRECIO = 0,
+        //       @CODBAR2 = '',
+        //       @CODBAR3 = '',
+        //       @CODBAR4 = '',
+        //       @IMPCODBARPOS = 0,
+        //       @FACTORACTPRECIO2 = 1,
+        //       @FACTORACTPRECIO3 = 1,
+        //       @FACTORACTPRECIO4 = 1,
+        //       @FACTORACTPRECIO5 = 1,
+        //       @FACTORACTPRECIO6 = 1,
+        //       @Detalle = 0,
+        //       @Listado1 = 0,
+        //       @Listado2 = 0,
+        //       @Listado3 = 0,
+        //       @Listado4 = 0,
+        //       @PrecioAdic = 0,
+        //       @Listado5 = 0,
+        //       @Casco = 0,
+        //       @Asientos = 0,
+        //       @Respaldos = 0,
+        //       @Otros1 = 0,
+        //       @Otros2 = 0,
+        //       @PrecioAdic2 = 0,
+        //       @ListadoCol1 = 0,
+        //       @ListadoCol2 = 0,
+        //       @Listado6 = 0,
+        //       @Otros3 = 0,
+        //       @ListadoCol3 = 0,
+        //       @Tienda = 0,
+        //       @Mayoreo = 0,
+        //       @ColorMad1 = 0,
+        //       @ColorMad2 = 0,
+        //       @ColorMad3 = 0,
+        //       @Caducidad = 0,
+        //       @NivelControl = 0,
+        //       @CVEMOV = 0,
+        //       @nTipoPrecio = 0,
+        //       @nCantDesc = 0,
+        //       @categoria = 'A',
+        //       @BimAplicado = 0,
+        //       @Precio1Ori = 0,
+        //       @HistBimChg = '',
+        //       @EmpSucOri = 0,
+        //       @EmpLoteEnaj = '',
+        //       @EmpFolBoleta = 0,
+        //       @EmpFolIndice = 0,
+        //       @EmpFecPres = '1900-01-01',
+        //       @EmpMontEval = 0,
+        //       @EmpMontPres = 0,
+        //       @EmpMontInte = 0,
+        //       @EmpPlazo = 0,
+        //       @EmpDiasPlazo = 0,
+        //       @EmpDescPlazo = '',
+        //       @EmpTasa = 0,
+        //       @EmpRefrendos = 0,
+        //       @EmpLogin = '',
+        //       @EmpValuador = '',
+        //       @EmpPagoCapital = 0,
+        //       @EmpInteresPagado = 0,
+        //       @EmpRecargoPagado = 0,
+        //       @EmpSaldo = 0,
+        //       @PrecioDef = 0,
+        //       @PorcDesc = 0,
+        //       @PorcDescWEB = 0,
+        //       @CveUserResp = '',
+        //       @CveUserGte = '',
+        //       @EdoFisico = '',
+        //       @EmpInteres = 0,
+        //       @EmpRecargo = 0,
+        //       @EmpCosFinDias = 0,
+        //       @EmpCosFin = 0,
+        //       @UsuarioAlta = ?,
+        //       @ProdNuevo = 1,
+        //       @Esjoyeria = 0`,
+        //   [
+        //     articulo.CveProd,        // CVEPROD
+        //     articulo.DesProd,        // DESPROD
+        //     articulo.CveUni,         // CVEUNI
+        //     articulo.CveFam,         // CVEFAM
+        //     articulo.CveMar,         // CVEMAR
+        //     articulo.ObservaProd ?? '',  // OBSERVA
+        //     0,        // LISPRE1
+        //     articulo.PreUni,        // LISPRE6
+        //     CreateCompraDto.UsuarioAlta, 
+        //     articulo.lote // UsuarioAlta
+        //   ],
+        // );  
+
+        console.log('se ejecuta catprod')
+
         const [resProducto]: SpResponse = await entityManager.query(
-          `EXEC dbo.SP_GV_AgregarProductoCompra
-              @CVEPROD = ?,
-              @DESPROD = ?,
-              @CVEUNI = ?,
-              @CVEFAM = ?,
-              @CVEMAR = ?,
+        ` EXEC dbo.SP_GV_AgregarProductoCompra
+              @CVEPROD = @0,
+              @DESPROD = @1,
+              @CVEUNI = @2,
+              @CVEFAM = @3,
+              @CVEMAR = @4,
               @DESMOD = '',
               @DESUBI = '',
               @TIPPROD = 1,
@@ -236,14 +401,14 @@ export class ComprasService {
               @PAQPROD = 0,
               @CODBAR = '',
               @NUMOBJ = 0,
-              @OBSERVA = ?,
-              @FOTO = 0x,
-              @LISPRE1 = ?,
+              @OBSERVA = @5,
+              @FOTO = 0x00,
+              @LISPRE1 = @6,
               @LISPRE2 = 0,
               @LISPRE3 = 0,
               @LISPRE4 = 0,
               @LISPRE5 = 0,
-              @LISPRE6 = ?,
+              @LISPRE6 = @7,
               @MINPROD = 0,
               @MAXPROD = 0,
               @CVEPRODPROV = '',
@@ -349,22 +514,24 @@ export class ComprasService {
               @EmpRecargo = 0,
               @EmpCosFinDias = 0,
               @EmpCosFin = 0,
-              @UsuarioAlta = ?,
+              @UsuarioAlta = @8,
               @ProdNuevo = 1,
-              @Esjoyeria = 0`,
+              @Esjoyeria = 0
+          `,
           [
-            articulo.CveProd,        // CVEPROD
-            articulo.DesProd,        // DESPROD
-            articulo.CveUni,         // CVEUNI
-            articulo.CveFam,         // CVEFAM
-            articulo.CveMar,         // CVEMAR
-            articulo.ObservaProd ?? '',  // OBSERVA
-            0,        // LISPRE1
-            articulo.PreUni,        // LISPRE6
-            CreateCompraDto.UsuarioAlta, 
-            articulo.lote // UsuarioAlta
-          ],
-        ); 
+            articulo.CveProd,            // @0
+            articulo.DesProd,            // @1
+            articulo.CveUni,             // @2
+            articulo.CveFam,             // @3
+            articulo.CveMar,             // @4
+            articulo.ObservaProd ?? '',  // @5
+            0,                           // @6 LISPRE1
+            articulo.PreUni,             // @7 LISPRE6
+            CreateCompraDto.UsuarioAlta  // @8 UsuarioAlta
+          ]
+          );
+
+          console.log('catprodXD')
       
 
         if (resProducto?.error) {
@@ -458,7 +625,7 @@ export class ComprasService {
       ,[TotalImporte]
       ,[UsuarioAlta]
       ,[FechaAlta]
-      FROM [SICAVI].[dbo].[VW_GV_ObtenerCompras]` 
+      FROM [SICAVI].[dbo].[VW_GV_ObtenerCompras] ORDER BY FechaAlta DESC;` 
       const getCompras =  await this.manager.query(query); 
 
       return this.ApiJson.customeResSuccess('Compras Obtenidas', getCompras); 
