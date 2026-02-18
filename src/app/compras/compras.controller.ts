@@ -12,10 +12,15 @@ export class ComprasController {
     return this.comprasService.create(createCompraDto);
   }
 
-  // @Get()
-  // findAll() {
-  //   return this.comprasService.findAll();
-  // }
+  @Get()
+  findAll() {
+    return this.comprasService.getAllCompras();
+  }; 
+
+  @Get('/:CveBod/:FolMov/:CveMov/:SerMov')
+  findDetalle(@Param('CveBod') CveBod: string, @Param('FolMov') FolMov: string, @Param('CveMov') CveMov: string, @Param('SerMov') SerMov: string  ) {
+    return this.comprasService.getComprasDetalle(+CveBod, +FolMov, +CveMov, SerMov);
+  }; 
 
   // @Get(':id')
   // findOne(@Param('id') id: string) {

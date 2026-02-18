@@ -3,7 +3,7 @@ import { CreateCompraDto } from './dto/create-compra.dto';
 import { UpdateCompraDto } from './dto/update-compra.dto';
 import { JwtServiceCustom } from 'src/globalServices/jwt-service/jwt-service-custom';
 import { payLoadToken } from 'src/types/types';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { resJsonClass } from 'src/utils/resJsonClass';
 import { SpResponse } from 'src/types/resJson';
 
@@ -17,7 +17,8 @@ interface resCompraMovtoResponse {
 export class ComprasService {
   constructor(
     private JwtServiceCustom: JwtServiceCustom,
-    private readonly dataSource: DataSource,
+    private readonly dataSource: DataSource, 
+    private readonly manager: EntityManager
   ) {} 
 
   public ApiJson = new resJsonClass(); 
@@ -442,6 +443,60 @@ export class ComprasService {
         await queryRunner.release();
       }
     } 
+  } 
+
+  async getAllCompras(){ 
+    try{ 
+      const query = `SELECT [SerMov]
+      ,[CveMov]
+      ,[FolMov]
+      ,[CveBod]
+      ,[NumDoc]
+      ,[CVEPROV]
+      ,[NOMPROV]
+      ,[TotalCantidad]
+      ,[TotalImporte]
+      ,[UsuarioAlta]
+      ,[FechaAlta]
+      FROM [SICAVI].[dbo].[VW_GV_ObtenerCompras]` 
+      const getCompras =  await this.manager.query(query); 
+
+      return this.ApiJson.customeResSuccess('Compras Obtenidas', getCompras); 
+
+    }catch(error){  
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        `Error ${error['message'] || 'Ocurrió un error interno'}`,
+      );  
+
+    }
+  }; 
+
+  async getComprasDetalle(CveBod: number, FolMov: number, CveMov: number, SerMov: string){ 
+    try{  
+
+      const query =`
+        SP_GV_ObtenerDetalleDeCompra @CveBod = @0, @FolMov = @1, @CveMov = @2, @SerMov = @3
+      ` 
+      const getCompras =  await this.manager.query(query, [CveBod, FolMov, CveMov, SerMov]); 
+
+      return this.ApiJson.customeResSuccess('Compras Obtenidas', getCompras); 
+      
+    }catch(error){  
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        `Error ${error['message'] || 'Ocurrió un error interno'}`,
+      );  
+
+    }
   }
 }
   
