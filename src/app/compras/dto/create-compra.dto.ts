@@ -49,7 +49,7 @@ export class ArticulosComprasDto {
   @ApiProperty({ description: 'Observacion del producto', type: String })
   ObservaProd: string; 
 
-@ApiProperty({ description: 'Observacion del producto', type: String })
+  @ApiProperty({ description: 'Observacion del producto', type: String })
   CveProdFac: string
 }
 
