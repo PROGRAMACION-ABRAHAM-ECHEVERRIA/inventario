@@ -1,6 +1,11 @@
-import { HttpException, HttpStatus, Injectable, InternalServerErrorException } from '@nestjs/common';
-import { CreateCompraDto } from './dto/create-compra.dto';
-import { UpdateCompraDto } from './dto/update-compra.dto';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { ArticulosComprasDto, CreateCompraDto } from './dto/create-compra.dto';
+import { UpdateEncabezadoFactura } from './dto/update-compra.dto';
 import { JwtServiceCustom } from 'src/globalServices/jwt-service/jwt-service-custom';
 import { payLoadToken } from 'src/types/types';
 import { DataSource, EntityManager } from 'typeorm';
@@ -17,15 +22,15 @@ interface resCompraMovtoResponse {
 export class ComprasService {
   constructor(
     private JwtServiceCustom: JwtServiceCustom,
-    private readonly dataSource: DataSource, 
-    private readonly manager: EntityManager
-  ) {} 
+    private readonly dataSource: DataSource,
+    private readonly manager: EntityManager,
+  ) {}
 
-  public ApiJson = new resJsonClass(); 
+  public ApiJson = new resJsonClass();
 
-  /* #region PostCompra */ 
-  // Abraham Echeverria 
-  // 17/02/2026 
+  /* #region PostCompra */
+  // Abraham Echeverria
+  // 17/02/2026
   // Endpoint para dar de alta a una compra
   async create(CreateCompraDto: CreateCompraDto) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -34,30 +39,97 @@ export class ComprasService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
       const entityManager = queryRunner.manager;
-      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;   
+      const payloadToken: payLoadToken = this.JwtServiceCustom
+        .payloadToken as payLoadToken;
 
-      console.log(CreateCompraDto); 
+      const porIva =
+        CreateCompraDto.PorcIva != 0 ? CreateCompraDto.PorcIva : undefined;
+      await this.validarDescuentoGlobal(
+        CreateCompraDto.PorcDesc,
+        CreateCompraDto.ImpTot,
+        CreateCompraDto.ImpSub,
+        CreateCompraDto.Articulos,
+        porIva,
+      );
 
-      // validando el CveProvCli 
-      if(!CreateCompraDto.CVEPROVCLI) { 
-        this.ApiJson.customeHttpExeption('Ingresa un proveedor', HttpStatus.BAD_REQUEST);
-      }; 
-
-      let findProv = await entityManager.query(`SELECT 1 FROM [dbo].[CATPROV] WHERE CVEPROV = @0`, [CreateCompraDto.CVEPROVCLI]) 
-
-      if(!findProv){ 
-        this.ApiJson.customeHttpExeption('No existe el proveedor', HttpStatus.NOT_FOUND)
+      // validando el CveProvCli
+      if (!CreateCompraDto.CVEPROVCLI) {
+        this.ApiJson.customeHttpExeption(
+          'Ingresa un proveedor',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
-      console.log('se ejecuta')
+      let [findProv] = await entityManager.query(
+        `SELECT 1 FROM [dbo].[CATPROV] WHERE CVEPROV = @0`,
+        [CreateCompraDto.CVEPROVCLI],
+      ); 
 
+      if (!findProv) {
+        this.ApiJson.customeHttpExeption(
+          'No existe el proveedor',
+          HttpStatus.NOT_FOUND,
+        );
+      } 
 
+       let [findNumdoc] = await entityManager.query(
+        `SELECT 1 FROM [dbo].[MOVTOS] WHERE NumDoc = @0`,
+        [CreateCompraDto.NumDoc],
+      );  
+
+      if(findNumdoc){ 
+        this.ApiJson.customeHttpExeption('El folio de la factura ya existe', HttpStatus.AMBIGUOUS)
+      }
 
       // ============================================
-      // 1. INSERTAR MOVIMIENTO
+      // 1. Crear productos
+      // ============================================
+
+      for (const articulo of CreateCompraDto.Articulos) {
+        // armando CVEPROD
+        const CVEPROD = `${CreateCompraDto.CVEBOD}-${articulo.lote}-${articulo.Generado}`;
+
+        const [resProducto]: SpResponse = await entityManager.query(
+          ` EXEC [dbo].[SP_GV_AgregarProductoCompra]  
+            @CVEPROD = @0 ,
+            @DESPROD = @1,
+            @CVEUNI = @2, 
+            @CVEFAM = @3,
+            @CVEMAR = @4,
+            @OBSERVA = @5, 
+            @LISPRE1 = @6,
+            @LISPRE2 = @7,
+            @LISPRE6 = @8,
+            @UsuarioAlta = @9 
+          `,
+          [
+            CVEPROD, // @0
+            articulo.DesProd, // @1
+            articulo.CveUni, // @2
+            articulo.CveFam, // @3
+            articulo.CveMar, // @4
+            articulo.ObservaProd ?? '', // @5
+            articulo.Lispre1, // @6 LISPRE1
+            articulo.Lispre2, // @6 LISPRE2
+            articulo.PreUni, // @7 LISPRE6
+            CreateCompraDto.UsuarioAlta, // @8 UsuarioAlta
+          ],
+        );
+
+        if (resProducto?.error) {
+          const mensaje = resProducto.mensaje || 'Error al crear el producto';
+          const estatus =
+            resProducto.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
+          this.ApiJson.customeHttpExeption(mensaje, estatus);
+        }
+      }
+
+      // ============================================
+      // 2. INSERTAR MOVIMIENTO
       // ============================================
       const resMovtos: Array<
-        resCompraMovtoResponse & { Folmov: number; fecmov: string }> = await entityManager.query(
+        resCompraMovtoResponse & { Folmov: number; fecmov: string }
+      > = await entityManager.query(
         `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
           @CVEBOD        = @0,
           @CveMov        = @1,
@@ -91,39 +163,38 @@ export class ComprasService {
           CreateCompraDto.CVEBOD,
           1,
           CreateCompraDto.SerMov,
-          CreateCompraDto.OrdCom,
+          0,
           CreateCompraDto.NumDoc,
           CreateCompraDto.CVEPROVCLI,
-          CreateCompraDto.DiasCred,
+          0,
           CreateCompraDto.ImpTot,
           CreateCompraDto.ImpDes,
           CreateCompraDto.PorcDesc,
-          CreateCompraDto.ImpFle,
+          0,
           CreateCompraDto.ImpSub,
           CreateCompraDto.ImpIva,
           CreateCompraDto.PorcIva,
           CreateCompraDto.ImpTot,
           CreateCompraDto.UsuarioAlta,
-          CreateCompraDto.CveVen,
+          0,
           CreateCompraDto.Observ,
           CreateCompraDto.ImpLet,
-          CreateCompraDto.Facturada,
-          CreateCompraDto.Cancelada,
-          CreateCompraDto.Devuelto,
-          CreateCompraDto.Afectado,
-          CreateCompraDto.NumDias,
-          CreateCompraDto.RepEntregada,
-          CreateCompraDto.Garantia,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          '',
           CreateCompraDto.UsuarioAlta,
           payloadToken.UsuarioId,
         ],
-      ); 
+      );
 
-      console.log('sdafdsgfdgfhfg');
-
-      if (!resMovtos[0] || resMovtos[0].error) { 
+      if (!resMovtos[0] || resMovtos[0].error) {
         const mensaje = resMovtos[0]?.mensaje || 'Error al crear el movimiento';
-        const estatus =resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
+        const estatus =
+          resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
         this.ApiJson.customeHttpExeption(mensaje, estatus);
       }
 
@@ -131,9 +202,10 @@ export class ComprasService {
       const fecMov = resMovtos[0].fecmov;
 
       // ============================================
-      // 2. INSERTAR DETALLES DE MOVIMIENTO 
+      // 3. INSERTAR DETALLES DE MOVIMIENTO
       // ============================================
       for (const articulo of CreateCompraDto.Articulos) {
+        const CVEPROD = `${CreateCompraDto.CVEBOD}-${articulo.lote}-${articulo.Generado}`;
         const [resDetmovtos]: SpResponse = await entityManager.query(
           `EXEC [dbo].[SP_GV_AgregarDetMovTosBool2]
             @CveBod      = @0,
@@ -153,41 +225,33 @@ export class ComprasService {
             FolMov,
             CreateCompraDto.CveMov,
             CreateCompraDto.SerMov,
-            articulo.CveProd,
+            CVEPROD,
             articulo.Cant,
-            articulo.LisPre,
-            articulo.porcentaje,
+            articulo.Lispre1 != 0 && articulo.Lispre2 != 0 ? 0 : articulo.Lispre1 != 0 ? 1 : 2,
+            articulo.PorcDesc,
             articulo.PreUni,
             articulo.importeTotal,
             articulo.DesProd,
             CreateCompraDto.UsuarioAlta,
           ],
-        );  
+        );
 
-        console.log('se ejecuta detMovtos')
-      
-
-        if (resDetmovtos?.error) { 
-          console.log('se ejecuta el error detmovtos')
-          const mensaje = resDetmovtos.mensaje || 'Error al crear detalle de movimiento';
-          const estatus =resDetmovtos.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
+        if (resDetmovtos?.error) {
+          const mensaje =
+            resDetmovtos.mensaje || 'Error al crear detalle de movimiento';
+          const estatus =
+            resDetmovtos.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
           this.ApiJson.customeHttpExeption(mensaje, estatus);
-        }  
-
-      }  
+        }
+      }
 
       // ============================================
-      // 2. INSERTAR DETALLES DE COMPRA 
-      // ============================================ 
+      // 4. INSERTAR DETALLES DE COMPRA
+      // ============================================
 
-      console.log('se ejecuta'); 
-      console.log( CreateCompraDto.SerMov) 
-      console.log(FolMov); 
-      console.log(CreateCompraDto.ImpTot); 
       for (const articulo of CreateCompraDto.Articulos) {
-        console.log('sdfdfgdfg'); 
-        console.log(articulo.porcentaje); 
-        console.log(articulo.importeTotal); 
+        const CVEPROD = `${CreateCompraDto.CVEBOD}-${articulo.lote}-${articulo.Generado}`;
+
         const [resDetCompra]: SpResponse = await entityManager.query(
           `EXEC [dbo].[SP_GV_AgregarDetalleCompra]
             @FolMov = @0,  
@@ -205,348 +269,36 @@ export class ComprasService {
             @UsuarioAlta = @12`,
           [
             FolMov,
-            CreateCompraDto.CVEBOD, 
+            CreateCompraDto.CVEBOD,
             CreateCompraDto.SerMov,
             CreateCompraDto.CveMov,
-            articulo.fecInv, 
-            articulo.lote,  
-            articulo.CveProdFac, 
-            articulo.CveProd, 
-            articulo.PreUni, 
-            articulo.Cant, 
-            articulo.importeTotal, 
-            articulo.porcentaje, 
-            CreateCompraDto.UsuarioAlta
+            articulo.fecInv,
+            articulo.lote,
+            articulo.CveProdFac,
+            CVEPROD,
+            articulo.PreUni,
+            articulo.Cant,
+            articulo.importeTotal,
+            articulo.PorcDesc,
+            CreateCompraDto.UsuarioAlta,
           ],
-        );  
-        
-        console.log('se ejecuta detalle compra')
+        );
 
-        if (resDetCompra?.error) { 
-          console.log('se ejecuta error del detalle de compra')
-          const mensaje = resDetCompra.mensaje || 'Error al crear detalle de movimiento';
-          const estatus =resDetCompra.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
+        if (resDetCompra?.error) {
+          const mensaje =
+            resDetCompra.mensaje || 'Error al crear detalle de movimiento';
+          const estatus =
+            resDetCompra.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
           this.ApiJson.customeHttpExeption(mensaje, estatus);
-        }  
-
-      } 
-
-
-      // ============================================
-      // 2. Crear productos  
-      // ============================================   
-
-      for (const articulo of CreateCompraDto.Articulos) {  
-
-        // armando CVEPROD 
-        const CVEPROD = `${CreateCompraDto.CVEBOD}-${articulo.lote}-${articulo.Generado}`; 
-
-        // const [resProducto]: SpResponse = await entityManager.query(
-        //   `EXEC dbo.SP_GV_AgregarProductoCompra
-        //       @CVEPROD = ?,
-        //       @DESPROD = ?,
-        //       @CVEUNI = ?,
-        //       @CVEFAM = ?,
-        //       @CVEMAR = ?,
-        //       @DESMOD = '',
-        //       @DESUBI = '',
-        //       @TIPPROD = 1,
-        //       @EDOPROD = 1,
-        //       @PAQPROD = 0,
-        //       @CODBAR = '',
-        //       @NUMOBJ = 0,
-        //       @OBSERVA = ?,
-        //       @FOTO = 0x,
-        //       @LISPRE1 = ?,
-        //       @LISPRE2 = 0,
-        //       @LISPRE3 = 0,
-        //       @LISPRE4 = 0,
-        //       @LISPRE5 = 0,
-        //       @LISPRE6 = ?,
-        //       @MINPROD = 0,
-        //       @MAXPROD = 0,
-        //       @CVEPRODPROV = '',
-        //       @MANSERIE = 0,
-        //       @MANKILOM = 0,
-        //       @MANRENTA = 0,
-        //       @DIAINI1 = 0,
-        //       @DIAFIN1 = 0,
-        //       @DIATOLER1 = 0,
-        //       @DIAPREC1 = 0,
-        //       @DIAINI2 = 0,
-        //       @DIAFIN2 = 0,
-        //       @DIATOLER2 = 0,
-        //       @DIAPREC2 = 0,
-        //       @DIAINI3 = 0,
-        //       @DIAFIN3 = 0,
-        //       @DIATOLER3 = 0,
-        //       @DIAPREC3 = 0,
-        //       @DIAINI4 = 0,
-        //       @DIAFIN4 = 0,
-        //       @DIATOLER4 = 0,
-        //       @DIAPREC4 = 0,
-        //       @DISPLUN = 0,
-        //       @DISPMAR = 0,
-        //       @DISPMIE = 0,
-        //       @DISPJUE = 0,
-        //       @DISPVIE = 0,
-        //       @DISPSAB = 0,
-        //       @DISPDOM = 0,
-        //       @KILOMMANTTO = 0,
-        //       @RENTASMANTTO = 0,
-        //       @NUMSEMMANTTO = 0,
-        //       @FECHAREAL = GETDATE(),
-        //       @FACTORACTPRECIO = 1,
-        //       @FLETEACTPRECIO = 0,
-        //       @CODBAR2 = '',
-        //       @CODBAR3 = '',
-        //       @CODBAR4 = '',
-        //       @IMPCODBARPOS = 0,
-        //       @FACTORACTPRECIO2 = 1,
-        //       @FACTORACTPRECIO3 = 1,
-        //       @FACTORACTPRECIO4 = 1,
-        //       @FACTORACTPRECIO5 = 1,
-        //       @FACTORACTPRECIO6 = 1,
-        //       @Detalle = 0,
-        //       @Listado1 = 0,
-        //       @Listado2 = 0,
-        //       @Listado3 = 0,
-        //       @Listado4 = 0,
-        //       @PrecioAdic = 0,
-        //       @Listado5 = 0,
-        //       @Casco = 0,
-        //       @Asientos = 0,
-        //       @Respaldos = 0,
-        //       @Otros1 = 0,
-        //       @Otros2 = 0,
-        //       @PrecioAdic2 = 0,
-        //       @ListadoCol1 = 0,
-        //       @ListadoCol2 = 0,
-        //       @Listado6 = 0,
-        //       @Otros3 = 0,
-        //       @ListadoCol3 = 0,
-        //       @Tienda = 0,
-        //       @Mayoreo = 0,
-        //       @ColorMad1 = 0,
-        //       @ColorMad2 = 0,
-        //       @ColorMad3 = 0,
-        //       @Caducidad = 0,
-        //       @NivelControl = 0,
-        //       @CVEMOV = 0,
-        //       @nTipoPrecio = 0,
-        //       @nCantDesc = 0,
-        //       @categoria = 'A',
-        //       @BimAplicado = 0,
-        //       @Precio1Ori = 0,
-        //       @HistBimChg = '',
-        //       @EmpSucOri = 0,
-        //       @EmpLoteEnaj = '',
-        //       @EmpFolBoleta = 0,
-        //       @EmpFolIndice = 0,
-        //       @EmpFecPres = '1900-01-01',
-        //       @EmpMontEval = 0,
-        //       @EmpMontPres = 0,
-        //       @EmpMontInte = 0,
-        //       @EmpPlazo = 0,
-        //       @EmpDiasPlazo = 0,
-        //       @EmpDescPlazo = '',
-        //       @EmpTasa = 0,
-        //       @EmpRefrendos = 0,
-        //       @EmpLogin = '',
-        //       @EmpValuador = '',
-        //       @EmpPagoCapital = 0,
-        //       @EmpInteresPagado = 0,
-        //       @EmpRecargoPagado = 0,
-        //       @EmpSaldo = 0,
-        //       @PrecioDef = 0,
-        //       @PorcDesc = 0,
-        //       @PorcDescWEB = 0,
-        //       @CveUserResp = '',
-        //       @CveUserGte = '',
-        //       @EdoFisico = '',
-        //       @EmpInteres = 0,
-        //       @EmpRecargo = 0,
-        //       @EmpCosFinDias = 0,
-        //       @EmpCosFin = 0,
-        //       @UsuarioAlta = ?,
-        //       @ProdNuevo = 1,
-        //       @Esjoyeria = 0`,
-        //   [
-        //     articulo.CveProd,        // CVEPROD
-        //     articulo.DesProd,        // DESPROD
-        //     articulo.CveUni,         // CVEUNI
-        //     articulo.CveFam,         // CVEFAM
-        //     articulo.CveMar,         // CVEMAR
-        //     articulo.ObservaProd ?? '',  // OBSERVA
-        //     0,        // LISPRE1
-        //     articulo.PreUni,        // LISPRE6
-        //     CreateCompraDto.UsuarioAlta, 
-        //     articulo.lote // UsuarioAlta
-        //   ],
-        // );  
-
-        console.log('se ejecuta catprod')
-
-        const [resProducto]: SpResponse = await entityManager.query(
-        ` EXEC dbo.SP_GV_AgregarProductoCompra
-              @CVEPROD = @0,
-              @DESPROD = @1,
-              @CVEUNI = @2,
-              @CVEFAM = @3,
-              @CVEMAR = @4,
-              @DESMOD = '',
-              @DESUBI = '',
-              @TIPPROD = 1,
-              @EDOPROD = 1,
-              @PAQPROD = 0,
-              @CODBAR = '',
-              @NUMOBJ = 0,
-              @OBSERVA = @5,
-              @FOTO = 0x00,
-              @LISPRE1 = @6,
-              @LISPRE2 = 0,
-              @LISPRE3 = 0,
-              @LISPRE4 = 0,
-              @LISPRE5 = 0,
-              @LISPRE6 = @7,
-              @MINPROD = 0,
-              @MAXPROD = 0,
-              @CVEPRODPROV = '',
-              @MANSERIE = 0,
-              @MANKILOM = 0,
-              @MANRENTA = 0,
-              @DIAINI1 = 0,
-              @DIAFIN1 = 0,
-              @DIATOLER1 = 0,
-              @DIAPREC1 = 0,
-              @DIAINI2 = 0,
-              @DIAFIN2 = 0,
-              @DIATOLER2 = 0,
-              @DIAPREC2 = 0,
-              @DIAINI3 = 0,
-              @DIAFIN3 = 0,
-              @DIATOLER3 = 0,
-              @DIAPREC3 = 0,
-              @DIAINI4 = 0,
-              @DIAFIN4 = 0,
-              @DIATOLER4 = 0,
-              @DIAPREC4 = 0,
-              @DISPLUN = 0,
-              @DISPMAR = 0,
-              @DISPMIE = 0,
-              @DISPJUE = 0,
-              @DISPVIE = 0,
-              @DISPSAB = 0,
-              @DISPDOM = 0,
-              @KILOMMANTTO = 0,
-              @RENTASMANTTO = 0,
-              @NUMSEMMANTTO = 0,
-              @FECHAREAL = GETDATE(),
-              @FACTORACTPRECIO = 1,
-              @FLETEACTPRECIO = 0,
-              @CODBAR2 = '',
-              @CODBAR3 = '',
-              @CODBAR4 = '',
-              @IMPCODBARPOS = 0,
-              @FACTORACTPRECIO2 = 1,
-              @FACTORACTPRECIO3 = 1,
-              @FACTORACTPRECIO4 = 1,
-              @FACTORACTPRECIO5 = 1,
-              @FACTORACTPRECIO6 = 1,
-              @Detalle = 0,
-              @Listado1 = 0,
-              @Listado2 = 0,
-              @Listado3 = 0,
-              @Listado4 = 0,
-              @PrecioAdic = 0,
-              @Listado5 = 0,
-              @Casco = 0,
-              @Asientos = 0,
-              @Respaldos = 0,
-              @Otros1 = 0,
-              @Otros2 = 0,
-              @PrecioAdic2 = 0,
-              @ListadoCol1 = 0,
-              @ListadoCol2 = 0,
-              @Listado6 = 0,
-              @Otros3 = 0,
-              @ListadoCol3 = 0,
-              @Tienda = 0,
-              @Mayoreo = 0,
-              @ColorMad1 = 0,
-              @ColorMad2 = 0,
-              @ColorMad3 = 0,
-              @Caducidad = 0,
-              @NivelControl = 0,
-              @CVEMOV = 0,
-              @nTipoPrecio = 0,
-              @nCantDesc = 0,
-              @categoria = 'A',
-              @BimAplicado = 0,
-              @Precio1Ori = 0,
-              @HistBimChg = '',
-              @EmpSucOri = 0,
-              @EmpLoteEnaj = '',
-              @EmpFolBoleta = 0,
-              @EmpFolIndice = 0,
-              @EmpFecPres = '1900-01-01',
-              @EmpMontEval = 0,
-              @EmpMontPres = 0,
-              @EmpMontInte = 0,
-              @EmpPlazo = 0,
-              @EmpDiasPlazo = 0,
-              @EmpDescPlazo = '',
-              @EmpTasa = 0,
-              @EmpRefrendos = 0,
-              @EmpLogin = '',
-              @EmpValuador = '',
-              @EmpPagoCapital = 0,
-              @EmpInteresPagado = 0,
-              @EmpRecargoPagado = 0,
-              @EmpSaldo = 0,
-              @PrecioDef = 0,
-              @PorcDesc = 0,
-              @PorcDescWEB = 0,
-              @CveUserResp = '',
-              @CveUserGte = '',
-              @EdoFisico = '',
-              @EmpInteres = 0,
-              @EmpRecargo = 0,
-              @EmpCosFinDias = 0,
-              @EmpCosFin = 0,
-              @UsuarioAlta = @8,
-              @ProdNuevo = 1,
-              @Esjoyeria = 0
-          `,
-          [
-            articulo.CveProd,            // @0
-            articulo.DesProd,            // @1
-            articulo.CveUni,             // @2
-            articulo.CveFam,             // @3
-            articulo.CveMar,             // @4
-            articulo.ObservaProd ?? '',  // @5
-            0,                           // @6 LISPRE1
-            articulo.PreUni,             // @7 LISPRE6
-            CreateCompraDto.UsuarioAlta  // @8 UsuarioAlta
-          ]
-          );
-
-          console.log('catprodXD')
-      
-
-        if (resProducto?.error) {
-          const mensaje = resProducto.mensaje || 'Error al crear detalle de movimiento';
-          const estatus = resProducto.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
-          this.ApiJson.customeHttpExeption(mensaje, estatus);
-        }  
-
-      } 
+        }
+      }
 
       // ============================================
       // 5. Modificar Existencias
       // ============================================
+      for (const articulo of CreateCompraDto.Articulos) {
+        const CVEPROD = `${CreateCompraDto.CVEBOD}-${articulo.lote}-${articulo.Generado}`;
 
-        for (const articulo of CreateCompraDto.Articulos) {
         const [resExiste]: SpResponse = await entityManager.query(
           `EXEC [dbo].[SP_GV_AgregarExisteCompra]
             @CVEPROD     = @0,
@@ -558,7 +310,7 @@ export class ComprasService {
             @EXIFIS      = @6,
             @UsuarioAlta = @7`,
           [
-            articulo.CveProd,
+            CVEPROD,
             CreateCompraDto.CVEBOD,
             articulo.Cant,
             articulo.fecInv,
@@ -573,24 +325,26 @@ export class ComprasService {
           this.ApiJson.customeHttpExeption(
             resExiste.mensaje || 'Error al crear existencia',
             resExiste.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
-          );  
-        };
-        }; 
-      
+          );
+        }
+      }
 
       // ============================================
       // 6. COMMIT DE LA TRANSACCIÓN
       // ============================================
       await queryRunner.commitTransaction();
 
-      return this.ApiJson.customeResSuccess('Venta creada exitosamente', {
+      return this.ApiJson.customeResSuccess('Compra creada exitosamente', {
+        NumDoc: CreateCompraDto.NumDoc,
         FolMov,
         fecMov,
+        CveBod: CreateCompraDto.CVEBOD,
+        CveMov: CreateCompraDto.CveMov,
+        Sermov: CreateCompraDto.SerMov,
         UsuarioAlta: CreateCompraDto.UsuarioAlta,
         totalArticulos: CreateCompraDto.Articulos.length,
-      });  
-
-  } catch (error) {
+      });
+    } catch (error) {
       // Rollback en caso de error
       if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();
@@ -602,68 +356,214 @@ export class ComprasService {
 
       throw new InternalServerErrorException(
         `Error ${error['message'] || 'Ocurrió un error interno'}`,
-      ); 
-
+      );
     } finally {
       // Siempre liberar el queryRunner
       if (!queryRunner.isReleased) {
         await queryRunner.release();
       }
-    } 
-  } 
+    }
+  }
+  /* #endregion */
 
-  async getAllCompras(){ 
-    try{ 
+  /* #region GetAllCompras */
+  // Abraham Echeverria
+  // 17/02/2026
+  async getAllCompras() {
+    try {
       const query = `SELECT [SerMov]
       ,[CveMov]
+      ,[DESMOV]
       ,[FolMov]
       ,[CveBod]
+      ,[DESBOD]
       ,[NumDoc]
       ,[CVEPROV]
       ,[NOMPROV]
-      ,[TotalCantidad]
+      ,[TotalCantidadProductos]
       ,[TotalImporte]
       ,[UsuarioAlta]
       ,[FechaAlta]
-      FROM [SICAVI].[dbo].[VW_GV_ObtenerCompras] ORDER BY FechaAlta DESC;` 
-      const getCompras =  await this.manager.query(query); 
+      FROM [SICAVI].[dbo].[VW_GV_ObtenerCompras]
+      ORDER BY FechaAlta DESC;`;
+      const getCompras = await this.manager.query(query);
 
-      return this.ApiJson.customeResSuccess('Compras Obtenidas', getCompras); 
-
-    }catch(error){  
-
+      return this.ApiJson.customeResSuccess('Compras Obtenidas', getCompras);
+    } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
 
       throw new InternalServerErrorException(
         `Error ${error['message'] || 'Ocurrió un error interno'}`,
-      );  
-
-    }
-  }; 
-
-  async getComprasDetalle(CveBod: number, FolMov: number, CveMov: number, SerMov: string){ 
-    try{  
-
-      const query =`
-        SP_GV_ObtenerDetalleDeCompra @CveBod = @0, @FolMov = @1, @CveMov = @2, @SerMov = @3
-      ` 
-      const getCompras =  await this.manager.query(query, [CveBod, FolMov, CveMov, SerMov]); 
-
-      return this.ApiJson.customeResSuccess('Compras Obtenidas', getCompras); 
-      
-    }catch(error){  
-
-      if (error instanceof HttpException) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException(
-        `Error ${error['message'] || 'Ocurrió un error interno'}`,
-      );  
-
+      );
     }
   }
+  /* #endregion */
+
+  /* #region getComprasDetalle */
+  // Abraham Echeverria
+  // 17/02/2026
+  async getComprasDetalle(
+    CveBod: number,
+    FolMov: number,
+    CveMov: number,
+    SerMov: string,
+  ) {
+    try {
+      const query = `
+        SP_GV_ObtenerDetalleDeCompra @CveBod = @0, @FolMov = @1, @CveMov = @2, @SerMov = @3
+      `;
+      const getCompras = await this.manager.query(query, [
+        CveBod,
+        FolMov,
+        CveMov,
+        SerMov,
+      ]);
+
+      return this.ApiJson.customeResSuccess('Compras Obtenidas', getCompras);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        `Error ${error['message'] || 'Ocurrió un error interno'}`,
+      );
+    }
+  }
+  /* #endregion */
+
+  /* #region validarDescuentoGlobal */
+  // Abraham Echeverria
+  // 17/02/2026
+  async validarDescuentoGlobal(
+    porDescuentoGlobal: number,
+    imptot: number,
+    subImpTot: number,
+    productos: ArticulosComprasDto[],
+    PorIva?: number,
+  ) {
+    const descuento = porDescuentoGlobal / 100;
+    const IVA = PorIva ? PorIva / 100 : 0;
+    let sumatoriaDescueto: number = 0;
+    productos.forEach((producto) => {
+      sumatoriaDescueto += producto.Cant * producto.PreUni * descuento;
+    });
+    const importeTotalDescuentoAplicado = subImpTot - sumatoriaDescueto;
+    const importeTotalDescuetoEIva =
+      importeTotalDescuentoAplicado + importeTotalDescuentoAplicado * IVA;
+    if (importeTotalDescuetoEIva != imptot) {
+      return this.ApiJson.customeHttpExeption(
+        'El total no coincide con la sumatoria de los productos',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+  /* #endregion */
+
+  async getComprasDetalleTotales(
+    CveBod: number,
+    FolMov: number,
+    CveMov: number,
+    SerMov: string,
+  ) {
+    try {
+      const query = ` 
+          SELECT  
+          ImpDes, 
+          PorcDesc, 
+          ImpSub, 
+          ImpIva, 
+          PorcIva, 
+          ImpTot, 
+          ImpLet 
+          FROM MOVTOS 
+          WHERE CveBod = @0 AND FolMov = @1 AND CveMov = @2 AND SerMov = @3`;
+
+      const getTotales = await this.manager.query(query, [
+        CveBod,
+        FolMov,
+        CveMov,
+        SerMov,
+      ]);
+
+      if (getTotales.length === 0) {
+        this.ApiJson.customeHttpExeption(
+          'Lo sentimos, pero no encontramos los totales',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      return this.ApiJson.customeResSuccess('Totales obtenidos', getTotales[0]);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        `Error ${error['message'] || 'Ocurrió un error interno'}`,
+      );
+    }
+  }
+
+  /* #region updateEncabezadoFactura */ 
+  // Abraham Jesus Echeverria Ruiz 
+  // 24/02/2026
+  async updateEncabezadoFactura(
+    CveBod: number,
+    FolMov: number,
+    CveMov: number,
+    SerMov: string,
+    updateEncabezadoFactura: UpdateEncabezadoFactura,
+  ) {
+    try {
+      const { NumDoc, fechaAlta, CVEPROVCLI, Observ, UsuarioMod } =
+        updateEncabezadoFactura;
+
+      let query = `EXEC SP_GV_ActualizarEncabezadoFactura
+	                  @NumDoc = @0, 
+                    @FechaAlta = @1, 
+                    @Observ = @2,  
+                    @CVEPROVCLI = @3, 
+                    @UsuarioMod = @4,  
+                    -- campos para llave primaria 
+                    @CveBod = @5, 
+                    @FolMov = @6, 
+                    @CveMov = @7, 
+                    @SerMov = @8 `;
+
+      let [res]: SpResponse = await this.manager.query(query, [
+        NumDoc,
+        fechaAlta,
+        Observ,
+        CVEPROVCLI,
+        UsuarioMod,
+        CveBod,
+        FolMov,
+        CveMov,
+        SerMov,
+      ]);
+
+      if (res.error) {
+        this.ApiJson.customeHttpExeption(res.mensaje, res.estatus);
+      }
+
+      let findEncabezado = await this.manager.query(
+        `select NumDoc, FechaAlta, Observ, CveProvCli  FROM MOVTOS WHERE CveBod = @0 AND FolMov = @1 AND CveMov = @2 AND SerMov = @3`,
+        [CveBod, FolMov, CveMov, SerMov],
+      );
+
+      return this.ApiJson.customeResSuccess(res.mensaje, findEncabezado);
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        `Error ${err['message'] || 'Ocurrió un error interno'}`,
+      );
+    }
+  }
+  /* #endregion */
 }
-  

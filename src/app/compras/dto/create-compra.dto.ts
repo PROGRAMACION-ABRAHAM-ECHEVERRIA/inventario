@@ -1,15 +1,12 @@
 import { IsNotEmpty } from '@nestjs/class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
 
 export class ArticulosComprasDto {
 
   @IsNotEmpty()
-  @ApiProperty({ description: 'Clave del producto', type: String })
-  CveProd: string;
-
-  @IsNotEmpty()
   @ApiProperty({ description: 'Lote', type: Number })
-  lote: number;
+  lote: number; 
 
   @IsNotEmpty()
   @ApiProperty({ description: 'Generado', type: String })
@@ -17,11 +14,11 @@ export class ArticulosComprasDto {
 
   @IsNotEmpty()
   @ApiProperty({ description: 'Porcentaje de descuento', type: Number })
-  porcentaje: number;
+  PorcDesc: number;
 
-  @IsNotEmpty()
-  @ApiProperty({ description: 'Lista de precio que se utilizo', type: Number })
-  LisPre: number;
+  // @IsNotEmpty()
+  // @ApiProperty({ description: 'Lista de precio que se utilizo', type: Number })
+  // LisPre: number;
 
   @IsNotEmpty()
   @ApiProperty({ description: 'Precio unitario', type: Number })
@@ -65,57 +62,52 @@ export class ArticulosComprasDto {
 
   @IsNotEmpty()
   @ApiProperty({ description: 'Observacion del producto', type: String })
-  CveProdFac: string
+  CveProdFac: string; 
+
+  // Si agregan los dos lispre en detmovtos el campo lispre = 0; 
+  @IsOptional()
+  @ApiProperty({ description: 'Lote', type: Number })
+  Lispre1: number;  
+
+  @IsOptional()
+  @ApiProperty({ description: 'Lote', type: Number })
+  Lispre2: number; 
+
 }
 
 export class CreateCompraDto {
 
-  //   @ApiProperty({ description: 'UsuarioId' })
-  // UsuarioId: number;
-
-
   @IsNotEmpty()
   @ApiProperty({ description: 'CVEBOD' })
-  CVEBOD: number; 
+  CVEBOD: number;  
+
+
 
   @IsNotEmpty()
   @ApiProperty({ description: 'CveMov' })
   CveMov: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @ApiProperty({ description: 'SerMov' })
   SerMov: string;
 
   @IsNotEmpty()
-  @ApiProperty({ description: 'OrdCom' })
-  OrdCom: number;
-
-  @IsNotEmpty()
   @ApiProperty({ description: 'NumDoc' })
-  NumDoc: number;
+  NumDoc: string;
 
-  // @ApiProperty({ description: 'CveProvCli' })
-  // CveProvCli: number;
-
-  @IsNotEmpty()
-  @ApiProperty({ description: 'DiasCred' })
-  DiasCred: number;
-
-  @IsNotEmpty()
-  @ApiProperty({ description: 'ImpMov' })
-  ImpMov: number;
+  // este es igual a imptot
+  // @IsNotEmpty()
+  // @ApiProperty({ description: 'ImpMov' })
+  // ImpMov: number;
 
   @IsNotEmpty()
   @ApiProperty({ description: 'ImpDes' })
   ImpDes: number;
 
+  // Descuento por producto
   @IsNotEmpty()
   @ApiProperty({ description: 'PorcDesc' })
   PorcDesc: number;
-
-  @IsNotEmpty()
-  @ApiProperty({ description: 'ImpFle' })
-  ImpFle: number;
 
   @IsNotEmpty()
   @ApiProperty({ description: 'ImpSub' })
@@ -133,13 +125,10 @@ export class CreateCompraDto {
   @ApiProperty({ description: 'ImpTot' })
   ImpTot: number;
 
-  @IsNotEmpty()
-  @ApiProperty({ description: 'Login' })
-  Login: number;
-
-  @IsNotEmpty()
-  @ApiProperty({ description: 'CveVen' })
-  CveVen: number;
+  // CveDelVendedor
+  // @IsNotEmpty()
+  // @ApiProperty({ description: 'CveVen' })
+  // CveVen: number;
 
   @IsNotEmpty()
   @ApiProperty({ description: 'Observ' })
@@ -149,40 +138,25 @@ export class CreateCompraDto {
   @ApiProperty({ description: 'ImpLet' })
   ImpLet: string;
 
-  @IsNotEmpty()
-  @ApiProperty({ description: 'Facturada' })
-  Facturada: number;
+  // @IsNotEmpty()
+  // @ApiProperty({ description: 'Facturada' })
+  // Facturada: number;
 
-  @IsNotEmpty()
-  @ApiProperty({ description: 'Cancelada' })
-  Cancelada: number;
+  // @IsNotEmpty()
+  // @ApiProperty({ description: 'Cancelada' })
+  // Cancelada: number;
 
-  @IsNotEmpty()
-  @ApiProperty({ description: 'Devuelto' })
-  Devuelto: number;
+  // @IsNotEmpty()
+  // @ApiProperty({ description: 'Devuelto' })
+  // Devuelto: number;
 
-  @IsNotEmpty()
-  @ApiProperty({ description: 'Afectado' })
-  Afectado: number;
-
-  @IsNotEmpty()
-  @ApiProperty({ description: 'NumDias' })
-  NumDias: number;
-
-  @IsNotEmpty()
-  @ApiProperty({ description: 'RepEntregada' })
-  RepEntregada: number;
-
-  @IsNotEmpty()
-  @ApiProperty({ description: 'Garantia' })
-  Garantia: string;
+  // @IsNotEmpty()
+  // @ApiProperty({ description: 'Afectado' })
+  // Afectado: number;
 
   @IsNotEmpty()
   @ApiProperty({ description: 'UsuarioAlta' })
   UsuarioAlta: string; 
-
-  // @ApiProperty({ description: 'Tipo' })
-  // TIPO: number; 
 
   @IsNotEmpty()
   @ApiProperty({ description: 'CVEPROVCLI' })
