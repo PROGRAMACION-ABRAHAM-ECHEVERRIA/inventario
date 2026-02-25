@@ -63,22 +63,25 @@ export class ComprasService {
       let [findProv] = await entityManager.query(
         `SELECT 1 FROM [dbo].[CATPROV] WHERE CVEPROV = @0`,
         [CreateCompraDto.CVEPROVCLI],
-      ); 
+      );
 
       if (!findProv) {
         this.ApiJson.customeHttpExeption(
           'No existe el proveedor',
           HttpStatus.NOT_FOUND,
         );
-      } 
+      }
 
-       let [findNumdoc] = await entityManager.query(
+      let [findNumdoc] = await entityManager.query(
         `SELECT 1 FROM [dbo].[MOVTOS] WHERE NumDoc = @0`,
         [CreateCompraDto.NumDoc],
-      );  
+      );
 
-      if(findNumdoc){ 
-        this.ApiJson.customeHttpExeption('El folio de la factura ya existe', HttpStatus.AMBIGUOUS)
+      if (findNumdoc) {
+        this.ApiJson.customeHttpExeption(
+          'El folio de la factura ya existe',
+          HttpStatus.AMBIGUOUS,
+        );
       }
 
       // ============================================
@@ -227,7 +230,11 @@ export class ComprasService {
             CreateCompraDto.SerMov,
             CVEPROD,
             articulo.Cant,
-            articulo.Lispre1 != 0 && articulo.Lispre2 != 0 ? 0 : articulo.Lispre1 != 0 ? 1 : 2,
+            articulo.Lispre1 != 0 && articulo.Lispre2 != 0
+              ? 0
+              : articulo.Lispre1 != 0
+                ? 1
+                : 2,
             articulo.PorcDesc,
             articulo.PreUni,
             articulo.importeTotal,
@@ -462,6 +469,9 @@ export class ComprasService {
   }
   /* #endregion */
 
+  /* #region getComprasDetalleTotales */ 
+  // Abraham Echeverria 
+  // 24/02/2026
   async getComprasDetalleTotales(
     CveBod: number,
     FolMov: number,
@@ -506,9 +516,10 @@ export class ComprasService {
       );
     }
   }
+  /* #endregion */
 
-  /* #region updateEncabezadoFactura */ 
-  // Abraham Jesus Echeverria Ruiz 
+  /* #region updateEncabezadoFactura */
+  // Abraham Jesus Echeverria Ruiz
   // 24/02/2026
   async updateEncabezadoFactura(
     CveBod: number,
