@@ -7,6 +7,7 @@ import { JwtServiceModule } from './globalServices/jwt-service/jwt-service.modul
 import { EntradasModule } from './app/entradas/entradas.module';
 import { SalidasModule } from './app/salidas/salidas.module';
 import { ComprasModule } from './app/compras/compras.module';
+import { TraspasosModule } from './app/traspasos/traspasos.module';
 // se necesita para poder llamar las variables de entorno
 require('dotenv').config();
 
@@ -33,7 +34,8 @@ require('dotenv').config();
   AuthGuardModule, 
   EntradasModule,
   SalidasModule, 
-  ComprasModule
+  ComprasModule,
+  TraspasosModule
 ],
   controllers: [AppController],
   providers: [AppService],
