@@ -203,4 +203,31 @@ export class SalidasService {
             )
         }
     }
+
+    async getSalida(cvebod: number, folmov: number, cvemov: number, sermov?: string) {
+        const query = `
+            exec SP_GV_GetSalida
+                @cvebod = @0,
+                @folmov = @1,
+                @cvemov = @2,
+                @sermov = @3;
+        `;
+
+        try {
+            const res = await this.dataSource.query(query, [cvebod, folmov, cvemov, sermov ?? '']);
+
+            console.log(res);
+
+            // Si no hay filas
+            if (!res || res.length === 0) {
+                return this.ApiJson.customeResSuccess('No se encontraron salidas', []);
+            }
+
+            return this.ApiJson.customeResSuccess('Salidas obtenidas exitosamente', res)
+        } catch (error) {
+            throw new InternalServerErrorException(
+                `Error ${error['message'] || 'Ocurrió un error interno'}`,
+            )
+        }
+    }
 }
