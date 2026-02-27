@@ -1,3 +1,4 @@
+import { IsOptional } from '@nestjs/class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty } from 'class-validator';
 
@@ -28,6 +29,7 @@ export class SalidaDTO {
     @ApiProperty({ description: 'usuarioAlta' })
 	usuarioAlta: string;
 
+    @IsOptional()
     @ApiProperty({ description: 'sermov' })
 	sermov: string;
 	

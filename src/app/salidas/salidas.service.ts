@@ -4,7 +4,7 @@ import { resJsonClass } from 'src/utils/resJsonClass';
 
 import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { SalidaDTO } from './dto/create-salida.dto';
+import { SalidaDTO } from './dto/create-salida.dto';
 
 @ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
@@ -103,7 +103,7 @@ export class SalidasService {
             await queryRunner.connect();
             await queryRunner.startTransaction();
 
-            const entityManager = queryRunner.manager; 
+            const entityManager = queryRunner.manager;
 
             const queryFolMov = `
             exec SP_GV_CrearFolMov
@@ -112,11 +112,11 @@ export class SalidasService {
                 @sermov = @2;
             `;
 
-            const resFolMov = await entityManager.query(queryFolMov, [cvebod, cvemov, sermov ?? '']);
+            const resFolMov = await entityManager.query(queryFolMov, [cvebod, cvemov, sermov]);
 
             if (resFolMov[0].error || !resFolMov[0].FolMov) {
                 // si falla uno, lanzamos excepción y detenemos el bucle
-                throw this.ApiJson.customeHttpExeption(resFolMov[0].mensaje, resFolMov[0].estatus);
+                throw this.ApiJson.customeHttpExeption(resFolMov[0].Mensaje, resFolMov[0].Estatus);
             }
 
             // recorrer cada producto
@@ -145,7 +145,7 @@ export class SalidasService {
                     cveProd,
                     cvemov,
                     resFolMov[0].FolMov,
-                    sermov ?? '',
+                    sermov,
                     usuarioAlta,
                     fechaSalida,
                     observ,
@@ -158,7 +158,7 @@ export class SalidasService {
 
                 if (res[0].error) {
                     // si falla uno, lanzamos excepción y detenemos el bucle
-                    throw this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus);
+                    throw this.ApiJson.customeHttpExeption(res[0].Mensaje, res[0].Estatus);
                 }
             }
 
