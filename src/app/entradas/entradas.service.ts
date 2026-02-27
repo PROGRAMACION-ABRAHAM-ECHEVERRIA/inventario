@@ -302,6 +302,71 @@ async ObteneTotalProdMov(
     );
   }
 }
+
+async ObtenerTotalProdMovSearch(CVEBOD:number, SEARCH:string,  pagina :number,
+  limit :number){
+
+  try {
+    
+
+        const query = `
+      EXEC dbo.SP_GV_ObteneTotalProdMovSearch @CVEBOD = @0,@SEARCH = @1
+    `;
+
+    const res: any[] = await this.manager.query(query, [CVEBOD, SEARCH]);
+
+      if (res.length == 0) {
+        this.ApiJson.customeHttpExeption('No se encontro ', 404); 
+      };
+
+      // Función para formatear Date a SQL Server sin conversión de zona horaria
+    const formatDateToSQL = (date: Date | string | null): string | null => {
+      if (!date) return null;
+      let d: Date;
+      if (typeof date === 'string') {
+        d = new Date(date);
+      } else {
+        d = date;
+      }
+      const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+             `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+    };
+        //Formateamos la fecha
+    const formattedRes = res.map(item => ({
+      ...item,
+      FechaAlta: formatDateToSQL(item.FechaAlta),
+    }));
+
+    // PAGINACIÓN
+  const total = formattedRes.length;
+    const totalPginas = Math.ceil(total / limit);
+    const start = (pagina - 1) * limit;
+    const data = formattedRes.slice(start, start + limit);
+
+       return this.ApiJson.customeResSuccess(
+      res[0]?.mensaje || 'Consulta exitosa',
+      {
+       pagina,
+        limit,
+        total,
+        totalPginas,
+        data,
+      },
+    );
+
+
+  } catch (err) {
+    console.log(err)
+        if (err instanceof HttpException) {
+      throw err;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${err['mensaje'] || 'Ocurrió un error interno'}`
+    );
+  }
+}
  async ObteneProdByMov(CVEBOD: number, CVEMOV: number, FOLMOV: number, SERMOV:string){
   try {
       const query = `
