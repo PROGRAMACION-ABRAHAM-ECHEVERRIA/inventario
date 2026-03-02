@@ -214,9 +214,7 @@ export class SalidasService {
         `;
 
         try {
-            const res = await this.dataSource.query(query, [cvebod, folmov, cvemov, sermov ?? '']);
-
-            console.log(res);
+            const res = await this.dataSource.query(query, [cvebod, folmov, cvemov, sermov ?? ""]);
 
             // Si no hay filas
             if (!res || res.length === 0) {
