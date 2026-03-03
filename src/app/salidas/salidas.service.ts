@@ -158,7 +158,7 @@ export class SalidasService {
 
                 if (res[0].error) {
                     // si falla uno, lanzamos excepción y detenemos el bucle
-                    throw this.ApiJson.customeHttpExeption(res[0].Mensaje, res[0].Estatus);
+                    throw this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus);
                 }
             }
 
@@ -166,6 +166,8 @@ export class SalidasService {
 
             return this.ApiJson.customeResSuccess('Salidas creada exitosamente', [])
         } catch (error) {
+            console.log(error);
+
             // Rollback en caso de error
             if (queryRunner.isTransactionActive) {
                 await queryRunner.rollbackTransaction();
