@@ -302,7 +302,118 @@ export class TraspasosService {
   }
   /* #endregion */
 
+  /* #region  TraspasosMovimiento */
+  // Paulina May
+  //Creacion 05/03/2026
+async ObtenerGeneralTraspasoMov(
+  CVEBOD: number,
+  ESTATUSFILTER: string,
+  pagina: number,
+  limit: number,
+) {
+  try {
 
+    const query = `
+      EXEC dbo.SP_GV_ObtenerGeneralTraspasoMov 
+        @CVEBOD = @0,
+        @ESTATUSFILTER = @1
+    `;
 
+    const res: any[] = await this.manager.query(query, [
+      CVEBOD,
+      ESTATUSFILTER
+    ]);
+
+    if (res.length == 0) {
+      this.ApiJson.customeHttpExeption('No hay traspasos', 404);
+    }
+
+    // Función para formatear Date a SQL Server sin conversión de zona horaria
+    const formatDateToSQL = (date: Date | string | null): string | null => {
+      if (!date) return null;
+
+      let d: Date;
+
+      if (typeof date === 'string') {
+        d = new Date(date);
+      } else {
+        d = date;
+      }
+
+      const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
+
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+    };
+
+    // Formateamos la fecha
+    const formattedRes = res.map(item => ({
+      ...item,
+      FechaAlta: formatDateToSQL(item.FechaAlta),
+    }));
+
+    // PAGINACIÓN
+    const total = formattedRes.length;
+    const totalPginas = Math.ceil(total / limit);
+    const start = (pagina - 1) * limit;
+    const data = formattedRes.slice(start, start + limit);
+
+    return this.ApiJson.customeResSuccess(
+      res[0]?.mensaje || 'Consulta exitosa',
+      {
+        pagina,
+        limit,
+        total,
+        totalPginas,
+        data,
+      },
+    );
+
+  } catch (err) {
+
+    if (err instanceof HttpException) {
+      throw err;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${err['message'] || 'Ocurrió un error interno'}`,
+    );
+  }
+}
+
+    /* #endregion */
+
+      /* #region  TraspasosMovimiento */
+  // Paulina May
+  //Creacion 05/03/2026
+
+  async ObteneDetalleTraspasoMov(CVEBOD: number, CVEMOV: number, FOLMOV: number, SERMOV:string){
+    try {
+        const query = `
+      EXEC dbo.SP_GV_ObteneDetalleTraspasoMov
+        @CVEBOD = @0,
+        @CVEMOV = @1,
+        @FOLMOV = @2,
+        @SERMOV = @3`;
+
+          const res: SpResponse = await this.manager.query(query, [CVEBOD, CVEMOV, FOLMOV, SERMOV]);
+     
+     if (res[0].error) {
+        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
+      };
+     return this.ApiJson.customeResSuccess(res[0].mensaje, res); 
+
+    } catch (err) {
+       if (err instanceof HttpException) {
+        throw err;
+      }
+      throw new InternalServerErrorException(
+        `Error ${err['message'] || 'Ocurrió un error interno'}`,
+      )
+      
+    }
+  }
+
+      /* #endregion */
 
 }
