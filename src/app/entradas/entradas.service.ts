@@ -140,6 +140,16 @@ export class EntradasService {
     /* ================= DETALLE MOVIMIENTO ================= */
 
     for (const articulo of createEntradaDto.articulo) {
+
+        const [validarLisPre]: {LISPRE6: number, LISPRE5: number}[] = await entityManager.query(`SELECT LISPRE6, LISPRE5 FROM CATPROD WHERE Cveprod = @0`, [articulo.cveProd]); 
+
+        const lispre = (validarLisPre.LISPRE6 != 0) ? validarLisPre.LISPRE6 : validarLisPre.LISPRE5  ;   
+
+        if(lispre  != articulo.preUni ){
+          this.ApiJson.customeHttpExeption(`El precio de lista6 (${lispre}) del producto ${articulo.cveProd} no coincide con el precio registrado en el catálogo (${articulo.preUni}).`, HttpStatus.BAD_REQUEST); 
+        }; 
+
+
       const [resDetMovtos]: SpResponse = await entityManager.query(
         `EXEC [dbo].[SP_GV_AgregarDetMovTosBool2]
           @CveBod      = @0,
