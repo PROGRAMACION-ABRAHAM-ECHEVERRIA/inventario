@@ -2,10 +2,10 @@ import { Controller, Get, Param, Query, UsePipes, ValidationPipe } from '@nestjs
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { TraspasosService } from './traspasos.service';
-//@ApiBearerAuth()  
+@ApiBearerAuth()  
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Traspaso')
-//@UseAuth()   
+@UseAuth()   
 @Controller('Traspaso')
 export class TraspasosController {
     constructor(private readonly traspasosService:TraspasosService){}
