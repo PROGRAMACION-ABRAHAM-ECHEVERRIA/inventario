@@ -10,9 +10,6 @@ export class TraspasoDto {
   @ApiProperty({ description: 'Clave de bodega Destino' })
   CveBodDes: number;
 
-  @ApiProperty({ description: 'Cantidad' })
-  @IsNumber()
-  cant: number
 
   @IsString()
   @ApiProperty({ description: 'Clave de movimiento' })
@@ -30,6 +27,12 @@ export class TraspasoDto {
   @IsString()
   @ApiProperty({ description: 'Usuario Alta' })
   usuarioAlta: string;
+    /* ===== ARTICULOS ===== */
+  @ApiProperty({ type: () => ArticuloDto, isArray: true })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ArticuloDto)
+  articulo: ArticuloDto[];
 
   /* ===== MOVIMIENTO ===== */
   @ApiProperty({ type: () => MovimientoDto, isArray: true })
@@ -38,12 +41,7 @@ export class TraspasoDto {
   @Type(() => MovimientoDto)
   movimiento: MovimientoDto[];
 
-  /* ===== ARTICULOS ===== */
-  @ApiProperty({ type: () => ArticuloDto, isArray: true })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ArticuloDto)
-  articulo: ArticuloDto[];
+
 
 
 
@@ -165,6 +163,9 @@ export class ArticuloDto {
   @ApiProperty({ description: 'Precio unitario' })
   @IsNumber()
   preUni: number;
+    @ApiProperty({ description: 'Cantidad' })
+  @IsNumber()
+  cant: number;
 
   /*   
           @ApiProperty({ description: 'Cantidad' })

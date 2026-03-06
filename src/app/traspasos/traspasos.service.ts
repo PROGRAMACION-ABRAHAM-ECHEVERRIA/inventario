@@ -24,43 +24,77 @@ export class TraspasosService {
   // Paulina May
   //Creacion 02/03/2026
   async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    try {
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
-      const entityManager = queryRunner.manager;
-      const payloadToken: payLoadToken =
-        this.jwtServiceCustom.payloadToken as payLoadToken;
-      /* ================= VALIDACIONES CLAVE ================= */
+  const queryRunner = this.dataSource.createQueryRunner();
 
-      if (!createTraspasoDto.movimiento?.length) {
-        throw new HttpException(
-          'Debe existir al menos un movimiento',
-          HttpStatus.BAD_REQUEST,
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    const entityManager = queryRunner.manager;
+    const payloadToken: payLoadToken = this.jwtServiceCustom.payloadToken as payLoadToken;
+    const { cveBod, CveBodDes, tipMov, movimiento, articulo, usuarioAlta, cveMov, serMov } = createTraspasoDto;
+
+    /* ================= VALIDACIONES CLAVE ================= */
+
+    if (!movimiento?.length) {
+      throw new HttpException('Debe existir al menos un movimiento', HttpStatus.BAD_REQUEST);
+    }
+
+    if (!articulo?.length) {
+      throw new HttpException('Debe existir al menos un artículo', HttpStatus.BAD_REQUEST);
+    }
+
+    if (tipMov !== 6) {
+      throw new HttpException('El tipo de movimiento debe ser un traspaso', HttpStatus.BAD_REQUEST);
+    }
+
+    if (cveBod === CveBodDes) {
+      throw new HttpException('No se puede hacer un traspaso a la misma bodega', HttpStatus.BAD_REQUEST);
+    }
+
+    /* ================= VALIDACIÓN MASIVA DE INVENTARIO ================= */
+
+    const productos = articulo.map(a => a.cveProd);
+    const cantidades = articulo.map(a => a.cant);
+
+    // Obtenemos existencia de todos los productos de una sola vez
+    const placeholders = productos.map((_, i) => `'${_}'`).join(',');
+    const resValidacionMasiva: Array<{ CVEPROD: string; EXISTE: number }> = await entityManager.query(
+      `
+      SELECT P.CVEPROD, E.EXISTE
+      FROM dbo.EXISTE E
+      INNER JOIN dbo.CATPROD P ON P.CVEPROD = E.CVEPROD
+      WHERE E.CVEBOD = @0
+        AND P.CVEPROD IN (${placeholders})
+      `,
+      [cveBod]
+    );
+
+    // Verificamos que todos existan y tengan existencia suficiente
+    for (let i = 0; i < productos.length; i++) {
+      const prod = productos[i];
+      const cant = cantidades[i];
+      const row = resValidacionMasiva.find(r => r.CVEPROD === prod);
+
+      if (!row) {
+        throw this.ApiJson.customeHttpExeption(
+          `El producto ${prod} no existe en la bodega`,
+          HttpStatus.BAD_REQUEST
         );
       }
 
-      if (!createTraspasoDto.articulo?.length) {
-        throw new HttpException(
-          'Debe existir al menos un artículo',
-          HttpStatus.BAD_REQUEST,
+      if (row.EXISTE < cant) {
+        throw this.ApiJson.customeHttpExeption(
+          `No hay existencia suficiente del producto ${prod} en la bodega`,
+          HttpStatus.BAD_REQUEST
         );
       }
+    }
 
-
-      if (createTraspasoDto.tipMov !== 6) {
-        throw new HttpException(
-          'El tipo de movimiento deber ser un traspaso',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      const movimiento = createTraspasoDto.movimiento[0];
-      /* ================= INSERTAR MOVIMIENTO ================= */
-      const resMovtos: Array<
-        response & { Folmov: number; fecmov: string; ImpSub: number }
-      > = await entityManager.query(
-        `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
+    /* ================= INSERTAR MOVIMIENTO ================= */
+    const movimientoData = movimiento[0];
+    const resMovtos: Array<response & { Folmov: number; fecmov: string; ImpSub: number }> = await entityManager.query(
+      `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
         @CVEBOD        = @0,
         @CveMov        = @1,
         @SerMov        = @2,
@@ -90,114 +124,96 @@ export class TraspasosService {
         @UsuarioAlta   = @26,
         @UsuarioId     = @27,
         @CveBodOrig = @28,
-        @CveBodDes = @29
-        @CveEstatusParam =@30`,
-        [
-          createTraspasoDto.cveBod,
-          createTraspasoDto.cveMov,
-          createTraspasoDto.serMov,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          movimiento.impTot, //impsub si es un articulo es el valor del articulo y si son muchos es el total
-          0,
-          0,
-          movimiento.impTot,
-          createTraspasoDto.usuarioAlta,
-          0,
-          movimiento.observ ?? '',
-          movimiento.impLet ?? '',
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          '',
-          createTraspasoDto.usuarioAlta,
-          payloadToken.UsuarioId,
-          createTraspasoDto.cveBod,
-          createTraspasoDto.CveBodDes,
-          'TPSD' // Estatus por defaul  traspaso  pendiente sucursal destino
+        @CveBodDes = @29,
+        @CveEstatusParam = @30`,
+      [
+        cveBod,
+        cveMov,
+        serMov,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        movimientoData.impTot,
+        0, 0,
+        movimientoData.impTot,
+        usuarioAlta,
+        0,
+        movimientoData.observ ?? '',
+        movimientoData.impLet ?? '',
+        0, 0, 0, 0, 0, 0,
+        '',
+        usuarioAlta,
+        payloadToken.UsuarioId,
+        cveBod,
+        CveBodDes,
+        'TPSD'
+      ]
+    );
 
-        ],
+    if (!resMovtos[0] || resMovtos[0].error) {
+      throw this.ApiJson.customeHttpExeption(
+        resMovtos[0]?.mensaje || 'Error al crear el movimiento',
+        resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
       );
-
-      if (!resMovtos[0] || resMovtos[0].error) {
-        this.ApiJson.customeHttpExeption(
-          resMovtos[0]?.mensaje || 'Error al crear el movimiento',
-          resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-
-      const FolMov = resMovtos[0].Folmov;
-      const fecMov = resMovtos[0].fecmov;
-
-      /* ================= DETALLE MOVIMIENTO ================= */
-      for (const articulo of createTraspasoDto.articulo) {
-        const [resDetMovtos]: SpResponse = await entityManager.query(
-          `EXEC [dbo].[SP_GV_AgregarDetMovTosBool2]
-                 @CveBod      = @0,
-                 @FolMov      = @1,
-                 @CveMov      = @2,
-                 @SerMov      = @3,
-                 @CveProd     = @4,
-                 @Cant        = @5,
-                 @LisPre      = @6,
-                 @PorcDesc    = @7,
-                 @PreUni      = @8,
-                 @ImpSub      = @9,
-                 @DesProd     = @10,
-                 @UsuarioAlta = @11`,
-          [
-            createTraspasoDto.cveBod,
-            FolMov,
-            createTraspasoDto.cveMov,
-            createTraspasoDto.serMov,
-            articulo.cveProd,
-            createTraspasoDto.cant,
-            articulo.lisPre,
-            0.00,
-            articulo.preUni,
-            articulo.preUni, //impsub
-            articulo.desProd,
-            createTraspasoDto.usuarioAlta,
-          ],
-        );
-
-        if (resDetMovtos?.error) {
-          this.ApiJson.customeHttpExeption(
-            resDetMovtos.mensaje || 'Error al crear detalle de movimiento',
-            resDetMovtos.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
-          );
-
-        }
-      }
-
-      await queryRunner.commitTransaction();
-      return this.ApiJson.customeResSuccess(
-        'Traspaso Creado Exitosamente',
-        {
-          FolMov,
-          fecMov,
-          usuarioAlta: createTraspasoDto.usuarioAlta
-        },
-      );
-
-    } catch (err) {
-      if (err instanceof HttpException) {
-        throw err;
-      }
-      throw new InternalServerErrorException(
-        `Error ${err['message'] || 'Ocurrio un error interno'}`
-      )
     }
+
+    const FolMov = resMovtos[0].Folmov;
+    const fecMov = resMovtos[0].fecmov;
+
+    /* ================= INSERTAR DETALLES ================= */
+    for (const articuloItem of articulo) {
+      const [resDetMovtos]: SpResponse = await entityManager.query(
+        `EXEC [dbo].[SP_GV_AgregarDetMovTosBool2]
+          @CveBod      = @0,
+          @FolMov      = @1,
+          @CveMov      = @2,
+          @SerMov      = @3,
+          @CveProd     = @4,
+          @Cant        = @5,
+          @LisPre      = @6,
+          @PorcDesc    = @7,
+          @PreUni      = @8,
+          @ImpSub      = @9,
+          @DesProd     = @10,
+          @UsuarioAlta = @11`,
+        [
+          cveBod,
+          FolMov,
+          cveMov,
+          serMov,
+          articuloItem.cveProd,
+          articuloItem.cant,
+          articuloItem.lisPre,
+          0.0,
+          articuloItem.preUni,
+          articuloItem.preUni,
+          articuloItem.desProd,
+          usuarioAlta
+        ]
+      );
+
+      if (resDetMovtos?.error) {
+        throw this.ApiJson.customeHttpExeption(
+          resDetMovtos.mensaje || 'Error al crear detalle de movimiento',
+          resDetMovtos.estatus || HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+    }
+
+    /* ================= COMMIT ================= */
+    await queryRunner.commitTransaction();
+
+    return this.ApiJson.customeResSuccess(
+      'Traspaso Creado Exitosamente',
+      { FolMov, fecMov, usuarioAlta }
+    );
+
+  } catch (err) {
+    await queryRunner.rollbackTransaction();
+    if (err instanceof HttpException) throw err;
+    throw new InternalServerErrorException(`Error ${err['message'] || 'Ocurrió un error interno'}`);
+  } finally {
+    await queryRunner.release();
   }
+}
 
   /* #endregion */
 
