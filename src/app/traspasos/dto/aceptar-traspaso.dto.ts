@@ -5,7 +5,7 @@ import { IsNumber, IsString } from "class-validator";
 export class AceptarTraspaso extends PartialType(OmitType(TraspasoDto, [ 'usuarioAlta', 'movimiento'] as const)) {
 
 
-    @IsString()
+    @IsNumber()
     @ApiProperty({ description: 'Clave de movimiento' })
-    Folmov: string;
+    Folmov: number;
 }

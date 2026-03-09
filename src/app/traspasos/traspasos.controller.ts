@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { TraspasosService } from './traspasos.service';
 import { CreateTraspasoDto } from './dto/create-traspaso.dto';
+import { AceptarTraspaso } from './dto/aceptar-traspaso.dto';
 @ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Traspaso')
@@ -12,7 +13,7 @@ export class TraspasosController {
   constructor(private readonly traspasosService: TraspasosService) { }
 
     @ApiOperation({ summary: 'Enpoint para crear un traspaso' })
-   @Post()
+   @Post('crear-traspaso')
 createTraspaso(@Body() createTraspasoDto: CreateTraspasoDto) {
   return this.traspasosService.createMovimientoTraspaso(createTraspasoDto);
 }
@@ -26,6 +27,35 @@ createTraspaso(@Body() createTraspasoDto: CreateTraspasoDto) {
 
     )
   }
+
+@Post('aceptar-traspaso')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Aceptar movimiento de traspaso',
+    description: 'Acepta un movimiento de traspaso ejecutando el SP_GV_AceptarTraspaso',
+  })
+  @ApiBody({
+    type: AceptarTraspaso,
+    description: 'Datos necesarios para aceptar el traspaso',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Traspaso aceptado exitosamente',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Error en los datos enviados',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Error interno del servidor',
+  })
+  async aceptarMovimientoTraspaso(
+    @Body() aceptarTraspaso: AceptarTraspaso,
+  ) {
+    return this.traspasosService.aceptarMovimientoTraspaso(aceptarTraspaso);
+  }
+
   @ApiOperation({ summary: 'Obtener todas los traspasos por bodega' })
   @ApiQuery({ name: 'ESTATUSFILTER', required: false })
   @Get(':CVEBOD')

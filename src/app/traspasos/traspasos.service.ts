@@ -23,77 +23,77 @@ export class TraspasosService {
   /* #region  CrearTraspaso */
   // Paulina May
   //Creacion 02/03/2026
-  async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
-  const queryRunner = this.dataSource.createQueryRunner();
 
+async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
+
+  const queryRunner = this.dataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
 
   try {
+
     const entityManager = queryRunner.manager;
     const payloadToken: payLoadToken = this.jwtServiceCustom.payloadToken as payLoadToken;
-    const { cveBod, CveBodDes, tipMov, movimiento, articulo, usuarioAlta, cveMov, serMov } = createTraspasoDto;
 
-    /* ================= VALIDACIONES CLAVE ================= */
+    const {
+      cveBod,
+      CveBodDes,
+      tipMov,
+      movimiento,
+      articulo,
+      usuarioAlta,
+      cveMov,
+      serMov
+    } = createTraspasoDto;
 
-    if (!movimiento?.length) {
+    /* ================= VALIDACIONES ================= */
+
+    if (!movimiento?.length)
       throw new HttpException('Debe existir al menos un movimiento', HttpStatus.BAD_REQUEST);
-    }
 
-    if (!articulo?.length) {
+    if (!articulo?.length)
       throw new HttpException('Debe existir al menos un artículo', HttpStatus.BAD_REQUEST);
-    }
 
-    if (tipMov !== 6) {
+    if (tipMov !== 6)
       throw new HttpException('El tipo de movimiento debe ser un traspaso', HttpStatus.BAD_REQUEST);
-    }
 
-    if (cveBod === CveBodDes) {
+    if (cveBod === CveBodDes)
       throw new HttpException('No se puede hacer un traspaso a la misma bodega', HttpStatus.BAD_REQUEST);
-    }
 
-    /* ================= VALIDACIÓN MASIVA DE INVENTARIO ================= */
 
-    const productos = articulo.map(a => a.cveProd);
-    const cantidades = articulo.map(a => a.cant);
+    /* ================= VALIDAR INVENTARIO CON TU SP ================= */
 
-    // Obtenemos existencia de todos los productos de una sola vez
-    const placeholders = productos.map((_, i) => `'${_}'`).join(',');
-    const resValidacionMasiva: Array<{ CVEPROD: string; EXISTE: number }> = await entityManager.query(
-      `
-      SELECT P.CVEPROD, E.EXISTE
-      FROM dbo.EXISTE E
-      INNER JOIN dbo.CATPROD P ON P.CVEPROD = E.CVEPROD
-      WHERE E.CVEBOD = @0
-        AND P.CVEPROD IN (${placeholders})
-      `,
-      [cveBod]
-    );
+    for (const art of articulo) {
 
-    // Verificamos que todos existan y tengan existencia suficiente
-    for (let i = 0; i < productos.length; i++) {
-      const prod = productos[i];
-      const cant = cantidades[i];
-      const row = resValidacionMasiva.find(r => r.CVEPROD === prod);
+      const [resValidacion]: SpResponse = await entityManager.query(
+        `EXEC SP_GV_ValidarIfExisProdInBod
+          @CVEBOD = @0,
+          @CVEPROD = @1,
+          @CANTIDAD = @2`,
+        [
+          cveBod,
+          art.cveProd,
+          art.cant
+        ]
+      );
 
-      if (!row) {
+      if (resValidacion?.error) {
         throw this.ApiJson.customeHttpExeption(
-          `El producto ${prod} no existe en la bodega`,
-          HttpStatus.BAD_REQUEST
+          resValidacion.mensaje,
+          resValidacion.estatus
         );
       }
 
-      if (row.EXISTE < cant) {
-        throw this.ApiJson.customeHttpExeption(
-          `No hay existencia suficiente del producto ${prod} en la bodega`,
-          HttpStatus.BAD_REQUEST
-        );
-      }
     }
+
 
     /* ================= INSERTAR MOVIMIENTO ================= */
+
     const movimientoData = movimiento[0];
-    const resMovtos: Array<response & { Folmov: number; fecmov: string; ImpSub: number }> = await entityManager.query(
+
+    const resMovtos: Array<
+      response & { Folmov: number; fecmov: string; ImpSub: number }
+    > = await entityManager.query(
       `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
         @CVEBOD        = @0,
         @CveMov        = @1,
@@ -123,22 +123,22 @@ export class TraspasosService {
         @Garantia      = @25,
         @UsuarioAlta   = @26,
         @UsuarioId     = @27,
-        @CveBodOrig = @28,
-        @CveBodDes = @29,
+        @CveBodOrig    = @28,
+        @CveBodDes     = @29,
         @CveEstatusParam = @30`,
       [
         cveBod,
         cveMov,
         serMov,
-        0, 0, 0, 0, 0, 0, 0, 0,
+        0,0,0,0,0,0,0,0,
         movimientoData.impTot,
-        0, 0,
+        0,0,
         movimientoData.impTot,
         usuarioAlta,
         0,
         movimientoData.observ ?? '',
         movimientoData.impLet ?? '',
-        0, 0, 0, 0, 0, 0,
+        0,0,0,0,0,0,
         '',
         usuarioAlta,
         payloadToken.UsuarioId,
@@ -148,6 +148,7 @@ export class TraspasosService {
       ]
     );
 
+
     if (!resMovtos[0] || resMovtos[0].error) {
       throw this.ApiJson.customeHttpExeption(
         resMovtos[0]?.mensaje || 'Error al crear el movimiento',
@@ -155,11 +156,15 @@ export class TraspasosService {
       );
     }
 
+
     const FolMov = resMovtos[0].Folmov;
     const fecMov = resMovtos[0].fecmov;
 
+
     /* ================= INSERTAR DETALLES ================= */
-    for (const articuloItem of articulo) {
+
+    for (const art of articulo) {
+
       const [resDetMovtos]: SpResponse = await entityManager.query(
         `EXEC [dbo].[SP_GV_AgregarDetMovTosBool2]
           @CveBod      = @0,
@@ -179,42 +184,59 @@ export class TraspasosService {
           FolMov,
           cveMov,
           serMov,
-          articuloItem.cveProd,
-          articuloItem.cant,
-          articuloItem.lisPre,
-          0.0,
-          articuloItem.preUni,
-          articuloItem.preUni,
-          articuloItem.desProd,
+          art.cveProd,
+          art.cant,
+          art.lisPre,
+          0,
+          art.preUni,
+          art.preUni,
+          art.desProd,
           usuarioAlta
         ]
       );
 
+
       if (resDetMovtos?.error) {
         throw this.ApiJson.customeHttpExeption(
-          resDetMovtos.mensaje || 'Error al crear detalle de movimiento',
-          resDetMovtos.estatus || HttpStatus.INTERNAL_SERVER_ERROR
+          resDetMovtos.mensaje,
+          resDetMovtos.estatus
         );
       }
+
     }
 
+
     /* ================= COMMIT ================= */
+
     await queryRunner.commitTransaction();
 
     return this.ApiJson.customeResSuccess(
       'Traspaso Creado Exitosamente',
-      { FolMov, fecMov, usuarioAlta }
+      {
+        FolMov,
+        fecMov,
+        usuarioAlta
+      }
     );
 
-  } catch (err) {
-    await queryRunner.rollbackTransaction();
-    if (err instanceof HttpException) throw err;
-    throw new InternalServerErrorException(`Error ${err['message'] || 'Ocurrió un error interno'}`);
-  } finally {
-    await queryRunner.release();
-  }
-}
 
+  } catch (err) {
+
+    await queryRunner.rollbackTransaction();
+
+    if (err instanceof HttpException) throw err;
+
+    throw new InternalServerErrorException(
+      `Error ${err['message'] || 'Ocurrió un error interno'}`
+    );
+
+  } finally {
+
+    await queryRunner.release();
+
+  }
+
+}
   /* #endregion */
 
 
@@ -236,7 +258,7 @@ export class TraspasosService {
                     @CveBodDes = @1,
                     @CveMov = @2,
                     @SerMov  = @3,
-                    @FolMov =@4`
+                    @FolMov =@4`,
           [
           aceptarTraspaso.cveBod ?? '',
           aceptarTraspaso.CveBodDes ?? '',
@@ -256,12 +278,13 @@ export class TraspasosService {
 
       await queryRunner.commitTransaction();
       return this.ApiJson.customeResSuccess(
-        'Traspaso Creado Exitosamente',
+        'Traspaso Aceptado Exitosamente',
         {
           aceptarTraspaso
         }
       );
     } catch (err) {
+      console.log(err)
       if (err instanceof HttpException) {
         throw err;
       }
@@ -412,12 +435,18 @@ async ObtenerGeneralTraspasoMov(
         @FOLMOV = @2,
         @SERMOV = @3`;
 
-          const res: SpResponse = await this.manager.query(query, [CVEBOD, CVEMOV, FOLMOV, SERMOV]);
+          const res: any[] = await this.manager.query(query, [CVEBOD, CVEMOV, FOLMOV, SERMOV]);
      
-     if (res[0].error) {
+     if (res.length === 0) {
         this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
       };
-     return this.ApiJson.customeResSuccess(res[0].mensaje, res); 
+      
+      return this.ApiJson.customeResSuccess(
+      res[0]?.mensaje || 'Consulta exitosa',
+      {
+        res
+      },
+    );
 
     } catch (err) {
        if (err instanceof HttpException) {
