@@ -144,7 +144,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
         payloadToken.UsuarioId,
         cveBod,
         CveBodDes,
-        'TPSD'
+        'AC'
       ]
     );
 
@@ -206,6 +206,32 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
     }
 
 
+    /* ================= INSERTAR ESTATUS TRASPASO ================= */
+
+        const [resEstatusTraspaso]:SpResponse = await entityManager.query(
+             `  EXEC dbo.SP_GV_AgregarTraspasoMoveEstatus
+        @CveBod = @0,
+        @FolMov =  @1,
+        @CveMov =  @2,
+        @SerMov =  @3,
+        @UsuarioId =  @4,
+        @UsuarioAlta =  @5`,
+         [
+     cveBod, //ESTE SIEMPRE ES LA BODEGA ORIGEN
+          FolMov,
+          cveMov,
+          serMov,
+       payloadToken.UsuarioId,
+      usuarioAlta//PROVENIENTE DE LA BODEGA ORIGEN
+    ]
+        );
+
+        if (!resEstatusTraspaso[0] || resEstatusTraspaso[0].error) {
+      throw this.ApiJson.customeHttpExeption(
+        resEstatusTraspaso[0]?.mensaje || 'Error al crear el movimiento',
+        resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
     /* ================= COMMIT ================= */
 
     await queryRunner.commitTransaction();
@@ -275,6 +301,8 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
 
         }
       }
+
+
 
       await queryRunner.commitTransaction();
       return this.ApiJson.customeResSuccess(

@@ -4,10 +4,10 @@ import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { TraspasosService } from './traspasos.service';
 import { CreateTraspasoDto } from './dto/create-traspaso.dto';
 import { AceptarTraspaso } from './dto/aceptar-traspaso.dto';
-@ApiBearerAuth()
+//@ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Traspaso')
-@UseAuth()
+//@UseAuth()
 @Controller('Traspaso')
 export class TraspasosController {
   constructor(private readonly traspasosService: TraspasosService) { }
