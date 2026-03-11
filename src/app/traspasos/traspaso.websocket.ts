@@ -3,6 +3,8 @@ import { Server, Socket } from 'socket.io';
 import { TraspasosService } from "./traspasos.service";
 import { CreateTraspasoDto } from "./dto/create-traspaso.dto";
 import { AceptarTraspaso } from "./dto/aceptar-traspaso.dto";
+import { CancelarTraspaso } from "./dto/cancelar-traspaso.dto";
+import { RechazarTraspaso } from "./dto/rechazar-traspaso.dto";
 
 
 
@@ -61,4 +63,41 @@ export class TraspasoWebsocket{
     client.emit('joined-bodega', { room });
   }
 
+
+    @SubscribeMessage('cancelar-traspaso')
+    async  cancelarTraspaso(@MessageBody() dto: CancelarTraspaso, @ConnectedSocket() client: Socket){
+         const res = await this.traspasoService.cancelarTraspaso(
+            dto
+        );
+         // Room de la bodega origen y destino
+      const roomOrigen = `bodega-${dto.cveBod}`;
+
+
+
+         // Notificar a todos los clientes conectados a esas bodegas
+      this.server.to(roomOrigen).emit('traspaso-cancelado',res);
+
+       // Respuesta al cliente que hizo la solicitud
+      return { ok: true, data: res };
+
+    }
+        @SubscribeMessage('rechazar-traspaso')
+        async  rechazarTraspaso(@MessageBody() dto: RechazarTraspaso, @ConnectedSocket() client: Socket){
+             const res = await this.traspasoService.rechazarTraspaso(
+            dto
+        );
+         // Room de la bodega origen y destino
+      const roomOrigen = `bodega-${dto.cveBod}`;
+      const roomDestino = `bodega-${dto.CveBodDes}`;
+
+
+         // Notificar a todos los clientes conectados a esas bodegas
+      this.server.to(roomOrigen).emit('traspaso-rechazado',res);
+      this.server.to(roomDestino).emit('traspaso-rechazo',res);
+
+       // Respuesta al cliente que hizo la solicitud
+      return { ok: true, data: res };
+
+
+        }
 }
