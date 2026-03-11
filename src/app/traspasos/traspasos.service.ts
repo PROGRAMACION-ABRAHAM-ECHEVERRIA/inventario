@@ -9,6 +9,8 @@ import { payLoadToken } from 'src/types/types';
 import { JwtServiceCustom } from 'src/globalServices/jwt-service/jwt-service-custom';
 import { SpResponse } from 'src/types/resJson';
 import { AceptarTraspaso } from './dto/aceptar-traspaso.dto';
+import { RechazarTraspaso } from './dto/rechazar-traspaso.dto';
+import { CancelarTraspaso } from './dto/cancelar-traspaso.dto';
 
 interface response {
   error: boolean;
@@ -372,7 +374,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
   /* #region  TraspasosMovimiento */
   // Paulina May
   //Creacion 05/03/2026
-async ObtenerGeneralTraspasoMov(
+async obtenerGeneralTraspasoMov(
   CVEBOD: number,
   ESTATUSFILTER: string,
   pagina: number,
@@ -452,9 +454,222 @@ async ObtenerGeneralTraspasoMov(
 
       /* #region  TraspasosMovimiento */
   // Paulina May
+  //Creacion 11/03/2026
+async rechazarTraspaso(rechazarTraspaso: RechazarTraspaso) {
+
+  const queryRunner = this.dataSource.createQueryRunner();
+
+  try {
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    const entityManager = queryRunner.manager;
+
+    const [resRechazarTraspaso] = await entityManager.query(
+      `EXEC [dbo].[SP_GV_RechazarTraspaso]
+        @CveBod = @0,
+        @CveBodDes = @1,
+        @CveMov = @2,
+        @SerMov = @3,
+        @FolMov = @4,
+        @UsuarioAlta = @5,
+        @UsuarioId = @6`,
+      [
+        rechazarTraspaso.cveBod ?? null,
+        rechazarTraspaso.CveBodDes ?? null,
+        rechazarTraspaso.cveMov ?? null,
+        rechazarTraspaso.serMov ?? null,
+        rechazarTraspaso.Folmov ?? null,
+        rechazarTraspaso.usuarioAlta ?? null,
+        rechazarTraspaso.UsuarioId ?? null
+      ]
+    );
+
+    // validar respuesta del SP
+    if (resRechazarTraspaso?.error) {
+
+      await queryRunner.rollbackTransaction();
+
+      this.ApiJson.customeHttpExeption(
+        resRechazarTraspaso.mensaje || 'Error al rechazar traspaso',
+        resRechazarTraspaso.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
+    }
+
+    await queryRunner.commitTransaction();
+
+    return this.ApiJson.customeResSuccess(
+      'Traspaso rechazado exitosamente',
+      {
+        rechazarTraspaso
+      }
+    );
+
+  } catch (err) {
+
+    await queryRunner.rollbackTransaction();
+
+    if (err instanceof HttpException) {
+      throw err;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${err?.message || 'Ocurrió un error interno'}`
+    );
+
+  } finally {
+
+    await queryRunner.release();
+
+  }
+}
+  /* #endregion */
+
+       /* #region  TraspasosMovimiento */
+  // Paulina May
+  //Creacion 11/03/2026
+async cancelarTraspaso(cancelarTraspaso: CancelarTraspaso){
+
+  const queryRunner = this.dataSource.createQueryRunner();
+
+  try {
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    const entityManager = queryRunner.manager;
+
+    const [resCancelarTraspaso] = await entityManager.query(
+      `EXEC [dbo].[SP_GV_CancelarTraspasoBodega]
+        @CveBod = @0,
+        @CveMov = @1,
+        @SerMov = @2,
+        @FolMov = @3,
+        @UsuarioAlta = @4,
+        @UsuarioId = @5`,
+      [
+        cancelarTraspaso.cveBod ?? null,
+        cancelarTraspaso.cveMov ?? null,
+        cancelarTraspaso.serMov ?? null,
+        cancelarTraspaso.Folmov ?? null,
+        cancelarTraspaso.usuarioAlta ?? null,
+        cancelarTraspaso.UsuarioId ?? null
+      ]
+    );
+
+    // validar respuesta del SP
+    if (resCancelarTraspaso?.error) {
+
+      await queryRunner.rollbackTransaction();
+
+      this.ApiJson.customeHttpExeption(
+        resCancelarTraspaso.mensaje || 'Error al cancelar traspaso',
+        resCancelarTraspaso.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
+    }
+
+    await queryRunner.commitTransaction();
+
+    return this.ApiJson.customeResSuccess(
+      'Traspaso cancelado exitosamente',
+      {
+        cancelarTraspaso
+      }
+    );
+
+  } catch (err) {
+
+    await queryRunner.rollbackTransaction();
+
+    if (err instanceof HttpException) {
+      throw err;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${err?.message || 'Ocurrió un error interno'}`
+    );
+
+  } finally {
+
+    await queryRunner.release();
+
+  }
+}
+    /* #endregion */
+
+    
+       /* #region  TraspasosMovimiento */
+  // Paulina May
+  //Creacion 11/03/2026
+  async buscadorTraspaso(CVEBOD:number, SEARCH:string,  pagina :number,
+  limit :number){
+    try {
+        const query = `
+      EXEC [dbo].[buscadorTraspaso] @CVEBOD = @0,@SEARCH = @1
+    `;
+
+    const res: any[] = await this.manager.query(query, [CVEBOD, SEARCH]);
+
+      if (res.length == 0) {
+        this.ApiJson.customeHttpExeption('No se encontro ', 404); 
+      };
+
+      // Función para formatear Date a SQL Server sin conversión de zona horaria
+    const formatDateToSQL = (date: Date | string | null): string | null => {
+      if (!date) return null;
+      let d: Date;
+      if (typeof date === 'string') {
+        d = new Date(date);
+      } else {
+        d = date;
+      }
+      const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+             `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+    };
+        //Formateamos la fecha
+    const formattedRes = res.map(item => ({
+      ...item,
+      FechaAlta: formatDateToSQL(item.FechaAlta),
+    }));
+
+    // PAGINACIÓN
+  const total = formattedRes.length;
+    const totalPginas = Math.ceil(total / limit);
+    const start = (pagina - 1) * limit;
+    const data = formattedRes.slice(start, start + limit);
+
+       return this.ApiJson.customeResSuccess(
+      res[0]?.mensaje || 'Consulta exitosa',
+      {
+       pagina,
+        limit,
+        total,
+        totalPginas,
+        data,
+      },
+    );
+      
+    } catch (err) {
+             if (err instanceof HttpException) {
+        throw err;
+      }
+      throw new InternalServerErrorException(
+        `Error ${err['message'] || 'Ocurrió un error interno'}`,
+      )
+    }
+  }
+
+      /* #endregion */
+
+      /* #region  TraspasosMovimiento */
+  // Paulina May
   //Creacion 05/03/2026
 
-  async ObteneDetalleTraspasoMov(CVEBOD: number, CVEMOV: number, FOLMOV: number, SERMOV:string){
+  async obteneDetalleTraspasoMov(CVEBOD: number, CVEMOV: number, FOLMOV: number, SERMOV:string){
     try {
         const query = `
       EXEC dbo.SP_GV_ObteneDetalleTraspasoMov

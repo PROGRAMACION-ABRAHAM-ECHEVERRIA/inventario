@@ -4,6 +4,8 @@ import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { TraspasosService } from './traspasos.service';
 import { CreateTraspasoDto } from './dto/create-traspaso.dto';
 import { AceptarTraspaso } from './dto/aceptar-traspaso.dto';
+import { RechazarTraspaso } from './dto/rechazar-traspaso.dto';
+import { CancelarTraspaso } from './dto/cancelar-traspaso.dto';
 //@ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Traspaso')
@@ -56,6 +58,69 @@ createTraspaso(@Body() createTraspasoDto: CreateTraspasoDto) {
     return this.traspasosService.aceptarMovimientoTraspaso(aceptarTraspaso);
   }
 
+  @Post('rechazar-traspaso')
+  @ApiOperation({
+    summary: 'Rechazar Traspaso',
+    description: 'Reachazar traspaso unicamente aplica en bodega destino',
+  })
+  @HttpCode(HttpStatus.OK)
+    @ApiBody({
+    type: RechazarTraspaso,
+    description: 'Datos necesarios para rechazar el traspaso',
+  })
+    @ApiResponse({
+    status: 200,
+    description: 'Traspaso rechazado exitosamente',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Error en los datos enviados',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Error interno del servidor',
+  })
+  async rechazarTraspaso(
+    @Body() rechazarTraspaso: RechazarTraspaso
+  ) {
+
+    return await this.traspasosService.rechazarTraspaso(rechazarTraspaso);
+
+  }
+
+    @Post('cancelar-traspaso')
+      @ApiOperation({
+    summary: 'Cancelar Traspaso',
+    description: 'Cancelar traspaso unicamente aplica en bodega Origen',
+  })
+
+    @HttpCode(HttpStatus.OK)
+    @ApiBody({
+    type: RechazarTraspaso,
+    description: 'Datos necesarios para rechazar el traspaso',
+  })
+    @ApiResponse({
+    status: 200,
+    description: 'Traspaso cancelado exitosamente',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Error en los datos enviados',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Error interno del servidor',
+  })
+
+    async cancelarTraspaso(
+    @Body() cancelarTraspaso: CancelarTraspaso
+  ) {
+
+    return await this.traspasosService.rechazarTraspaso(cancelarTraspaso);
+
+  }
+  
+
   @ApiOperation({ summary: 'Obtener todas los traspasos por bodega' })
   @ApiQuery({ name: 'ESTATUSFILTER', required: false })
   @Get(':CVEBOD')
@@ -65,7 +130,7 @@ createTraspaso(@Body() createTraspasoDto: CreateTraspasoDto) {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.traspasosService.ObtenerGeneralTraspasoMov(
+    return this.traspasosService.obtenerGeneralTraspasoMov(
       Number(CVEBOD),
       ESTATUSFILTER ?? '',
       Number(page) || 1,
@@ -81,13 +146,39 @@ createTraspaso(@Body() createTraspasoDto: CreateTraspasoDto) {
     @Param('FOLMOV') FOLMOV: number,
     @Query('SERMOV') SERMOV?: string,
   ) {
-    return this.traspasosService.ObteneDetalleTraspasoMov(
+    return this.traspasosService.obteneDetalleTraspasoMov(
       Number(CVEBOD),
       Number(CVEMOV),
       Number(FOLMOV),
       SERMOV ?? '',
     );
   }
+
+
+  @ApiOperation({ summary: 'Buscador' })
+@ApiQuery({ name: 'CVEBOD', required: true, type: Number, description: 'Clave de la bodega (obligatorio)' })
+@ApiQuery({ name: 'page', required: false, type: Number })
+@ApiQuery({ name: 'limit', required: false, type: Number })
+@ApiQuery({ name: 'SEARCH', required: false, type: String })
+@Get('Buscador/BuscarTraspasos') 
+buscadorTraspaso(
+  @Query('CVEBOD') CVEBOD: number,
+  @Query('page') page?: number,
+  @Query('limit') limit?: number,
+  @Query('SEARCH') Search?: string,
+){
+const searchValue = Search?.trim() ? Search.trim() : '';
+
+return this.traspasosService.buscadorTraspaso(
+  CVEBOD,
+  String(searchValue),
+  Number(page) || 1,
+  Number(limit) || 25,
+);
+}
+
+
+
 
 
 
