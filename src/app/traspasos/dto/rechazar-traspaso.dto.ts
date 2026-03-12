@@ -8,8 +8,6 @@ export class RechazarTraspaso extends PartialType(OmitType(TraspasoDto, ['movimi
         @ApiProperty({ description: 'Folio movimiento' })
         Folmov: number;
 
-        @IsNumber()
-        @ApiProperty({ description: 'id user SSO' })
-        UsuarioId:number;
+     
 
 }

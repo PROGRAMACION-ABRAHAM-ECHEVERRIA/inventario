@@ -213,13 +213,15 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
         const [resEstatusTraspaso]:SpResponse = await entityManager.query(
              `  EXEC dbo.SP_GV_AgregarTraspasoMoveEstatus
         @CveBod = @0,
-        @FolMov =  @1,
-        @CveMov =  @2,
-        @SerMov =  @3,
-        @UsuarioId =  @4,
-        @UsuarioAlta =  @5`,
+          @CveBodDes = @1
+        @FolMov =  @2,
+        @CveMov =  @3,
+        @SerMov =  @4,
+        @UsuarioId =  @5,
+        @UsuarioAlta =  @6`,
          [
      cveBod, //ESTE SIEMPRE ES LA BODEGA ORIGEN
+     CveBodDes,
           FolMov,
           cveMov,
           serMov,
@@ -277,6 +279,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
       await queryRunner.connect();
       await queryRunner.startTransaction();
       const entityManager = queryRunner.manager;
+      const payloadToken: payLoadToken = this.jwtServiceCustom.payloadToken as payLoadToken;
 
       /* ================= ACEPTAR TRASPASO================= */
       for (const articulo of aceptarTraspaso.articulo!) {
@@ -465,6 +468,7 @@ async rechazarTraspaso(rechazarTraspaso: RechazarTraspaso) {
     await queryRunner.startTransaction();
 
     const entityManager = queryRunner.manager;
+    const payloadToken: payLoadToken = this.jwtServiceCustom.payloadToken as payLoadToken;
 
     const [resRechazarTraspaso] = await entityManager.query(
       `EXEC [dbo].[SP_GV_RechazarTraspaso]
@@ -476,13 +480,13 @@ async rechazarTraspaso(rechazarTraspaso: RechazarTraspaso) {
         @UsuarioAlta = @5,
         @UsuarioId = @6`,
       [
-        rechazarTraspaso.cveBod ?? null,
-        rechazarTraspaso.CveBodDes ?? null,
-        rechazarTraspaso.cveMov ?? null,
-        rechazarTraspaso.serMov ?? null,
-        rechazarTraspaso.Folmov ?? null,
-        rechazarTraspaso.usuarioAlta ?? null,
-        rechazarTraspaso.UsuarioId ?? null
+        rechazarTraspaso.cveBod ?? '',
+        rechazarTraspaso.CveBodDes ?? '',
+        rechazarTraspaso.cveMov ?? '',
+        rechazarTraspaso.serMov ?? '',
+        rechazarTraspaso.Folmov ?? '',
+        rechazarTraspaso.usuarioAlta ?? '',
+              payloadToken.UsuarioId, 
       ]
     );
 
@@ -538,24 +542,27 @@ async cancelarTraspaso(cancelarTraspaso: CancelarTraspaso){
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
+    const payloadToken: payLoadToken = this.jwtServiceCustom.payloadToken as payLoadToken;
 
     const entityManager = queryRunner.manager;
 
     const [resCancelarTraspaso] = await entityManager.query(
       `EXEC [dbo].[SP_GV_CancelarTraspasoBodega]
         @CveBod = @0,
-        @CveMov = @1,
-        @SerMov = @2,
-        @FolMov = @3,
-        @UsuarioAlta = @4,
-        @UsuarioId = @5`,
+         @CveBodDe =@1,
+        @CveMov = @2,
+        @SerMov = @3,
+        @FolMov = @4,
+        @UsuarioAlta = @5,
+        @UsuarioId = @6`,
       [
-        cancelarTraspaso.cveBod ?? null,
-        cancelarTraspaso.cveMov ?? null,
-        cancelarTraspaso.serMov ?? null,
-        cancelarTraspaso.Folmov ?? null,
-        cancelarTraspaso.usuarioAlta ?? null,
-        cancelarTraspaso.UsuarioId ?? null
+        cancelarTraspaso.CveBodDes??'',
+        cancelarTraspaso.cveBod ?? '',
+        cancelarTraspaso.cveMov ?? '',
+        cancelarTraspaso.serMov ?? '',
+        cancelarTraspaso.Folmov ?? '',
+        cancelarTraspaso.usuarioAlta ?? '',
+            payloadToken.UsuarioId,
       ]
     );
 
