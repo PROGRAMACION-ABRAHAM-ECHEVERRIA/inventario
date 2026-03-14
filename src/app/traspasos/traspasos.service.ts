@@ -209,33 +209,32 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
 
 
     /* ================= INSERTAR ESTATUS TRASPASO ================= */
-
-        const [resEstatusTraspaso]:SpResponse = await entityManager.query(
-             `  EXEC dbo.SP_GV_AgregarTraspasoMoveEstatus
-        @CveBod = @0,
-          @CveBodDes = @1
-        @FolMov =  @2,
-        @CveMov =  @3,
-        @SerMov =  @4,
-        @UsuarioId =  @5,
-        @UsuarioAlta =  @6`,
-         [
-     cveBod, //ESTE SIEMPRE ES LA BODEGA ORIGEN
-     CveBodDes,
-          FolMov,
-          cveMov,
-          serMov,
-       payloadToken.UsuarioId,
-      usuarioAlta//PROVENIENTE DE LA BODEGA ORIGEN
-    ]
-        );
-
-        if (!resEstatusTraspaso[0] || resEstatusTraspaso[0].error) {
-      throw this.ApiJson.customeHttpExeption(
-        resEstatusTraspaso[0]?.mensaje || 'Error al crear el movimiento',
-        resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
+const [resEstatusTraspaso]: SpResponse = await entityManager.query(
+  `EXEC dbo.SP_GV_AgregarTraspasoMoveEstatus
+    @CveBod = @0,
+    @CveBodDes = @1,
+    @FolMov = @2,
+    @CveMov = @3,
+    @SerMov = @4,
+    @UsuarioId = @5,
+    @UsuarioAlta = @6`,
+  [
+    cveBod,
+    CveBodDes,
+    FolMov,
+    cveMov,
+    serMov,
+    payloadToken.UsuarioId,
+    usuarioAlta
+  ]
+);
+console.log(resEstatusTraspaso)
+if ( resEstatusTraspaso?.error) {
+  throw this.ApiJson.customeHttpExeption(
+    resEstatusTraspaso?.mensaje || 'Error al crear el traspaso',
+    resEstatusTraspaso?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
+  );
+}
     /* ================= COMMIT ================= */
 
     await queryRunner.commitTransaction();
@@ -251,7 +250,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
 
 
   } catch (err) {
-
+     console.log(err)
     await queryRunner.rollbackTransaction();
 
     if (err instanceof HttpException) throw err;
@@ -349,6 +348,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
       ,[LOGIN]
       ,[CveEstatus]
   FROM [SICAVI].[dbo].[VW_GV_TRASPASOS]`
+
       let res = await this.manager.query(query);
       if (res.length == 0) {
         this.ApiJson.customeHttpExeption('Movimientos por entrada no disponible', HttpStatus.NOT_FOUND)
@@ -390,12 +390,12 @@ async obtenerGeneralTraspasoMov(
         @CVEBOD = @0,
         @ESTATUSFILTER = @1
     `;
-
+console.log(query)
     const res: any[] = await this.manager.query(query, [
       CVEBOD,
       ESTATUSFILTER
     ]);
-
+ console.log(res)
     if (res.length == 0) {
       this.ApiJson.customeHttpExeption('No hay traspasos', 404);
     }
@@ -442,7 +442,7 @@ async obtenerGeneralTraspasoMov(
     );
 
   } catch (err) {
-
+    console.log(err)
     if (err instanceof HttpException) {
       throw err;
     }
@@ -684,21 +684,24 @@ async cancelarTraspaso(cancelarTraspaso: CancelarTraspaso){
         @CVEMOV = @1,
         @FOLMOV = @2,
         @SERMOV = @3`;
-
+        console.log(query)
           const res: any[] = await this.manager.query(query, [CVEBOD, CVEMOV, FOLMOV, SERMOV]);
-     
-     if (res.length === 0) {
-        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
-      };
+     console.log(res)
+ if (res.length === 0) {
+      throw this.ApiJson.customeHttpExeption(
+        'No se encontraron registros para la bodega seleccionada',
+        404
+      ); 
+    }
       
-      return this.ApiJson.customeResSuccess(
-      res[0]?.mensaje || 'Consulta exitosa',
-      {
-        res
-      },
+    return this.ApiJson.customeResSuccess(
+      'Consulta exitosa',
+      { res }
     );
 
+
     } catch (err) {
+      console.log(err)
        if (err instanceof HttpException) {
         throw err;
       }
