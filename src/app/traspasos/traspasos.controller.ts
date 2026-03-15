@@ -6,10 +6,10 @@ import { CreateTraspasoDto } from './dto/create-traspaso.dto';
 import { AceptarTraspaso } from './dto/aceptar-traspaso.dto';
 import { RechazarTraspaso } from './dto/rechazar-traspaso.dto';
 import { CancelarTraspaso } from './dto/cancelar-traspaso.dto';
-@ApiBearerAuth()
+//@ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Traspaso')
-@UseAuth()
+//@UseAuth()
 @Controller('Traspaso')
 export class TraspasosController {
   constructor(private readonly traspasosService: TraspasosService) { }
@@ -138,21 +138,26 @@ createTraspaso(@Body() createTraspasoDto: CreateTraspasoDto) {
     );
   }
   @ApiOperation({ summary: 'Obtener detalle por traspaso' })
-  @ApiQuery({ name: 'SERMOV', required: false })
-  @Get(':CVEBOD/:CVEMOV/:FOLMOV')
-  ObteneDetalleTraspasoMov(
-    @Param('CVEBOD') CVEBOD: number,
-    @Param('CVEMOV') CVEMOV: number,
-    @Param('FOLMOV') FOLMOV: number,
-    @Query('SERMOV') SERMOV?: string,
-  ) {
-    return this.traspasosService.obteneDetalleTraspasoMov(
-      Number(CVEBOD),
-      Number(CVEMOV),
-      Number(FOLMOV),
-      SERMOV ?? '',
-    );
-  }
+  @ApiQuery({ name: 'SERIEORIGEN', required: false })
+  @ApiQuery({name:'SERIEDESTINO', required:false})
+  @Get()
+ObteneDetalleTraspasoMov(
+  @Query('CVEBOD') CVEBOD: number,
+  @Query('CVEBODDES') CVEBODDES: number,
+  @Query('CVEMOV') CVEMOV: number,
+  @Query('FOLMOV') FOLMOV: number,
+  @Query('SERIEORIGEN') SERIEORIGEN?: string,
+  @Query('SERIEDESTINO') SERIEDESTINO?: string,
+) {
+  return this.traspasosService.obteneDetalleTraspasoMov(
+    Number(CVEBOD),
+    Number(CVEBODDES),
+    Number(CVEMOV),
+    Number(FOLMOV),
+    SERIEORIGEN ?? '',
+    SERIEDESTINO ?? '',
+  );
+}
 
 
   @ApiOperation({ summary: 'Buscador' })

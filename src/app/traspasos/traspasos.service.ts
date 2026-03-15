@@ -676,41 +676,59 @@ async cancelarTraspaso(cancelarTraspaso: CancelarTraspaso){
   // Paulina May
   //Creacion 05/03/2026
 
-  async obteneDetalleTraspasoMov(CVEBOD: number, CVEMOV: number, FOLMOV: number, SERMOV:string){
-    try {
-        const query = `
+  async obteneDetalleTraspasoMov(
+  CVEBOD: number,
+  CVEBODDES: number,
+  CVEMOV: number,
+  FOLMOV: number,
+  SERIEORIGEN: string,
+  SERIEDESTINO: string
+) {
+  try {
+    const query = `
       EXEC dbo.SP_GV_ObteneDetalleTraspasoMov
         @CVEBOD = @0,
-        @CVEMOV = @1,
-        @FOLMOV = @2,
-        @SERMOV = @3`;
-        console.log(query)
-          const res: any[] = await this.manager.query(query, [CVEBOD, CVEMOV, FOLMOV, SERMOV]);
-     console.log(res)
- if (res.length === 0) {
+        @CVEBODDES = @1,
+        @CVEMOV = @2,
+        @FOLMOV = @3,
+        @SERIEORIGEN = @4,
+        @SERIEDESTINO = @5`;
+    
+    console.log('Executing query:', query);
+
+    const res: any[] = await this.manager.query(query, [
+      CVEBOD,
+      CVEBODDES,
+      CVEMOV,
+      FOLMOV,
+      SERIEORIGEN,
+      SERIEDESTINO
+    ]);
+
+    console.log('Query result:', res);
+
+    if (res.length === 0) {
       throw this.ApiJson.customeHttpExeption(
         'No se encontraron registros para la bodega seleccionada',
         404
-      ); 
+      );  
     }
-      
+    
     return this.ApiJson.customeResSuccess(
       'Consulta exitosa',
       { res }
     );
 
-
-    } catch (err) {
-      console.log(err)
-       if (err instanceof HttpException) {
-        throw err;
-      }
-      throw new InternalServerErrorException(
-        `Error ${err['message'] || 'Ocurrió un error interno'}`,
-      )
-      
+  } catch (err) {
+    console.log(err);
+    if (err instanceof HttpException) {
+      throw err;
     }
+    throw new InternalServerErrorException(
+      `Error ${err['message'] || 'Ocurrió un error interno'}`,
+    );
   }
+}
 
       /* #endregion */
 
