@@ -272,62 +272,73 @@ if ( resEstatusTraspaso?.error) {
   /* #region  CrearTraspaso */
   // Paulina May
   //Creacion 02/03/2026
-  async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    try {
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
-      const entityManager = queryRunner.manager;
-      const payloadToken: payLoadToken = this.jwtServiceCustom.payloadToken as payLoadToken;
+async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
 
-      /* ================= ACEPTAR TRASPASO================= */
-      for (const articulo of aceptarTraspaso.articulo!) {
-        const [resAceptarTraspaso]: SpResponse = await entityManager.query(
-          `EXEC [dbo].[SP_GV_AceptarTraspaso]
-                  @CveBod   = @0,
-                    @CveBodDes = @1,
-                    @CveMov = @2,
-                    @SerMov  = @3,
-                    @FolMov =@4`,
-          [
-          aceptarTraspaso.cveBod ?? '',
-          aceptarTraspaso.CveBodDes ?? '',
-          aceptarTraspaso.cveMov ?? '',
-          aceptarTraspaso.serMov ?? '',
-          aceptarTraspaso.Folmov ?? ''
-          ]
-        );
-        if (resAceptarTraspaso?.error) {
-          this.ApiJson.customeHttpExeption(
-            resAceptarTraspaso.mensaje || 'Error al crear detalle de movimiento',
-            resAceptarTraspaso.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
-          );
+  const queryRunner = this.dataSource.createQueryRunner();
 
-        }
-      }
+  try {
 
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
+    const entityManager = queryRunner.manager;
 
-      await queryRunner.commitTransaction();
-      return this.ApiJson.customeResSuccess(
-        'Traspaso Aceptado Exitosamente',
-        {
-          aceptarTraspaso
-        }
+    /* ================= ACEPTAR TRASPASO ================= */
+
+    const [resAceptarTraspaso]: SpResponse = await entityManager.query(
+      `EXEC [dbo].[SP_GV_AceptarTraspaso]
+          @CveBod      = @0,
+          @CveBodDes   = @1,
+          @CveMov      = @2,
+          @SerMov      = @3,
+          @FolMov      = @4,
+          @UsuarioAlta = @5`,
+      [
+        aceptarTraspaso.cveBod ?? '',
+        aceptarTraspaso.CveBodDes ?? '',
+        aceptarTraspaso.cveMov ?? '',
+        aceptarTraspaso.serMov ?? '',
+        aceptarTraspaso.Folmov ?? '',
+        aceptarTraspaso.usuarioAlta?? ''
+
+      ]
+    );
+
+    console.log(resAceptarTraspaso);
+
+    if (resAceptarTraspaso?.error) {
+      this.ApiJson.customeHttpExeption(
+        resAceptarTraspaso.mensaje || 'Error al aceptar traspaso',
+        resAceptarTraspaso.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
       );
-    } catch (err) {
-      console.log(err)
-      if (err instanceof HttpException) {
-        throw err;
-      }
-      throw new InternalServerErrorException(
-        `Error ${err['message'] || 'Ocurrio un error interno'}`
-      )
-
-
     }
 
+    await queryRunner.commitTransaction();
+
+    return this.ApiJson.customeResSuccess(
+      'Traspaso Aceptado Exitosamente',
+      {
+        aceptarTraspaso
+      }
+    );
+
+  } catch (err) {
+         console.log(err);
+    await queryRunner.rollbackTransaction();
+ 
+
+    if (err instanceof HttpException) {
+      throw err;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${err['message'] || 'Ocurrió un error interno'}`
+    );
+
+  } finally {
+    await queryRunner.release();
   }
+}
 
   /* #endregion */
 

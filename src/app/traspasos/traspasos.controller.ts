@@ -6,10 +6,10 @@ import { CreateTraspasoDto } from './dto/create-traspaso.dto';
 import { AceptarTraspaso } from './dto/aceptar-traspaso.dto';
 import { RechazarTraspaso } from './dto/rechazar-traspaso.dto';
 import { CancelarTraspaso } from './dto/cancelar-traspaso.dto';
-//@ApiBearerAuth()
+@ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Traspaso')
-//@UseAuth()
+@UseAuth()
 @Controller('Traspaso')
 export class TraspasosController {
   constructor(private readonly traspasosService: TraspasosService) { }
@@ -31,32 +31,35 @@ createTraspaso(@Body() createTraspasoDto: CreateTraspasoDto) {
   }
 
 @Post('aceptar-traspaso')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Aceptar movimiento de traspaso',
-    description: 'Acepta un movimiento de traspaso ejecutando el SP_GV_AceptarTraspaso',
-  })
-  @ApiBody({
-    type: AceptarTraspaso,
-    description: 'Datos necesarios para aceptar el traspaso',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Traspaso aceptado exitosamente',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Error en los datos enviados',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Error interno del servidor',
-  })
-  async aceptarMovimientoTraspaso(
-    @Body() aceptarTraspaso: AceptarTraspaso,
-  ) {
-    return this.traspasosService.aceptarMovimientoTraspaso(aceptarTraspaso);
-  }
+@HttpCode(HttpStatus.OK)
+@ApiOperation({
+  summary: 'Aceptar traspaso',
+  description: 'Acepta un movimiento de traspaso entre bodegas ejecutando el SP_GV_AceptarTraspaso',
+})
+@ApiBody({
+  type: AceptarTraspaso,
+  description: 'Datos del movimiento de traspaso a aceptar',
+})
+@ApiResponse({
+  status: 200,
+  description: 'Traspaso aceptado correctamente',
+})
+@ApiResponse({
+  status: 400,
+  description: 'Datos inválidos en la solicitud',
+})
+@ApiResponse({
+  status: 500,
+  description: 'Error interno del servidor',
+})
+async aceptarMovimientoTraspaso(
+  @Body(new ValidationPipe({ whitelist: true }))
+  aceptarTraspaso: AceptarTraspaso,
+) {
+  return await this.traspasosService.aceptarMovimientoTraspaso(
+    aceptarTraspaso,
+  );
+}
 
   @Post('rechazar-traspaso')
   @ApiOperation({
@@ -123,9 +126,9 @@ createTraspaso(@Body() createTraspasoDto: CreateTraspasoDto) {
 
   @ApiOperation({ summary: 'Obtener todas los traspasos por bodega' })
   @ApiQuery({ name: 'ESTATUSFILTER', required: false })
-  @Get(':CVEBOD')
+  @Get('General')
   ObtenerGeneralTraspasoMov(
-    @Param('CVEBOD') CVEBOD: number,
+    @Query('CVEBOD') CVEBOD: number,
     @Query('ESTATUSFILTER') ESTATUSFILTER?: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
@@ -140,7 +143,7 @@ createTraspaso(@Body() createTraspasoDto: CreateTraspasoDto) {
   @ApiOperation({ summary: 'Obtener detalle por traspaso' })
   @ApiQuery({ name: 'SERIEORIGEN', required: false })
   @ApiQuery({name:'SERIEDESTINO', required:false})
-  @Get()
+  @Get('Detalle')
 ObteneDetalleTraspasoMov(
   @Query('CVEBOD') CVEBOD: number,
   @Query('CVEBODDES') CVEBODDES: number,
