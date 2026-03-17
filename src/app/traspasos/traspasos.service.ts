@@ -143,7 +143,8 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
         0,0,0,0,0,0,
         '',
         usuarioAlta,
-        payloadToken.UsuarioId,
+        //payloadToken.UsuarioId,
+        1,
         cveBod,
         CveBodDes,
         'AC'
@@ -224,7 +225,8 @@ const [resEstatusTraspaso]: SpResponse = await entityManager.query(
     FolMov,
     cveMov,
     serMov,
-    payloadToken.UsuarioId,
+    //payloadToken.UsuarioId,
+    1,
     usuarioAlta
   ]
 );
@@ -496,15 +498,14 @@ async rechazarTraspaso(rechazarTraspaso: RechazarTraspaso) {
         rechazarTraspaso.cveMov ?? '',
         rechazarTraspaso.serMov ?? '',
         rechazarTraspaso.Folmov ?? '',
-        rechazarTraspaso.usuarioAlta ?? '',
-              payloadToken.UsuarioId, 
+        rechazarTraspaso.usuarioBaja ?? '',
+         payloadToken.UsuarioId, 
       ]
     );
-
+   console.log(rechazarTraspaso)
     // validar respuesta del SP
     if (resRechazarTraspaso?.error) {
 
-      await queryRunner.rollbackTransaction();
 
       this.ApiJson.customeHttpExeption(
         resRechazarTraspaso.mensaje || 'Error al rechazar traspaso',
@@ -560,27 +561,25 @@ async cancelarTraspaso(cancelarTraspaso: CancelarTraspaso){
     const [resCancelarTraspaso] = await entityManager.query(
       `EXEC [dbo].[SP_GV_CancelarTraspasoBodega]
         @CveBod = @0,
-         @CveBodDe =@1,
+         @CveBodDes =@1,
         @CveMov = @2,
         @SerMov = @3,
         @FolMov = @4,
         @UsuarioAlta = @5,
         @UsuarioId = @6`,
       [
-        cancelarTraspaso.CveBodDes??'',
-        cancelarTraspaso.cveBod ?? '',
+        cancelarTraspaso.cveBod??'',
+        cancelarTraspaso.CveBodDes?? '',
         cancelarTraspaso.cveMov ?? '',
         cancelarTraspaso.serMov ?? '',
         cancelarTraspaso.Folmov ?? '',
-        cancelarTraspaso.usuarioAlta ?? '',
+        cancelarTraspaso.usuarioBaja ?? '',
             payloadToken.UsuarioId,
       ]
     );
-
+ console.log(resCancelarTraspaso)
     // validar respuesta del SP
     if (resCancelarTraspaso?.error) {
-
-      await queryRunner.rollbackTransaction();
 
       this.ApiJson.customeHttpExeption(
         resCancelarTraspaso.mensaje || 'Error al cancelar traspaso',
