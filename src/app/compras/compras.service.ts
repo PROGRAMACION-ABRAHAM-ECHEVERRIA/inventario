@@ -374,6 +374,7 @@ export class ComprasService {
     try {
       const query = `SELECT [SerMov]
       ,[CveMov]
+      ,[Observ]
       ,[DESMOV]
       ,[FolMov]
       ,[CveBod]
@@ -500,7 +501,8 @@ export class ComprasService {
           ImpIva, 
           PorcIva, 
           ImpTot, 
-          ImpLet 
+          ImpLet, 
+          Observ
           FROM MOVTOS 
           WHERE CveBod = @0 AND FolMov = @1 AND CveMov = @2 AND SerMov = @3`;
 
