@@ -5,6 +5,7 @@ import { UpdateEntradaDto } from './dto/update-entrada.dto';
 import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 
+
 @ApiBearerAuth()  
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Entradas')
