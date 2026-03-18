@@ -6,10 +6,10 @@ import { CreateTraspasoDto } from './dto/create-traspaso.dto';
 import { AceptarTraspaso } from './dto/aceptar-traspaso.dto';
 import { RechazarTraspaso } from './dto/rechazar-traspaso.dto';
 import { CancelarTraspaso } from './dto/cancelar-traspaso.dto';
-@ApiBearerAuth()
+//@ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Traspaso')
-@UseAuth()
+//@UseAuth()
 @Controller('Traspaso')
 export class TraspasosController {
   constructor(private readonly traspasosService: TraspasosService) { }
@@ -125,21 +125,24 @@ export class TraspasosController {
 
 
   @ApiOperation({ summary: 'Obtener todas los traspasos por bodega' })
-  @ApiQuery({ name: 'ESTATUSFILTER', required: false })
-  @Get('General')
-  ObtenerGeneralTraspasoMov(
-    @Query('CVEBOD') CVEBOD: number,
-    @Query('ESTATUSFILTER') ESTATUSFILTER?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.traspasosService.obtenerGeneralTraspasoMov(
-      Number(CVEBOD),
-      ESTATUSFILTER ?? '',
-      Number(page) || 1,
-      Number(limit) || 30,
-    );
-  }
+@ApiQuery({ name: 'ESTATUSFILTER', required: false })
+@ApiQuery({ name: 'BUSQUEDA', required: false, description: 'Texto, número o fecha parcial para búsqueda global' })
+@Get('General')
+ObtenerGeneralTraspasoMov(
+  @Query('CVEBOD') CVEBOD: number,
+  @Query('ESTATUSFILTER') ESTATUSFILTER?: string,
+  @Query('BUSQUEDA') BUSQUEDA?: string,
+  @Query('page') page?: number,
+  @Query('limit') limit?: number,
+) {
+  return this.traspasosService.obtenerGeneralTraspasoMov(
+    Number(CVEBOD),
+    ESTATUSFILTER ?? '',
+    BUSQUEDA ?? '',
+    Number(page) || 1,
+    Number(limit) || 30,
+  );
+}
   @ApiOperation({ summary: 'Obtener detalle por traspaso' })
   @ApiQuery({ name: 'SERIEORIGEN', required: false })
   @ApiQuery({ name: 'SERIEDESTINO', required: false })

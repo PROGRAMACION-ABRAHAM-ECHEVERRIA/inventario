@@ -390,22 +390,26 @@ async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
 async obtenerGeneralTraspasoMov(
   CVEBOD: number,
   ESTATUSFILTER: string,
+  BUSQUEDA: string,
   pagina: number,
   limit: number,
 ) {
   try {
-
+    // Ejecutar SP con los 3 parámetros
     const query = `
       EXEC dbo.SP_GV_ObtenerGeneralTraspasoMov 
         @CVEBOD = @0,
-        @ESTATUSFILTER = @1
+        @ESTATUSFILTER = @1,
+        @BUSQUEDA = @2
     `;
+
     const res: any[] = await this.manager.query(query, [
       CVEBOD,
-      ESTATUSFILTER
+      ESTATUSFILTER,
+      BUSQUEDA || '', // por si viene null o undefined
     ]);
- console.log(res)
-    if (res.length == 0) {
+
+    if (res.length === 0) {
       this.ApiJson.customeHttpExeption('No hay traspasos', 404);
     }
 
@@ -414,7 +418,6 @@ async obtenerGeneralTraspasoMov(
       if (!date) return null;
 
       let d: Date;
-
       if (typeof date === 'string') {
         d = new Date(date);
       } else {
@@ -424,13 +427,15 @@ async obtenerGeneralTraspasoMov(
       const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
 
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
-        `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+             `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
     };
 
-    // Formateamos la fecha
+    // Formateamos la fecha y los decimales para que sean strings consistentes
     const formattedRes = res.map(item => ({
       ...item,
       FechaAlta: formatDateToSQL(item.FechaAlta),
+      Cant: item.Cant != null ? Number(item.Cant).toFixed(2) : null,
+      ImpTot: item.ImpTot != null ? Number(item.ImpTot).toFixed(2) : null,
     }));
 
     // PAGINACIÓN
@@ -451,7 +456,6 @@ async obtenerGeneralTraspasoMov(
     );
 
   } catch (err) {
-
     if (err instanceof HttpException) {
       throw err;
     }
