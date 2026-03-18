@@ -1,9 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, InternalServerErrorException} from '@nestjs/common';
 import { ArticulosComprasDto, CreateCompraDto } from './dto/create-compra.dto';
 import { UpdateEncabezadoFactura } from './dto/update-compra.dto';
 import { JwtServiceCustom } from 'src/globalServices/jwt-service/jwt-service-custom';
@@ -39,11 +34,10 @@ export class ComprasService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
       const entityManager = queryRunner.manager;
-      const payloadToken: payLoadToken = this.JwtServiceCustom
-        .payloadToken as payLoadToken;
+      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
 
-      const porIva =
-        CreateCompraDto.PorcIva != 0 ? CreateCompraDto.PorcIva : undefined;
+      const porIva = !CreateCompraDto.IVA ? 0 : 16;
+
       await this.validarDescuentoGlobal(
         CreateCompraDto.PorcDesc,
         CreateCompraDto.ImpTot,
@@ -176,7 +170,7 @@ export class ComprasService {
           0,
           CreateCompraDto.ImpSub,
           CreateCompraDto.ImpIva,
-          CreateCompraDto.PorcIva,
+          porIva,
           CreateCompraDto.ImpTot,
           CreateCompraDto.UsuarioAlta,
           0,
@@ -445,28 +439,47 @@ export class ComprasService {
   // Abraham Echeverria
   // 17/02/2026
   async validarDescuentoGlobal(
-    porDescuentoGlobal: number,
-    imptot: number,
-    subImpTot: number,
-    productos: ArticulosComprasDto[],
-    PorIva?: number,
-  ) {
-    const descuento = porDescuentoGlobal / 100;
-    const IVA = PorIva ? PorIva / 100 : 0;
-    let sumatoriaDescueto: number = 0;
-    productos.forEach((producto) => {
-      sumatoriaDescueto += producto.Cant * producto.PreUni * descuento;
-    });
-    const importeTotalDescuentoAplicado = subImpTot - sumatoriaDescueto;
-    const importeTotalDescuetoEIva =
-      importeTotalDescuentoAplicado + importeTotalDescuentoAplicado * IVA;
-    if (importeTotalDescuetoEIva != imptot) {
-      return this.ApiJson.customeHttpExeption(
-        'El total no coincide con la sumatoria de los productos',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  porDescuentoGlobal: number,
+  imptot: number,
+  subImpTot: number,
+  productos: ArticulosComprasDto[],
+  PorIva?: number,
+) {
+
+  const descuentoGlobal = porDescuentoGlobal / 100;
+  const IVA = PorIva ? PorIva / 100 : 0;
+
+  let subtotalCalculado = 0;
+
+  productos.forEach((producto) => {
+
+    const subtotalProducto = producto.Cant * producto.PreUni;
+
+    // descuento por producto
+    const descProducto = subtotalProducto * (producto.PorcDesc / 100);
+
+    const subtotalConDescProducto = subtotalProducto - descProducto;
+
+    // descuento global
+    const descGlobal = subtotalConDescProducto * descuentoGlobal;
+
+    const subtotalFinalProducto = subtotalConDescProducto - descGlobal;
+
+    subtotalCalculado += subtotalFinalProducto;
+
+  });
+
+  const totalConIVA = subtotalCalculado * (1 + IVA);
+
+  const totalCalculado = Math.round(totalConIVA * 100) / 100;
+
+  if (totalCalculado !== imptot) {
+    return this.ApiJson.customeHttpExeption(
+      'El total no coincide con la sumatoria de los productos',
+      HttpStatus.BAD_REQUEST,
+    );
   }
+}
   /* #endregion */
 
   /* #region getComprasDetalleTotales */ 
@@ -577,4 +590,5 @@ export class ComprasService {
     }
   }
   /* #endregion */
+
 }

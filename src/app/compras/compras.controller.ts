@@ -16,7 +16,7 @@ export class ComprasController {
   @Post()
   create(@Body() createCompraDto: CreateCompraDto) {
     return this.comprasService.create(createCompraDto);
-  }
+  }; 
 
   @Get()
   findAll() {
