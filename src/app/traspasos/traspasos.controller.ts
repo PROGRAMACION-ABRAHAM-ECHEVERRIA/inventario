@@ -6,10 +6,10 @@ import { CreateTraspasoDto } from './dto/create-traspaso.dto';
 import { AceptarTraspaso } from './dto/aceptar-traspaso.dto';
 import { RechazarTraspaso } from './dto/rechazar-traspaso.dto';
 import { CancelarTraspaso } from './dto/cancelar-traspaso.dto';
-//@ApiBearerAuth()
+@ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Traspaso')
-//@UseAuth()
+@UseAuth()
 @Controller('Traspaso')
 export class TraspasosController {
   constructor(private readonly traspasosService: TraspasosService) { }
