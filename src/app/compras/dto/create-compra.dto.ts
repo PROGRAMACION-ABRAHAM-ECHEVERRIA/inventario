@@ -81,8 +81,6 @@ export class CreateCompraDto {
   @ApiProperty({ description: 'CVEBOD' })
   CVEBOD: number;  
 
-
-
   @IsNotEmpty()
   @ApiProperty({ description: 'CveMov' })
   CveMov: number;
@@ -107,7 +105,11 @@ export class CreateCompraDto {
   // Descuento por producto
   @IsNotEmpty()
   @ApiProperty({ description: 'PorcDesc' })
-  PorcDesc: number;
+  PorcDesc: number; 
+
+  @IsNotEmpty()
+  @ApiProperty({ description: 'PorcDesc' })
+  IVA: boolean; 
 
   @IsNotEmpty()
   @ApiProperty({ description: 'ImpSub' })
@@ -117,9 +119,9 @@ export class CreateCompraDto {
   @ApiProperty({ description: 'ImpIva' })
   ImpIva: number;
 
-  @IsNotEmpty()
-  @ApiProperty({ description: 'PorcIva' })
-  PorcIva: number;
+  // @IsNotEmpty()
+  // @ApiProperty({ description: 'PorcIva' })
+  // PorcIva: number;
 
   @IsNotEmpty()
   @ApiProperty({ description: 'ImpTot' })
@@ -160,7 +162,7 @@ export class CreateCompraDto {
 
   @IsNotEmpty()
   @ApiProperty({ description: 'CVEPROVCLI' })
-  CVEPROVCLI: number
+  CVEPROVCLI: number; 
 
   @IsNotEmpty()
   @ApiProperty({ type: [ArticulosComprasDto], description: 'Lista de artículos' })
