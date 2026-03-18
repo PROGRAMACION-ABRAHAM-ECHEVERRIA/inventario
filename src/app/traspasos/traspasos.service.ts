@@ -143,8 +143,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
         0,0,0,0,0,0,
         '',
         usuarioAlta,
-        //payloadToken.UsuarioId,
-        1,
+        payloadToken.UsuarioId,
         cveBod,
         CveBodDes,
         'AC'
@@ -225,12 +224,11 @@ const [resEstatusTraspaso]: SpResponse = await entityManager.query(
     FolMov,
     cveMov,
     serMov,
-    //payloadToken.UsuarioId,
-    1,
+    payloadToken.UsuarioId,
     usuarioAlta
   ]
 );
-console.log(resEstatusTraspaso)
+
 if ( resEstatusTraspaso?.error) {
   throw this.ApiJson.customeHttpExeption(
     resEstatusTraspaso?.mensaje || 'Error al crear el traspaso',
@@ -252,7 +250,7 @@ if ( resEstatusTraspaso?.error) {
 
 
   } catch (err) {
-     console.log(err)
+
     await queryRunner.rollbackTransaction();
 
     if (err instanceof HttpException) throw err;
@@ -306,7 +304,6 @@ async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
       ]
     );
 
-    console.log(resAceptarTraspaso);
 
     if (resAceptarTraspaso?.error) {
       this.ApiJson.customeHttpExeption(
@@ -325,7 +322,7 @@ async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
     );
 
   } catch (err) {
-         console.log(err);
+  
     await queryRunner.rollbackTransaction();
  
 
@@ -403,7 +400,6 @@ async obtenerGeneralTraspasoMov(
         @CVEBOD = @0,
         @ESTATUSFILTER = @1
     `;
-console.log(query)
     const res: any[] = await this.manager.query(query, [
       CVEBOD,
       ESTATUSFILTER
@@ -455,7 +451,7 @@ console.log(query)
     );
 
   } catch (err) {
-    console.log(err)
+
     if (err instanceof HttpException) {
       throw err;
     }
@@ -502,7 +498,7 @@ async rechazarTraspaso(rechazarTraspaso: RechazarTraspaso) {
          payloadToken.UsuarioId, 
       ]
     );
-   console.log(rechazarTraspaso)
+
     // validar respuesta del SP
     if (resRechazarTraspaso?.error) {
 
@@ -714,8 +710,6 @@ async cancelarTraspaso(cancelarTraspaso: CancelarTraspaso){
       SERIEORIGEN,
       SERIEDESTINO
     ]);
-
-    console.log('Query result:', res);
 
     if (res.length === 0) {
       throw this.ApiJson.customeHttpExeption(

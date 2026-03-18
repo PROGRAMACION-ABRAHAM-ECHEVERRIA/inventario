@@ -6,10 +6,10 @@ import { CreateTraspasoDto } from './dto/create-traspaso.dto';
 import { AceptarTraspaso } from './dto/aceptar-traspaso.dto';
 import { RechazarTraspaso } from './dto/rechazar-traspaso.dto';
 import { CancelarTraspaso } from './dto/cancelar-traspaso.dto';
-//@ApiBearerAuth()
+@ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Traspaso')
-//@UseAuth()
+@UseAuth()
 @Controller('Traspaso')
 export class TraspasosController {
   constructor(private readonly traspasosService: TraspasosService) { }
@@ -163,7 +163,7 @@ export class TraspasosController {
   }
 
 
-  @ApiOperation({ summary: 'Buscador' })
+  /* @ApiOperation({ summary: 'Buscador' })
   @ApiQuery({ name: 'CVEBOD', required: true, type: Number, description: 'Clave de la bodega (obligatorio)' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -184,7 +184,7 @@ export class TraspasosController {
       Number(limit) || 25,
     );
   }
-
+ */
 
 
 
