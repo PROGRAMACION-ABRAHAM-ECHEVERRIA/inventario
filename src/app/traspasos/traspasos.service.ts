@@ -149,7 +149,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
         'AC'
       ]
     );
-
+  console.log(payloadToken.UsuarioId)
 
     if (!resMovtos[0] || resMovtos[0].error) {
       throw this.ApiJson.customeHttpExeption(
