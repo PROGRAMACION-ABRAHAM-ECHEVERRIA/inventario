@@ -132,7 +132,7 @@ export class CreateCompraDto {
   // @ApiProperty({ description: 'CveVen' })
   // CveVen: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @ApiProperty({ description: 'Observ' })
   Observ: string;
 

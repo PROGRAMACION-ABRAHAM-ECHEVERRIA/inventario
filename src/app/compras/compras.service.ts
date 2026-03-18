@@ -174,7 +174,7 @@ export class ComprasService {
           CreateCompraDto.ImpTot,
           CreateCompraDto.UsuarioAlta,
           0,
-          CreateCompraDto.Observ,
+          CreateCompraDto.Observ ? CreateCompraDto.Observ : '',
           CreateCompraDto.ImpLet,
           0,
           0,
