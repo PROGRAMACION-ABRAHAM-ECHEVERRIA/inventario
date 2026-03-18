@@ -13,27 +13,18 @@ export class SalidasController {
         return this.salidasService.salidas(salidaDTO);
     }
 
-    @Get(':cvebod')
+    @Get('all/:cvebod')
     getSalidas(@Param('cvebod') cvebod: number) {
         return this.salidasService.getSalidas(cvebod);
     }
 
     @Get(':cvebod/:folmov/:cvemov/:sermov')
     getSalida(
-        @Param('cvebod') cvebod: number,
-        @Param('folmov') folmov: number,
-        @Param('cvemov') cvemov: number,
-        @Param('sermov') sermov: string,
+        @Param('cvebod') cvebod: string,
+        @Param('folmov') folmov: string,
+        @Param('cvemov') cvemov: string,
+        @Param('sermov') sermov?: string,
     ) {
-        return this.salidasService.getSalida(cvebod, folmov, cvemov, sermov);
-    }
-
-    @Get(':cvebod/:folmov/:cvemov')
-    getSalidaNoSermov(
-        @Param('cvebod') cvebod: number,
-        @Param('folmov') folmov: number,
-        @Param('cvemov') cvemov: number,
-    ) {
-        return this.salidasService.getSalida(cvebod, folmov, cvemov, undefined);
+        return this.salidasService.getSalida(+cvebod, +folmov, +cvemov, sermov);
     }
 }
