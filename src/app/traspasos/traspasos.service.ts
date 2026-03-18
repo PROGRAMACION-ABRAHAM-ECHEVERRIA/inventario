@@ -277,54 +277,69 @@ async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
   const queryRunner = this.dataSource.createQueryRunner();
 
   try {
-
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     const entityManager = queryRunner.manager;
 
+    const {
+      cveBod,
+      CveBodDes,
+      Folmov,
+      articulo,
+      usuarioAlta,
+      cveMov,
+      serMov
+    } = aceptarTraspaso;
+  
+
+if (!articulo || articulo.length === 0) {
+  throw new HttpException(
+    'Debe enviar al menos un artículo',
+    HttpStatus.BAD_REQUEST
+  );
+}
+
     /* ================= ACEPTAR TRASPASO ================= */
+    for (const art of articulo) {
 
-    const [resAceptarTraspaso]: SpResponse = await entityManager.query(
-      `EXEC [dbo].[SP_GV_AceptarTraspaso]
-          @CveBod      = @0,
-          @CveBodDes   = @1,
-          @CveMov      = @2,
-          @SerMov      = @3,
-          @FolMov      = @4,
-          @UsuarioAlta = @5`,
-      [
-        aceptarTraspaso.cveBod ?? '',
-        aceptarTraspaso.CveBodDes ?? '',
-        aceptarTraspaso.cveMov ?? '',
-        aceptarTraspaso.serMov ?? '',
-        aceptarTraspaso.Folmov ?? '',
-        aceptarTraspaso.usuarioAlta?? ''
-
-      ]
-    );
-
-
-    if (resAceptarTraspaso?.error) {
-      this.ApiJson.customeHttpExeption(
-        resAceptarTraspaso.mensaje || 'Error al aceptar traspaso',
-        resAceptarTraspaso.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
+      const [resAceptarTraspaso]: SpResponse = await entityManager.query(
+        `EXEC [dbo].[SP_GV_AceptarTraspaso]
+            @CveBod      = @0,
+            @CveBodDes   = @1,
+            @CveMov      = @2,
+            @SerMov      = @3,
+            @FolMov      = @4,
+            @UsuarioAlta = @5`,
+        [
+          cveBod ?? '',
+          CveBodDes ?? '',
+          cveMov ?? '',
+          serMov ?? '',
+          Folmov ?? '',
+          usuarioAlta ?? ''
+        ]
       );
+
+      if (resAceptarTraspaso?.error) {
+        throw new HttpException(
+          resAceptarTraspaso.mensaje || 'Error al aceptar traspaso',
+          resAceptarTraspaso.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     }
 
+    // ✅Commit solo una vez
     await queryRunner.commitTransaction();
 
     return this.ApiJson.customeResSuccess(
       'Traspaso Aceptado Exitosamente',
-      {
-        aceptarTraspaso
-      }
+      { aceptarTraspaso }
     );
 
   } catch (err) {
-  
+
     await queryRunner.rollbackTransaction();
- 
 
     if (err instanceof HttpException) {
       throw err;
@@ -338,7 +353,6 @@ async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
     await queryRunner.release();
   }
 }
-
   /* #endregion */
 
 
