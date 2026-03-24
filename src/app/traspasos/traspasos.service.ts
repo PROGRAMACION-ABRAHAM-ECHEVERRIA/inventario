@@ -78,9 +78,11 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
           art.cant
         ]
       );
-
+  
       if (resValidacion?.error) {
+
         throw this.ApiJson.customeHttpExeption(
+          
           resValidacion.mensaje,
           resValidacion.estatus
         );
@@ -94,7 +96,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
     const movimientoData = movimiento[0];
 
     const resMovtos: Array<
-      response & { Folmov: number; fecmov: string; ImpSub: number }
+      response & { Folmov: number; fecmov: string; ImpSub: number; CveMov:number; SerMov: string; CVEBOD:number;  CveBodDes:number;  }
     > = await entityManager.query(
       `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
         @CVEBOD        = @0,
@@ -152,6 +154,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
   console.log(payloadToken.UsuarioId)
 
     if (!resMovtos[0] || resMovtos[0].error) {
+
       throw this.ApiJson.customeHttpExeption(
         resMovtos[0]?.mensaje || 'Error al crear el movimiento',
         resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
@@ -161,6 +164,8 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
 
     const FolMov = resMovtos[0].Folmov;
     const fecMov = resMovtos[0].fecmov;
+
+
 
 
     /* ================= INSERTAR DETALLES ================= */
@@ -182,10 +187,10 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
           @DesProd     = @10,
           @UsuarioAlta = @11`,
         [
-          cveBod,
+         cveBod,
           FolMov,
-          cveMov,
-          serMov,
+           cveMov ,
+         serMov,
           art.cveProd,
           art.cant,
           art.lisPre,
@@ -196,14 +201,50 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
           usuarioAlta
         ]
       );
+        //console.log('DetMov',resDetMovtos)
 
 
-      if (resDetMovtos?.error) {
-        throw this.ApiJson.customeHttpExeption(
-          resDetMovtos.mensaje,
-          resDetMovtos.estatus
-        );
+      if (!resMovtos[0] || resMovtos[0].error) {
+       // console.log('DetMov',resMovtos[0].error)
+        const mensaje = resMovtos[0]?.mensaje || 'Error al crear el movimiento';
+        const estatus =
+          resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
+        this.ApiJson.customeHttpExeption(mensaje, estatus);
       }
+
+
+    }
+  /* ================= INSERTAR ApartadoProdToMovtosTraspasos================= */
+        for (const art of articulo) { 
+          console.log('dfdgdfg')
+          const [resProdCantTempTras]:SpResponse = await entityManager.query(
+            `EXEC dbo.SP_GV_ApartadoProdToMovtosTraspasos
+              @CveBod = @0,
+              @FolMov = @1,
+              @CveMov = @2,
+              @SerMov = @3,
+              @UsuarioAlta = @4,
+                  @CveProd = @5,
+                      @Cant = @6`,
+            [
+              cveBod,
+              FolMov,
+              cveMov,
+            serMov,
+              usuarioAlta,
+              art.cveProd,
+                  art.cant
+            ]
+          )
+            console.log(resProdCantTempTras)
+          if ( resProdCantTempTras?.error) {
+            console.log(resProdCantTempTras?.error)
+                throw this.ApiJson.customeHttpExeption(
+                  resProdCantTempTras[0]?.mensaje || 'Error al insertar la existencia del producto',
+                  resProdCantTempTras[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
+                );
+              }
+
 
     }
 
@@ -221,20 +262,27 @@ const [resEstatusTraspaso]: SpResponse = await entityManager.query(
   [
     cveBod,
     CveBodDes,
-    FolMov,
-    cveMov,
-    serMov,
+      FolMov,
+   cveMov,
+     serMov,
     payloadToken.UsuarioId,
     usuarioAlta
   ]
 );
-
+       //console.log(resEstatusTraspaso)
+      // console.log('cvemov',cveMov)
+       //console.log('TIPO CveMov:', typeof cveMov);
+//console.log('VALOR CveMov:', cveMov);
 if ( resEstatusTraspaso?.error) {
+         //console.log( resEstatusTraspaso?.error)
   throw this.ApiJson.customeHttpExeption(
     resEstatusTraspaso?.mensaje || 'Error al crear el traspaso',
     resEstatusTraspaso?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
   );
 }
+
+
+
     /* ================= COMMIT ================= */
 
     await queryRunner.commitTransaction();
@@ -242,7 +290,11 @@ if ( resEstatusTraspaso?.error) {
     return this.ApiJson.customeResSuccess(
       'Traspaso Creado Exitosamente',
       {
+        cveBod,
+        CveBodDes,
+            cveMov,
         FolMov,
+       serMov,
         fecMov,
         usuarioAlta
       }
@@ -283,7 +335,6 @@ async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
     const entityManager = queryRunner.manager;
 
     const {
-      cveBod,
       CveBodDes,
       Folmov,
       articulo,
@@ -291,14 +342,33 @@ async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
       cveMov,
       serMov
     } = aceptarTraspaso;
-  
 
-if (!articulo || articulo.length === 0) {
-  throw new HttpException(
-    'Debe enviar al menos un artículo',
-    HttpStatus.BAD_REQUEST
-  );
-}
+    if (!articulo || articulo.length === 0) {
+      throw new HttpException(
+        'Debe enviar al menos un artículo',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    /* ================= OBTENER ORIGEN ================= */
+    const resMovtos = await entityManager.query(
+      `SELECT CveBod, CveBodDes, Folmov, CveMov, SerMov,FecMov
+       FROM MOVTOS
+       WHERE FolMov = @0
+         AND CveMov = @1
+         AND SerMov = @2`,
+      [Folmov, cveMov, serMov]
+    );
+
+    if (!resMovtos || resMovtos.length === 0) {
+      throw new HttpException(
+        'No se encontró el movimiento',
+        HttpStatus.NOT_FOUND
+      );
+    }
+
+    const CVEBOD = resMovtos[0].CveBod;      
+    const CVEBODDES = resMovtos[0].CveBodDes; 
 
     /* ================= ACEPTAR TRASPASO ================= */
     for (const art of articulo) {
@@ -306,16 +376,14 @@ if (!articulo || articulo.length === 0) {
       const [resAceptarTraspaso]: SpResponse = await entityManager.query(
         `EXEC [dbo].[SP_GV_AceptarTraspaso]
             @CveBod      = @0,
-            @CveBodDes   = @1,
-            @CveMov      = @2,
-            @SerMov      = @3,
-            @FolMov      = @4,
-            @UsuarioAlta = @5`,
+            @CveMov      = @1,
+            @SerMovDes      = @2,
+            @FolMov      = @3,
+            @UsuarioAlta = @4`,
         [
-          cveBod ?? '',
-          CveBodDes ?? '',
+            CveBodDes?? '', // siempre destino
           cveMov ?? '',
-          serMov ?? '',
+          serMov ?? '',//Siempre Destino
           Folmov ?? '',
           usuarioAlta ?? ''
         ]
@@ -329,12 +397,14 @@ if (!articulo || articulo.length === 0) {
       }
     }
 
-    // ✅Commit solo una vez
     await queryRunner.commitTransaction();
 
     return this.ApiJson.customeResSuccess(
       'Traspaso Aceptado Exitosamente',
-      { aceptarTraspaso }
+      {
+        CveBod: CVEBOD,  
+        aceptarTraspaso
+      }
     );
 
   } catch (err) {

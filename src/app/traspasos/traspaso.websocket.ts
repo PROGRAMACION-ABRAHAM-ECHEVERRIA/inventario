@@ -39,20 +39,20 @@ export class TraspasoWebsocket{
 
     @SubscribeMessage('aceptar-traspaso')
     async aceptarTraspaso(@MessageBody() dto: AceptarTraspaso,  @ConnectedSocket() client: Socket){
-        const aceptarTraspaso = await this.traspasoService.aceptarMovimientoTraspaso(
+        const res = await this.traspasoService.aceptarMovimientoTraspaso(
             dto
         );
          // Room de la bodega origen y destino
-      const roomOrigen = `bodega-${dto.cveBod}`;
-      const roomDestino = `bodega-${dto.CveBodDes}`;
+const roomOrigen = `bodega-${res.data[0].CveBod}`;
+const roomDestino = `bodega-${res.data[0].aceptarTraspaso[0].CveBodDes}`;
 
 
          // Notificar a todos los clientes conectados a esas bodegas
-      this.server.to(roomOrigen).emit('traspaso-aceptado',aceptarTraspaso);
-      this.server.to(roomDestino).emit('traspaso-aceptado',aceptarTraspaso);
+      this.server.to(roomOrigen).emit('traspaso-aceptado',res.data);
+      this.server.to(roomDestino).emit('traspaso-aceptado',res.data);
 
        // Respuesta al cliente que hizo la solicitud
-      return { ok: true, data: aceptarTraspaso };
+      return { ok: true, data: res };
     }
 
 // Cliente se une a una room de bodega
