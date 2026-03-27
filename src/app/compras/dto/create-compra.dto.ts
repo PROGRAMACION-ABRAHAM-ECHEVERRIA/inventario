@@ -1,4 +1,4 @@
-import { IsNotEmpty } from '@nestjs/class-validator';
+import { IsNotEmpty, IsNumber } from '@nestjs/class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
 
@@ -8,7 +8,7 @@ export class ArticulosComprasDto {
   @ApiProperty({ description: 'Lote', type: Number })
   lote: number; 
 
-  @IsNotEmpty()
+  @IsNotEmpty() 
   @ApiProperty({ description: 'Generado', type: String })
   Generado: string;
 

@@ -421,7 +421,7 @@ export class ComprasService {
         FolMov,
         CveMov,
         SerMov,
-      ]);
+      ]);  
 
       return this.ApiJson.customeResSuccess('Compras Obtenidas', getCompras);
     } catch (error) {
