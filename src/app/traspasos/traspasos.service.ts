@@ -10,7 +10,8 @@ import { JwtServiceCustom } from 'src/globalServices/jwt-service/jwt-service-cus
 import { SpResponse } from 'src/types/resJson';
 import { AceptarTraspaso } from './dto/aceptar-traspaso.dto';
 import { RechazarTraspaso } from './dto/rechazar-traspaso.dto';
-import { CancelarTraspaso } from './dto/cancelar-traspaso.dto';
+import { CancelarTraspasoDTO } from './dto/cancelar-traspaso.dto';
+
 
 interface response {
   error: boolean;
@@ -38,14 +39,14 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
     const payloadToken: payLoadToken = this.jwtServiceCustom.payloadToken as payLoadToken;
 
     const {
-      cveBod,
+      cveBodOrig,
       CveBodDes,
       tipMov,
       movimiento,
       articulo,
       usuarioAlta,
       cveMov,
-      serMov
+      serMovOrig
     } = createTraspasoDto;
 
     /* ================= VALIDACIONES ================= */
@@ -59,7 +60,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
     if (tipMov !== 6)
       throw new HttpException('El tipo de movimiento debe ser un traspaso', HttpStatus.BAD_REQUEST);
 
-    if (cveBod === CveBodDes)
+    if (cveBodOrig === CveBodDes)
       throw new HttpException('No se puede hacer un traspaso a la misma bodega', HttpStatus.BAD_REQUEST);
 
 
@@ -73,14 +74,16 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
           @CVEPROD = @1,
           @CANTIDAD = @2`,
         [
-          cveBod,
+          cveBodOrig,
           art.cveProd,
           art.cant
         ]
       );
-
+  
       if (resValidacion?.error) {
+
         throw this.ApiJson.customeHttpExeption(
+          
           resValidacion.mensaje,
           resValidacion.estatus
         );
@@ -94,7 +97,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
     const movimientoData = movimiento[0];
 
     const resMovtos: Array<
-      response & { Folmov: number; fecmov: string; ImpSub: number }
+      response & { Folmov: number; fecmov: string; ImpSub: number; CveMov:number; SerMov: string; CVEBOD:number;  CveBodDes:number;  }
     > = await entityManager.query(
       `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
         @CVEBOD        = @0,
@@ -129,9 +132,9 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
         @CveBodDes     = @29,
         @CveEstatusParam = @30`,
       [
-        cveBod,
+        cveBodOrig,
         cveMov,
-        serMov,
+        serMovOrig,
         0,0,0,0,0,0,0,0,
         movimientoData.impTot,
         0,0,
@@ -144,7 +147,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
         '',
         usuarioAlta,
         payloadToken.UsuarioId,
-        cveBod,
+        cveBodOrig,
         CveBodDes,
         'AC'
       ]
@@ -152,6 +155,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
   console.log(payloadToken.UsuarioId)
 
     if (!resMovtos[0] || resMovtos[0].error) {
+
       throw this.ApiJson.customeHttpExeption(
         resMovtos[0]?.mensaje || 'Error al crear el movimiento',
         resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
@@ -161,6 +165,8 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
 
     const FolMov = resMovtos[0].Folmov;
     const fecMov = resMovtos[0].fecmov;
+
+
 
 
     /* ================= INSERTAR DETALLES ================= */
@@ -182,10 +188,10 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
           @DesProd     = @10,
           @UsuarioAlta = @11`,
         [
-          cveBod,
+         cveBodOrig,
           FolMov,
-          cveMov,
-          serMov,
+           cveMov ,
+         serMovOrig,
           art.cveProd,
           art.cant,
           art.lisPre,
@@ -196,14 +202,50 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
           usuarioAlta
         ]
       );
+        //console.log('DetMov',resDetMovtos)
 
 
-      if (resDetMovtos?.error) {
-        throw this.ApiJson.customeHttpExeption(
-          resDetMovtos.mensaje,
-          resDetMovtos.estatus
-        );
+      if (!resMovtos[0] || resMovtos[0].error) {
+       // console.log('DetMov',resMovtos[0].error)
+        const mensaje = resMovtos[0]?.mensaje || 'Error al crear el movimiento';
+        const estatus =
+          resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
+        this.ApiJson.customeHttpExeption(mensaje, estatus);
       }
+
+
+    }
+  /* ================= INSERTAR ApartadoProdToMovtosTraspasos================= */
+        for (const art of articulo) { 
+          console.log('dfdgdfg')
+          const [resProdCantTempTras]:SpResponse = await entityManager.query(
+            `EXEC dbo.SP_GV_ApartadoProdToMovtosTraspasos
+              @CveBod = @0,
+              @FolMov = @1,
+              @CveMov = @2,
+              @SerMov = @3,
+              @UsuarioAlta = @4,
+                  @CveProd = @5,
+                      @Cant = @6`,
+            [
+              cveBodOrig,
+              FolMov,
+              cveMov,
+            serMovOrig,
+              usuarioAlta,
+              art.cveProd,
+                  art.cant
+            ]
+          )
+            console.log(resProdCantTempTras)
+          if ( resProdCantTempTras?.error) {
+            console.log(resProdCantTempTras?.error)
+                throw this.ApiJson.customeHttpExeption(
+                  resProdCantTempTras[0]?.mensaje || 'Error al insertar la existencia del producto',
+                  resProdCantTempTras[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
+                );
+              }
+
 
     }
 
@@ -219,22 +261,29 @@ const [resEstatusTraspaso]: SpResponse = await entityManager.query(
     @UsuarioId = @5,
     @UsuarioAlta = @6`,
   [
-    cveBod,
+    cveBodOrig,
     CveBodDes,
-    FolMov,
-    cveMov,
-    serMov,
+      FolMov,
+   cveMov,
+     serMovOrig,
     payloadToken.UsuarioId,
     usuarioAlta
   ]
 );
-
+       //console.log(resEstatusTraspaso)
+      // console.log('cvemov',cveMov)
+       //console.log('TIPO CveMov:', typeof cveMov);
+//console.log('VALOR CveMov:', cveMov);
 if ( resEstatusTraspaso?.error) {
+         //console.log( resEstatusTraspaso?.error)
   throw this.ApiJson.customeHttpExeption(
     resEstatusTraspaso?.mensaje || 'Error al crear el traspaso',
     resEstatusTraspaso?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
   );
 }
+
+
+
     /* ================= COMMIT ================= */
 
     await queryRunner.commitTransaction();
@@ -242,7 +291,11 @@ if ( resEstatusTraspaso?.error) {
     return this.ApiJson.customeResSuccess(
       'Traspaso Creado Exitosamente',
       {
+        cveBodOrig,
+        CveBodDes,
+            cveMov,
         FolMov,
+       serMovOrig,
         fecMov,
         usuarioAlta
       }
@@ -250,7 +303,7 @@ if ( resEstatusTraspaso?.error) {
 
 
   } catch (err) {
-
+    console.log(err)
     await queryRunner.rollbackTransaction();
 
     if (err instanceof HttpException) throw err;
@@ -283,44 +336,48 @@ async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
     const entityManager = queryRunner.manager;
 
     const {
-      cveBod,
+      CveBodOrig,
+      serMovOrig,
       CveBodDes,
       Folmov,
       articulo,
-      usuarioAlta,
+      usuarioMod,
       cveMov,
-      serMov
+       serMovDes
     } = aceptarTraspaso;
-  
+    if (!articulo || articulo.length === 0) {
+      throw new HttpException(
+        'Debe enviar al menos un artículo',
+        HttpStatus.BAD_REQUEST
+      );
+    }
 
-if (!articulo || articulo.length === 0) {
-  throw new HttpException(
-    'Debe enviar al menos un artículo',
-    HttpStatus.BAD_REQUEST
-  );
-}
-
+   
     /* ================= ACEPTAR TRASPASO ================= */
+
     for (const art of articulo) {
 
-      const [resAceptarTraspaso]: SpResponse = await entityManager.query(
+      const [resAceptarTraspaso ]:SpResponse = await entityManager.query(
         `EXEC [dbo].[SP_GV_AceptarTraspaso]
-            @CveBod      = @0,
-            @CveBodDes   = @1,
-            @CveMov      = @2,
-            @SerMov      = @3,
-            @FolMov      = @4,
-            @UsuarioAlta = @5`,
+         @FolMov       =@0,
+         @CveMov     =@1,
+          @CveBodOrig =@2,     
+    @SerMovOrig  = @3,
+         @CveBodDes    =@4,
+         @SerMovDes  =@5,
+        @UsuarioAlta =@6`,
         [
-          cveBod ?? '',
-          CveBodDes ?? '',
+            Folmov?? '', 
           cveMov ?? '',
-          serMov ?? '',
-          Folmov ?? '',
-          usuarioAlta ?? ''
+            CveBodOrig??'',
+             serMovOrig ?? '',
+          CveBodDes?? '',
+          serMovDes ?? '',
+          usuarioMod ?? ''
         ]
       );
-
+  
+  
       if (resAceptarTraspaso?.error) {
         throw new HttpException(
           resAceptarTraspaso.mensaje || 'Error al aceptar traspaso',
@@ -328,14 +385,21 @@ if (!articulo || articulo.length === 0) {
         );
       }
     }
+    
 
-    // ✅Commit solo una vez
+
     await queryRunner.commitTransaction();
 
-    return this.ApiJson.customeResSuccess(
+
+      return this.ApiJson.customeResSuccess(
       'Traspaso Aceptado Exitosamente',
-      { aceptarTraspaso }
+      {
+       aceptarTraspaso
+      }
+   
     );
+       
+
 
   } catch (err) {
 
@@ -495,25 +559,33 @@ async rechazarTraspaso(rechazarTraspaso: RechazarTraspaso) {
     await queryRunner.startTransaction();
 
     const entityManager = queryRunner.manager;
-    const payloadToken: payLoadToken = this.jwtServiceCustom.payloadToken as payLoadToken;
+     const {
+      cveMov,
+      Folmov,
+      cveBodOrig,
+      serMovOrig,
+      CveBodDes,
+      serMovDes,
+      usuarioBaja
+    } = rechazarTraspaso;
 
     const [resRechazarTraspaso] = await entityManager.query(
       `EXEC [dbo].[SP_GV_RechazarTraspaso]
-        @CveBod = @0,
-        @CveBodDes = @1,
-        @CveMov = @2,
-        @SerMov = @3,
-        @FolMov = @4,
-        @UsuarioAlta = @5,
-        @UsuarioId = @6`,
+       @CveMov = @0,
+          @FolMov = @1,
+         @CveBodOrig = @2,
+     @SerMovOrig  = @3,
+         @CveBodDes    = @4,
+           @SerMovDes    = @5,
+            @UsuarioAlta= @6`,
       [
-        rechazarTraspaso.cveBod ?? '',
-        rechazarTraspaso.CveBodDes ?? '',
-        rechazarTraspaso.cveMov ?? '',
-        rechazarTraspaso.serMov ?? '',
-        rechazarTraspaso.Folmov ?? '',
-        rechazarTraspaso.usuarioBaja ?? '',
-         payloadToken.UsuarioId, 
+        cveMov ?? '',
+  Folmov ?? '',
+  cveBodOrig ?? '',
+  serMovOrig ?? '',
+  CveBodDes ?? '',
+  serMovDes ?? '',
+  usuarioBaja ?? ''
       ]
     );
 
@@ -560,59 +632,76 @@ async rechazarTraspaso(rechazarTraspaso: RechazarTraspaso) {
        /* #region  TraspasosMovimiento */
   // Paulina May
   //Creacion 11/03/2026
-async cancelarTraspaso(cancelarTraspaso: CancelarTraspaso){
-
+async cancelarTraspasoMovimiento(cancelarTraspasoDto: CancelarTraspasoDTO) {
   const queryRunner = this.dataSource.createQueryRunner();
 
   try {
-
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    const payloadToken: payLoadToken = this.jwtServiceCustom.payloadToken as payLoadToken;
 
-    const entityManager = queryRunner.manager;
+     const entityManager = queryRunner.manager;
 
-    const [resCancelarTraspaso] = await entityManager.query(
+const {
+      cveMov,
+      Folmov,
+      cveBodOrig,
+      serMovOrig,
+      CveBodDes,
+      serMovDes,
+      usuarioBaja
+    } = cancelarTraspasoDto;
+    // Ejecutamos el SP con los parámetros correctos
+   
+    console.log(`Enviando al SP: CveMov=${cveMov}, FolMov=${Folmov}`);
+    const [resCancelarTraspaso]:SpResponse = await entityManager.query(
       `EXEC [dbo].[SP_GV_CancelarTraspasoBodega]
-        @CveBod = @0,
-         @CveBodDes =@1,
-        @CveMov = @2,
-        @SerMov = @3,
-        @FolMov = @4,
-        @UsuarioAlta = @5,
-        @UsuarioId = @6`,
+        @CveMov = @0,
+          @FolMov = @1,
+         @CveBodOrig = @2,
+     @SerMovOrig  = @3,
+         @CveBodDes    = @4,
+           @SerMovDes    = @5,
+            @UsuarioAlta= @6`,
       [
-        cancelarTraspaso.cveBod??'',
-        cancelarTraspaso.CveBodDes?? '',
-        cancelarTraspaso.cveMov ?? '',
-        cancelarTraspaso.serMov ?? '',
-        cancelarTraspaso.Folmov ?? '',
-        cancelarTraspaso.usuarioBaja ?? '',
-            payloadToken.UsuarioId,
+        
+cveMov ?? '',
+  Folmov ?? '',
+  cveBodOrig ?? '',
+  serMovOrig ?? '',
+  CveBodDes ?? '',
+  serMovDes ?? '',
+  usuarioBaja ?? ''
+ 
+/*         7,
+        5,
+        3,
+        'B',
+        7,
+        'G',
+        'PauDevTest'  */
       ]
     );
- console.log(resCancelarTraspaso)
-    // validar respuesta del SP
+
+    console.log('SP Response:', resCancelarTraspaso);
+
+    // Si el SP devolvió error, lanzamos HttpException con el mismo estatus
     if (resCancelarTraspaso?.error) {
-
-      this.ApiJson.customeHttpExeption(
+   
+      throw new HttpException(
         resCancelarTraspaso.mensaje || 'Error al cancelar traspaso',
-        resCancelarTraspaso.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
+        resCancelarTraspaso.estatus || HttpStatus.INTERNAL_SERVER_ERROR
       );
-
     }
 
     await queryRunner.commitTransaction();
 
+    // Retornamos la respuesta exitosa
     return this.ApiJson.customeResSuccess(
       'Traspaso cancelado exitosamente',
-      {
-        cancelarTraspaso
-      }
+   cancelarTraspasoDto
     );
 
   } catch (err) {
-
     await queryRunner.rollbackTransaction();
 
     if (err instanceof HttpException) {
@@ -622,11 +711,8 @@ async cancelarTraspaso(cancelarTraspaso: CancelarTraspaso){
     throw new InternalServerErrorException(
       `Error ${err?.message || 'Ocurrió un error interno'}`
     );
-
   } finally {
-
     await queryRunner.release();
-
   }
 }
     /* #endregion */

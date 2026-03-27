@@ -5,34 +5,35 @@ import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } fr
 export class TraspasoDto {
   @IsNumber()
   @ApiProperty({ description: 'Clave de bodega Origen' })
-  cveBod: number;
+  cveBodOrig: number;
+    @IsString()
+  @ApiProperty({ description: 'Serie de movimiento Origen' })
+  serMovOrig: string;
+
   @IsNumber()
   @ApiProperty({ description: 'Clave de bodega Destino' })
   CveBodDes: number;
 
 
-  @IsString()
+  @IsNumber()
   @ApiProperty({ description: 'Clave de movimiento' })
-  cveMov: string;
-
-  @IsString()
-  @ApiProperty({ description: 'Serie de movimiento' })
-  serMov: string;
-
+  cveMov: number;
 
   @IsNumber()
   @ApiProperty({ description: 'Tipo de Movimeinto' })
   tipMov: number;
 
+
+
   @IsString()
   @ApiProperty({ description: 'Usuario Alta' })
   usuarioAlta: string;
     /* ===== ARTICULOS ===== */
-  @ApiProperty({ type: () => ArticuloDto, isArray: true })
+  @ApiProperty({ type: () => ProductoDto, isArray: true })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => ArticuloDto)
-  articulo: ArticuloDto[];
+  @Type(() => ProductoDto)
+  articulo: ProductoDto[];
 
   /* ===== MOVIMIENTO ===== */
   @ApiProperty({ type: () => MovimientoDto, isArray: true })
@@ -148,24 +149,27 @@ export class MovimientoDto {
 
 
 
-export class ArticuloDto {
+export class ProductoDto {
 
   @ApiProperty({ description: 'Clave del producto' })
   @IsString()
   cveProd: string;
-
-  ;
-
+    @ApiProperty({ description: 'Descripción del producto' })
+  @IsString()
+  desProd: string;
   @ApiProperty({ description: 'Lista de precios' })
   @IsNumber()
   lisPre: number;
 
   @ApiProperty({ description: 'Precio unitario' })
   @IsNumber()
-  preUni: number;
-    @ApiProperty({ description: 'Cantidad' })
+  preUni: number; 
+
+  @ApiProperty({ description: 'Cantidad' })
   @IsNumber()
-  cant: number;
+  cant: number; 
+
+
 
   /*   
           @ApiProperty({ description: 'Cantidad' })
@@ -176,11 +180,9 @@ export class ArticuloDto {
     @IsNumber()
     porcentaje: number; */
 
-  /*   @ApiProperty({ description: 'Importe total' })
+   /*   @ApiProperty({ description: 'Importe total' })
     @IsNumber()
-    importeTotal: number;
-   */
-  @ApiProperty({ description: 'Descripción del producto' })
-  @IsString()
-  desProd: string;
+    importeTotal: number; */
+   
+
 }
