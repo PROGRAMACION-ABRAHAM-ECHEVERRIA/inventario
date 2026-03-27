@@ -174,7 +174,7 @@ export class ComprasService {
           CreateCompraDto.ImpTot,
           CreateCompraDto.UsuarioAlta,
           0,
-          CreateCompraDto.Observ,
+          CreateCompraDto.Observ ? CreateCompraDto.Observ : '',
           CreateCompraDto.ImpLet,
           0,
           0,
@@ -421,7 +421,7 @@ export class ComprasService {
         FolMov,
         CveMov,
         SerMov,
-      ]);
+      ]);  
 
       return this.ApiJson.customeResSuccess('Compras Obtenidas', getCompras);
     } catch (error) {
