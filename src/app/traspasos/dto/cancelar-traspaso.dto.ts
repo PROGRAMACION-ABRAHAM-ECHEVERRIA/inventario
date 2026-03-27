@@ -1,16 +1,33 @@
 import { ApiProperty, OmitType, PartialType } from "@nestjs/swagger";
-import { TraspasoDto } from "./traspaso.dto";
 import { IsNumber, IsString } from "class-validator";
 
-export class CancelarTraspaso extends PartialType(OmitType(TraspasoDto, ['movimiento', 'articulo', 'usuarioAlta'])){
-    
-        @IsNumber()
-        @ApiProperty({ description: 'Clave de movimiento' })
-        Folmov: number;
+export class CancelarTraspasoDTO {
 
-          @IsString()
-          @ApiProperty({ description: 'Usuario Alta' })
-          usuarioBaja: string;
+     @IsNumber()
+  @ApiProperty({ description: 'Clave de movimiento' })
+  cveMov: number;
+  @IsNumber()
+  @ApiProperty({ description: 'Folio' })
+  Folmov: number;
 
-        
+
+
+  @IsNumber()
+  @ApiProperty({ description: 'Clave de bodega Origen' })
+  cveBodOrig: number;
+  @IsString()
+  @ApiProperty({ description: 'Serie de movimiento Origen' })
+  serMovOrig: string;
+
+  @IsNumber()
+  @ApiProperty({ description: 'Clave de bodega Destino' })
+  CveBodDes: number;
+  @ApiProperty({ description: 'Serie de movimiento Destino' })
+  @IsString()
+  serMovDes: string;
+
+  @IsString()
+  @ApiProperty({ description: 'Usuario Alta' })
+  usuarioBaja: string;
+
 }

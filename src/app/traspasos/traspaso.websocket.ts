@@ -3,8 +3,9 @@ import { Server, Socket } from 'socket.io';
 import { TraspasosService } from "./traspasos.service";
 import { CreateTraspasoDto } from "./dto/create-traspaso.dto";
 import { AceptarTraspaso } from "./dto/aceptar-traspaso.dto";
-import { CancelarTraspaso } from "./dto/cancelar-traspaso.dto";
+
 import { RechazarTraspaso } from "./dto/rechazar-traspaso.dto";
+import { CancelarTraspasoDTO } from "./dto/cancelar-traspaso.dto";
 
 
 
@@ -24,7 +25,7 @@ export class TraspasoWebsocket{
             dto
         );
    // Identificar rooms (bodega origen y destino)
-    const roomOrigen = `bodega-${dto.cveBod}`;
+    const roomOrigen = `bodega-${dto.cveBodOrig}`;
     const roomDestino = `bodega-${dto.CveBodDes}`;
 
     //  Emitir evento a todos los clientes conectados a esas bodegas
@@ -65,12 +66,12 @@ const roomDestino = `bodega-${res.data[0].aceptarTraspaso[0].CveBodDes}`;
 
 
     @SubscribeMessage('cancelar-traspaso')
-    async  cancelarTraspaso(@MessageBody() dto: CancelarTraspaso, @ConnectedSocket() client: Socket){
-         const res = await this.traspasoService.cancelarTraspaso(
+    async  cancelarTraspaso(@MessageBody() dto: CancelarTraspasoDTO, @ConnectedSocket() client: Socket){
+         const res = await this.traspasoService.cancelarTraspasoMovimiento(
             dto
         );
          // Room de la bodega origen y destino
-      const roomOrigen = `bodega-${dto.cveBod}`;
+      const roomOrigen = `bodega-${dto.cveBodOrig}`;
 
 
 
@@ -87,7 +88,7 @@ const roomDestino = `bodega-${res.data[0].aceptarTraspaso[0].CveBodDes}`;
             dto
         );
          // Room de la bodega origen y destino
-      const roomOrigen = `bodega-${dto.cveBod}`;
+      const roomOrigen = `bodega-${dto.cveBodOrig}`;
       const roomDestino = `bodega-${dto.CveBodDes}`;
 
 

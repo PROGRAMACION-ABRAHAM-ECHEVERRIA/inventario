@@ -5,10 +5,10 @@ import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } fr
 export class TraspasoDto {
   @IsNumber()
   @ApiProperty({ description: 'Clave de bodega Origen' })
-  cveBod: number;
+  cveBodOrig: number;
     @IsString()
   @ApiProperty({ description: 'Serie de movimiento Origen' })
-  serMov: string;
+  serMovOrig: string;
 
   @IsNumber()
   @ApiProperty({ description: 'Clave de bodega Destino' })
@@ -22,6 +22,8 @@ export class TraspasoDto {
   @IsNumber()
   @ApiProperty({ description: 'Tipo de Movimeinto' })
   tipMov: number;
+
+
 
   @IsString()
   @ApiProperty({ description: 'Usuario Alta' })

@@ -5,7 +5,8 @@ import { TraspasosService } from './traspasos.service';
 import { CreateTraspasoDto } from './dto/create-traspaso.dto';
 import { AceptarTraspaso } from './dto/aceptar-traspaso.dto';
 import { RechazarTraspaso } from './dto/rechazar-traspaso.dto';
-import { CancelarTraspaso } from './dto/cancelar-traspaso.dto';
+import { CancelarTraspasoDTO } from './dto/cancelar-traspaso.dto';
+
 @ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Traspaso')
@@ -40,10 +41,10 @@ export class TraspasosController {
     type: AceptarTraspaso,
     description: 'Datos del movimiento de traspaso a aceptar',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Traspaso aceptado correctamente',
-  })
+@ApiResponse({
+  status: 200,
+  description: 'Traspaso aceptado Exitosamente',
+})
   @ApiResponse({
     status: 400,
     description: 'Datos inválidos en la solicitud',
@@ -52,13 +53,12 @@ export class TraspasosController {
     status: 500,
     description: 'Error interno del servidor',
   })
-  async aceptarMovimientoTraspaso(
-    @Body(new ValidationPipe({ whitelist: true }))
-    aceptarTraspaso: AceptarTraspaso,
+  async AceptarTraspaso(
+    @Body() aceptarTraspaso: AceptarTraspaso
   ) {
-    return await this.traspasosService.aceptarMovimientoTraspaso(
-      aceptarTraspaso,
-    );
+
+    return await this.traspasosService.aceptarMovimientoTraspaso(aceptarTraspaso);
+
   }
 
   @Post('rechazar-traspaso')
@@ -99,8 +99,8 @@ export class TraspasosController {
 
   @HttpCode(HttpStatus.OK)
   @ApiBody({
-    type: RechazarTraspaso,
-    description: 'Datos necesarios para rechazar el traspaso',
+    type:CancelarTraspasoDTO,
+    description: 'Datos necesarios para Cancelar el traspaso',
   })
   @ApiResponse({
     status: 200,
@@ -116,10 +116,10 @@ export class TraspasosController {
   })
 
   async cancelarTraspaso(
-    @Body() cancelarTraspaso: CancelarTraspaso
+    @Body() cancelarTraspasoDTO: CancelarTraspasoDTO
   ) {
 
-    return await this.traspasosService.cancelarTraspaso(cancelarTraspaso);
+    return await this.traspasosService.cancelarTraspasoMovimiento(cancelarTraspasoDTO);
 
   }
 
