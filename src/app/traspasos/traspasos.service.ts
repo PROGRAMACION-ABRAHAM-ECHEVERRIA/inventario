@@ -48,7 +48,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
       cveMov,
       serMovOrig
     } = createTraspasoDto;
-
+     console.log(createTraspasoDto);
     /* ================= VALIDACIONES ================= */
 
     if (!movimiento?.length)
@@ -217,7 +217,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
     }
   /* ================= INSERTAR ApartadoProdToMovtosTraspasos================= */
         for (const art of articulo) { 
-          console.log('dfdgdfg')
+       
           const [resProdCantTempTras]:SpResponse = await entityManager.query(
             `EXEC dbo.SP_GV_ApartadoProdToMovtosTraspasos
               @CveBod = @0,
@@ -566,7 +566,8 @@ async rechazarTraspaso(rechazarTraspaso: RechazarTraspaso) {
       serMovOrig,
       CveBodDes,
       serMovDes,
-      usuarioBaja
+      usuarioBaja,
+      Observa
     } = rechazarTraspaso;
 
     const [resRechazarTraspaso] = await entityManager.query(
@@ -577,7 +578,8 @@ async rechazarTraspaso(rechazarTraspaso: RechazarTraspaso) {
      @SerMovOrig  = @3,
          @CveBodDes    = @4,
            @SerMovDes    = @5,
-            @UsuarioAlta= @6`,
+            @UsuarioAlta= @6,
+            @Observa =@7`,
       [
         cveMov ?? '',
   Folmov ?? '',
@@ -585,7 +587,8 @@ async rechazarTraspaso(rechazarTraspaso: RechazarTraspaso) {
   serMovOrig ?? '',
   CveBodDes ?? '',
   serMovDes ?? '',
-  usuarioBaja ?? ''
+  usuarioBaja ?? '',
+  Observa?? ''
       ]
     );
 
