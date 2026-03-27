@@ -15,9 +15,9 @@ export class TraspasoDto {
   CveBodDes: number;
 
 
-  @IsString()
+  @IsNumber()
   @ApiProperty({ description: 'Clave de movimiento' })
-  cveMov: string;
+  cveMov: number;
 
   @IsNumber()
   @ApiProperty({ description: 'Tipo de Movimeinto' })

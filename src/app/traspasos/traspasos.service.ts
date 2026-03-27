@@ -303,7 +303,7 @@ if ( resEstatusTraspaso?.error) {
 
 
   } catch (err) {
-
+    console.log(err)
     await queryRunner.rollbackTransaction();
 
     if (err instanceof HttpException) throw err;
