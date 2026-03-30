@@ -8,6 +8,7 @@ import { EntradasModule } from './app/entradas/entradas.module';
 import { SalidasModule } from './app/salidas/salidas.module';
 import { ComprasModule } from './app/compras/compras.module';
 import { TraspasosModule } from './app/traspasos/traspasos.module';
+import { AuthGuardWebsocketModule } from './guards/authGuard/authGuardWebsocket.module';
 // se necesita para poder llamar las variables de entorno
 require('dotenv').config();
 
@@ -32,6 +33,7 @@ require('dotenv').config();
   }),   
   JwtServiceModule, 
   AuthGuardModule, 
+  AuthGuardWebsocketModule,
   EntradasModule,
   SalidasModule, 
   ComprasModule,
