@@ -20,7 +20,7 @@ export class TraspasoWebsocket{
 
     @SubscribeMessage('crear-traspaso')
     async crearTraspaso(@MessageBody() dto: CreateTraspasoDto, @ConnectedSocket() client: Socket){
-
+        console.log(dto)
         const traspaso = await this.traspasoService.createMovimientoTraspaso(
             dto
         );
@@ -40,6 +40,7 @@ export class TraspasoWebsocket{
 
     @SubscribeMessage('aceptar-traspaso')
     async aceptarTraspaso(@MessageBody() dto: AceptarTraspaso,  @ConnectedSocket() client: Socket){
+        console.log(dto)
         const res = await this.traspasoService.aceptarMovimientoTraspaso(
             dto
         );
@@ -62,11 +63,13 @@ const roomDestino = `bodega-${res.data[0].aceptarTraspaso[0].CveBodDes}`;
     const room = `bodega-${cveBod}`;
     client.join(room);
     client.emit('joined-bodega', { room });
+    console.log(cveBod)
   }
 
 
     @SubscribeMessage('cancelar-traspaso')
     async  cancelarTraspaso(@MessageBody() dto: CancelarTraspasoDTO, @ConnectedSocket() client: Socket){
+        console.log(dto)
          const res = await this.traspasoService.cancelarTraspasoMovimiento(
             dto
         );
