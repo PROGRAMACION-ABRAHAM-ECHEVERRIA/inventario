@@ -30,7 +30,7 @@ export class TraspasoWebsocket{
 
     //  Emitir evento a todos los clientes conectados a esas bodegas
     this.server.to(roomOrigen).emit('traspaso-creado', traspaso);
-    this.server.to(roomDestino).emit('traspaso-creado', traspaso);
+    this.server.to(roomDestino).emit('traspaso-creadoDestino', traspaso);
 
         //  Respuesta al cliente que envió el evento
     return { ok: true, data: traspaso };
@@ -50,7 +50,7 @@ const roomDestino = `bodega-${res.data[0].aceptarTraspaso[0].CveBodDes}`;
 
          // Notificar a todos los clientes conectados a esas bodegas
       this.server.to(roomOrigen).emit('traspaso-aceptado',res.data);
-      this.server.to(roomDestino).emit('traspaso-aceptado',res.data);
+      this.server.to(roomDestino).emit('traspaso-aceptadoDestino',res.data);
 
        // Respuesta al cliente que hizo la solicitud
       return { ok: true, data: res };
@@ -78,7 +78,7 @@ const roomDestino = `bodega-${res.data[0].aceptarTraspaso[0].CveBodDes}`;
 
          // Notificar a todos los clientes conectados a esas bodegas
       this.server.to(roomOrigen).emit('traspaso-cancelado',res);
-      this.server.to(roomDes).emit('traspaso-cancelado',res);
+      this.server.to(roomDes).emit('traspaso-canceladoDestino',res);
 
        // Respuesta al cliente que hizo la solicitud
       return { ok: true, data: res };
@@ -96,7 +96,7 @@ const roomDestino = `bodega-${res.data[0].aceptarTraspaso[0].CveBodDes}`;
 
          // Notificar a todos los clientes conectados a esas bodegas
       this.server.to(roomOrigen).emit('traspaso-rechazado',res);
-      this.server.to(roomDestino).emit('traspaso-rechazo',res);
+      this.server.to(roomDestino).emit('traspaso-rechazoDestino',res);
 
        // Respuesta al cliente que hizo la solicitud
       return { ok: true, data: res };
