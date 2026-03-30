@@ -72,11 +72,13 @@ const roomDestino = `bodega-${res.data[0].aceptarTraspaso[0].CveBodDes}`;
         );
          // Room de la bodega origen y destino
       const roomOrigen = `bodega-${dto.cveBodOrig}`;
+      const roomDes = `bodega-${dto.CveBodDes}`;
 
 
 
          // Notificar a todos los clientes conectados a esas bodegas
       this.server.to(roomOrigen).emit('traspaso-cancelado',res);
+      this.server.to(roomDes).emit('traspaso-cancelado',res);
 
        // Respuesta al cliente que hizo la solicitud
       return { ok: true, data: res };
