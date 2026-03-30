@@ -9,7 +9,7 @@ import { CancelarTraspasoDTO } from "./dto/cancelar-traspaso.dto";
 
 
 
-@WebSocketGateway({cors:{origin:'*'}})
+@WebSocketGateway({cors:{origin:'http://0.10.100.11:8093'}})
 export class TraspasoWebsocket{
     @WebSocketServer()
     server: Server;
