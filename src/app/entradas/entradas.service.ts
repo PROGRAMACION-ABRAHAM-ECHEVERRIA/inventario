@@ -233,7 +233,7 @@ export class EntradasService {
         usuarioAlta: createEntradaDto.usuarioAlta
       },
     );
-  } catch (err) {
+  } catch (err: any) {
     console.log(err)
     if (queryRunner.isTransactionActive) {
       await queryRunner.rollbackTransaction();
@@ -304,7 +304,7 @@ async ObteneTotalProdMov(
         data,
       },
     );
-  } catch (err) {
+  } catch (err: any) {
     if (err instanceof HttpException) throw err;
 
     throw new InternalServerErrorException(
@@ -366,7 +366,7 @@ async ObtenerTotalProdMovSearch(CVEBOD:number, SEARCH:string,  pagina :number,
     );
 
 
-  } catch (err) {
+  } catch (err:any) {
     console.log(err)
         if (err instanceof HttpException) {
       throw err;
@@ -378,7 +378,11 @@ async ObtenerTotalProdMovSearch(CVEBOD:number, SEARCH:string,  pagina :number,
   }
 }
  async ObteneProdByMov(CVEBOD: number, CVEMOV: number, FOLMOV: number, SERMOV:string){
-  try {
+  try { 
+    console.log(CVEBOD); 
+    console.log(CVEMOV); 
+    console.log(FOLMOV); 
+    console.log(SERMOV); 
       const query = `
       EXEC dbo.SP_GV_ObteneProdByMov
         @CVEBOD = @0,
@@ -393,7 +397,7 @@ async ObtenerTotalProdMovSearch(CVEBOD:number, SEARCH:string,  pagina :number,
       };
      return this.ApiJson.customeResSuccess(res[0].mensaje, res); 
 
-  } catch (err) {
+  } catch (err: any) {
 
      if(err instanceof HttpException){
       throw err;
@@ -404,7 +408,45 @@ async ObtenerTotalProdMovSearch(CVEBOD:number, SEARCH:string,  pagina :number,
        
     );
   }
+ } 
+
+  async ObteneProdByMovParams(CVEBOD: number | null, CVEMOV: number | null, FOLMOV: number | null, SERMOV: string | null){
+  try {  
+
+    if(!SERMOV){ 
+      SERMOV = ' '
+    } 
+      const query = `
+     EXEC [dbo].[SP_GV_ObteneProdByMov]
+        @CVEBOD = @0,
+        @CVEMOV = @1,
+        @FOLMOV = @2,
+        @SERMOV = @3
+    `;
+       const res: SpResponse = await this.manager.query(query, [CVEBOD, CVEMOV, FOLMOV, SERMOV]);
+     
+     if (res[0].error) {
+      console.log(res[0].error)
+        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
+        console.log(res[0].error)
+      };
+     return this.ApiJson.customeResSuccess(res[0].mensaje, res); 
+
+  } catch (err: any) {
+
+    console.log(err);
+
+     if(err instanceof HttpException){
+      throw err;
+    }
+    throw new InternalServerErrorException(
+      
+       `Error ${err['mensaje'] || 'Ocurrió un error interno'}`,
+       
+    );
+  }
  }
+
 
 async ObteneTotalProdMovFilter(
   CVEBOD: number | null,
@@ -479,7 +521,7 @@ async ObteneTotalProdMovFilter(
       },
     );
 
-  } catch (err) {
+  } catch (err: any) {
     console.log('Error atrapado en el servicio:', err);
 
     if (err instanceof HttpException) {

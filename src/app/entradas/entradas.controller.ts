@@ -53,11 +53,48 @@ return this.entradasService.ObtenerTotalProdMovSearch(
 );
 }
 
-      @ApiOperation({ summary: 'Obtener detalle por entrada' })
+    @ApiOperation({ summary: 'Obtener detalle por entrada' })
     @Get(':CVEBOD/:CVEMOV/:FOLMOV/:SERMOV') 
     ObteneProdByMov(@Param('CVEBOD') CVEBOD:number, @Param('CVEMOV') CVEMOV:number, @Param('FOLMOV') FOLMOV:number, @Param('SERMOV')SERMOV:string){
+      console.log(SERMOV); 
         return this.entradasService.ObteneProdByMov(CVEBOD,CVEMOV,FOLMOV, SERMOV)
+    } 
+
+    @ApiQuery({ name: 'CVEBOD', required: true, type: Number, description: 'Clave de la bodega (obligatorio)' })
+    @ApiQuery({ name: 'CVEMOV', required: true, type: String, description: 'Descripción del movimiento' })
+    @ApiQuery({ name: 'FOLMOV', required: true, type: String, description: 'Folio movimiento' }) 
+    @ApiQuery({ name: 'SERMOV', required: false, type: String, description: 'Serie del movimiento' })
+
+  
+    @ApiOperation({ summary: 'Obtener detalle por entrada' })
+    @Get('detalle/entrada/queryParams') 
+    ObteneProdByMovParams(
+      @Query('CVEBOD') CVEBOD?: string,
+            @Query('CVEMOV') CVEMOV?: string ,
+                  @Query('FOLMOV') FOLMOV?: string, 
+      @Query('SERMOV') SERMOV?: string,
+
+
+    ){  
+      if(!CVEBOD){ 
+          throw new InternalServerErrorException('El parámetro CVEBOD es obligatorio');
+      } 
+
+      if(!CVEMOV){ 
+          throw new InternalServerErrorException('El parámetro CVEBOD es obligatorio');
+      } 
+
+      if(!FOLMOV){ 
+          throw new InternalServerErrorException('El parámetro CVEBOD es obligatorio');
+      }
+        return this.entradasService.ObteneProdByMovParams(
+    +CVEBOD, 
+    +CVEMOV, 
+    +FOLMOV,
+    SERMOV ?? null,
+  );
     }
+
 
  @ApiOperation({ summary: 'Obtener todas las entradas por bodega y  filtrar por bodega, movimiento, serie y fecha' })
 @ApiQuery({ name: 'CVEBOD', required: true, type: Number, description: 'Clave de la bodega (obligatorio)' })
