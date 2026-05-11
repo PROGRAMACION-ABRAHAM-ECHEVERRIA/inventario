@@ -9,6 +9,7 @@ import { SalidasModule } from './app/salidas/salidas.module';
 import { ComprasModule } from './app/compras/compras.module';
 import { TraspasosModule } from './app/traspasos/traspasos.module';
 import { AuthGuardWebsocketModule } from './guards/authGuard/authGuardWebsocket.module';
+import { ApartadosModule } from './app/apartados/apartados/apartados.module';
 // se necesita para poder llamar las variables de entorno
 require('dotenv').config();
 
@@ -37,7 +38,8 @@ require('dotenv').config();
   EntradasModule,
   SalidasModule, 
   ComprasModule,
-  TraspasosModule
+  TraspasosModule, 
+  ApartadosModule
 ],
   controllers: [AppController],
   providers: [AppService],
