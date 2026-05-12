@@ -3,27 +3,37 @@ import { Type } from "class-transformer";
 import { IsArray, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export class ApartadoDto{
-  @IsNumber()
+
+            @ApiProperty({ description: 'Clave de bodega de la sucursal' })
+        @IsNumber()
+  cvebod: number;
+
+
+        @ApiProperty({ description: 'Serie de la sucursal' })
+    @IsString()
+    serMov: string;
+
+
   @ApiProperty({ description: 'Clave del cliente' })
-  cveProCli: number;
+    @IsNumber()
+  cveProvCli: number;
       @ApiProperty({ description: 'Observa' })
     @IsString()
     observ: string;
     
       @ApiProperty({ description: 'UsuarioId' })
+        @IsNumber()
   usuarioId: number;
-  
-  @ApiProperty({ description: 'Importe Total' })
-  @IsNumber()
-  impTot: number;
 
-  
-  @IsNumber()
-  @ApiProperty({ description: 'Tipo de Movimeinto' })
-  tipMov: number;
+    
+
+
         @ApiProperty({ description: 'UsuarioAlta' })
     @IsString()
     UsuarioAlta: string;
+
+
+
 
     
   @ApiProperty({ type: () => ArticuloApartadoDto, isArray: true })
@@ -44,21 +54,16 @@ export class ApartadoDto{
 export class MovimientoApartadoDto {
 
 
-    @ApiProperty({ description: 'Login' })
-    @IsString()
-    login: string;
-
       @ApiProperty({ description: 'Clave Vendedor' })
   @IsNumber()
   cveVen: number;
 
-    @ApiProperty({ description: 'Login' })
-    @IsString()
-    login: string;
-
         @ApiProperty({ description: 'Importe de Letra' })
     @IsString()
     impLet: string;
+      @ApiProperty({ description: 'Importe Total' })
+  @IsNumber()
+  impTot: number;
 }
 
 
@@ -82,6 +87,11 @@ export class ArticuloApartadoDto {
   @ApiProperty({ description: 'Cantidad' })
   @IsNumber()
   cant: number; 
+
+
+
+
+ 
 
 
 
