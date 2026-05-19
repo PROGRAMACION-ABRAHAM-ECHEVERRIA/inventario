@@ -40,10 +40,13 @@ export class ApartadosService {
                 observ,
                 cvebod,
                 serMov,
+                login,
                 usuarioId,
                 UsuarioAlta,
                 articulo,
-                movimiento
+                movimiento,
+                pagos,
+                detallePagos
 
             } = createApartadoDto;
             console.log(createApartadoDto);
@@ -202,15 +205,137 @@ export class ApartadosService {
                   // 3. INSERTAR PAGO DEL APARTADO
                   // ============================================
 
+
+                   const resPagoApartado: Array<
+                resApartadosMovtoResponse & { FolPag: number; }
+            > = await entityManager.query(
+                `EXEC [dbo].[SP_GV_AgregarPagoApartado]
+                      @Cvebod        = @0,//
+                      @SerMov       = @1, //
+                      @CveMov       = @2,//
+                      @Folmov        = @3,//
+                      @CveProCli        = @4,//
+                      @ImpTot   = @5,//
+                     @Observa      = @6,//
+                      @Login        = @7,//
+                      @UsuarioAlta        = @8`,
+                [
+                    100,
+                    serMov,
+                    16,
+                    FolMov,
+                    cveProvCli,
+                     movimiento[0].impTot,
+                      observ ? observ : '',
+                    movimiento[0].impTot,
+                    login,
+                    UsuarioAlta ? UsuarioAlta  : ''
+                ],
+            );
+
+            if (!resPagoApartado[0] || resPagoApartado[0].error) {
+                const mensaje = resPagoApartado[0]?.mensaje || 'Error al crear el pago apartado';
+                const estatus =
+                    resPagoApartado[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
+                this.ApiJson.customeHttpExeption(mensaje, estatus);
+            }
+
+            const FolPag = resPagoApartado[0].FolPag;
+
+
                  // ============================================
-                  // 3. INSERTAR DETALLE DE PAGO DEL APARTADO
+                  // 4. INSERTAR DETALLE DE PAGO DEL APARTADO
                   // ============================================
+         const resDetPagoApartado: Array<
+                resApartadosMovtoResponse & {  }
+            > = await entityManager.query(
+                `EXEC [dbo].[SP_GV_AgregarDetallePagoApartado]
+                      @FolPag        = @0,//
+                      @CveTpPgo      = @1, //
+                      @Imppag      = @2,//
+                      @observa       = @3,//
+                    @UsuarioAlta   = @4`,
+                [
+                    FolPag,
+                    detallePagos[0].cveTpPgo,
+                   movimiento[0].impTot,
+                   observ ? observ : '',
+                     UsuarioAlta ? UsuarioAlta  : ''
+                ],
+            );
+
+            if (!resDetPagoApartado[0] || resDetPagoApartado[0].error) {
+                const mensaje = resDetPagoApartado[0]?.mensaje || 'Error al crear el detalle del pago apartado';
+                const estatus =
+                    resDetPagoApartado[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
+                this.ApiJson.customeHttpExeption(mensaje, estatus);
+            }
+
+              // ============================================
+                  // 5. INSERTAR DETALLE DE PAGO INICIAL
+                  // ============================================
+
+const resPagoApartadoInicial: Array<
+                resApartadosMovtoResponse & {  }
+            > = await entityManager.query(
+                `EXEC [dbo].[SP_GV_AgregarPagoApartadoInicial]
+                  @Cvebod        = @0,//
+                      @SerMov       = @1, //
+                      @CveMov       = @2,//
+                      @Folmov        = @3,//
+                      @NumPagosTotal        = @4,//
+                      @UltFolPag     = @5, //
+                      @ImpTotalApar    = @6,//
+                     @ImpPagoProg      = @7,//
+                  	@Login  = @8`,
+                [
+                    100,
+                  serMov,
+                  16,
+                  FolMov,
+                  pagos[0].numPagosTotal? pagos[0].numPagosTotal : 0,
+                  FolPag,
+                  movimiento[0].impTot,
+                      pagos[0].impPagoProg,
+                     login
+                ],
+            );
+
+            if (!resPagoApartadoInicial[0] || resPagoApartadoInicial[0].error) {
+                const mensaje = resPagoApartadoInicial[0]?.mensaje || 'Error al crear el pago del apartado Inicial';
+                const estatus =
+                    resPagoApartadoInicial[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
+                this.ApiJson.customeHttpExeption(mensaje, estatus);
+            }
+
 
 
                           // ============================================
-                  // 3. CAMBIAR EXISTENCIA DE LA BODEGA ORIGEN A LA BODEGA 100
+                  // 6. CAMBIAR EXISTENCIA DE LA BODEGA ORIGEN A LA BODEGA 100
                   // ============================================
             
+const resCambioExiste: Array<
+                resApartadosMovtoResponse & {  }
+            > = await entityManager.query(
+                `EXEC [dbo].[SP_GV_AgregarCambioExisteBodCien]
+                @CveProd     = @0,//
+                    	@CveBod      = @1, //
+                     	@Cant      = @2,//
+                     	@Login       = @3,//`,
+                [
+                    articulo[0].cveProd,
+                  100,
+                  articulo[0].cant,
+                 login
+                ],
+            );
+
+            if (!resCambioExiste[0] || resCambioExiste[0].error) {
+                const mensaje = resCambioExiste[0]?.mensaje || 'Error al cambiar la existencia a la bodega 100';
+                const estatus =
+                    resCambioExiste[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
+                this.ApiJson.customeHttpExeption(mensaje, estatus);
+            }
 
         } catch (error) {
             if (queryRunner.isTransactionActive) {
