@@ -360,6 +360,86 @@ const resCambioExiste: Array<
 
     }
 
-    
+    async obtenerApartadosGeneral(
+ pagina :number,
+  limit :number,
+    ){
+           const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        try {
+
+              const query = `EXEC SP_GV_ApartadosGeneral`;
+                 const res: any[] = await this.manager.query(query);
+
+  if (res[0].error) {
+        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
+      };
+
+            
+      return this.ApiJson.customeResSuccess('Apartados Obtenidos', res);
+
+            
+        } catch (error) {
+             if (queryRunner.isTransactionActive) {
+                await queryRunner.rollbackTransaction();
+            }
+
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(
+                `Error ${error['message'] || 'Ocurrió un error interno'}`,
+            );
+            
+        }finally{
+              // Siempre liberar el queryRunner
+            if (!queryRunner.isReleased) {
+                await queryRunner.release();
+            }
+
+        }
+    }
+    async obtenerApartadoDetalle(
+        Folmov: number,
+        SerMov:string,
+         pagina :number,
+  limit :number,
+    ){
+           const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        try {
+              const query = `EXEC SP_GV_ApartadosDetallePagos @FolMov, 	@SerMov`;
+                 const res: any[] = await this.manager.query(query, [Folmov, SerMov]);
+                 if (res[0].error) {
+        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
+      };
+
+            
+      return this.ApiJson.customeResSuccess('Detalle del Apartado', res);
+            
+        } catch (error) {
+               if (queryRunner.isTransactionActive) {
+                await queryRunner.rollbackTransaction();
+            }
+
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(
+                `Error ${error['message'] || 'Ocurrió un error interno'}`,
+            );
+            
+        }finally{
+              // Siempre liberar el queryRunner
+            if (!queryRunner.isReleased) {
+                await queryRunner.release();
+            }
+
+        }
+    }
 
 }
