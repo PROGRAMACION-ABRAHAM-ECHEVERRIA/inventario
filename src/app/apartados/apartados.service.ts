@@ -360,86 +360,143 @@ const resCambioExiste: Array<
 
     }
 
-    async obtenerApartadosGeneral(
- pagina :number,
-  limit :number,
-    ){
-           const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-        try {
+   async obtenerApartadosGeneral(
+  pagina: number,
+  limit: number,
+) {
+  const queryRunner = this.dataSource.createQueryRunner();
 
-              const query = `EXEC SP_GV_ApartadosGeneral`;
-                 const res: any[] = await this.manager.query(query);
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
 
-  if (res[0].error) {
-        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
-      };
+  try {
 
-            
-      return this.ApiJson.customeResSuccess('Apartados Obtenidos', res);
+    // Calcular offset
+    const offset = (pagina - 1) * limit;
 
-            
-        } catch (error) {
-             if (queryRunner.isTransactionActive) {
-                await queryRunner.rollbackTransaction();
-            }
+    // Ejecutar SP con paginación
+    const query = `
+      EXEC SP_GV_ApartadosGeneral
+        @Offset = @0,
+        @Limit = @1
+    `;
 
-            if (error instanceof HttpException) {
-                throw error;
-            }
+    const res: any[] = await queryRunner.manager.query(query, [
+      offset,
+      limit,
+    ]);
 
-            throw new InternalServerErrorException(
-                `Error ${error['message'] || 'Ocurrió un error interno'}`,
-            );
-            
-        }finally{
-              // Siempre liberar el queryRunner
-            if (!queryRunner.isReleased) {
-                await queryRunner.release();
-            }
-
-        }
+    if (res[0]?.error) {
+      this.ApiJson.customeHttpExeption(
+        res[0].mensaje,
+        res[0].estatus,
+      );
     }
-    async obtenerApartadoDetalle(
-        Folmov: number,
-        SerMov:string,
-         pagina :number,
-  limit :number,
-    ){
-           const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-        try {
-              const query = `EXEC SP_GV_ApartadosDetallePagos @FolMov, 	@SerMov`;
-                 const res: any[] = await this.manager.query(query, [Folmov, SerMov]);
-                 if (res[0].error) {
-        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
-      };
 
-            
-      return this.ApiJson.customeResSuccess('Detalle del Apartado', res);
-            
-        } catch (error) {
-               if (queryRunner.isTransactionActive) {
-                await queryRunner.rollbackTransaction();
-            }
+    return this.ApiJson.customeResSuccess(
+      'Apartados Obtenidos',
+      {
+        pagina,
+        limit,
+        total: res[0]?.total || 0,
+        data: res,
+      },
+    );
 
-            if (error instanceof HttpException) {
-                throw error;
-            }
+  } catch (error) {
 
-            throw new InternalServerErrorException(
-                `Error ${error['message'] || 'Ocurrió un error interno'}`,
-            );
-            
-        }finally{
-              // Siempre liberar el queryRunner
-            if (!queryRunner.isReleased) {
-                await queryRunner.release();
-            }
-
-        }
+    if (queryRunner.isTransactionActive) {
+      await queryRunner.rollbackTransaction();
     }
+
+    if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+
+  } finally {
+
+    // Liberar conexión
+    if (!queryRunner.isReleased) {
+      await queryRunner.release();
+    }
+
+  }
+}
+
+
+  async obtenerApartadoDetalle(
+  Folmov: number,
+  SerMov: string,
+  pagina: number,
+  limit: number,
+) {
+  const queryRunner = this.dataSource.createQueryRunner();
+
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    // Calcular offset
+    const offset = (pagina - 1) * limit;
+
+    // Ejecutar SP con paginación
+    const query = `
+      EXEC SP_GV_ApartadosDetallePagos 
+        @FolMov = @0,
+        @SerMov = @1,
+        @Offset = @2,
+        @Limit = @3
+    `;
+
+    const res: any[] = await queryRunner.manager.query(query, [
+      Folmov,
+      SerMov,
+      offset,
+      limit,
+    ]);
+
+    if (res[0]?.error) {
+      this.ApiJson.customeHttpExeption(
+        res[0].mensaje,
+        res[0].estatus,
+      );
+    }
+
+    return this.ApiJson.customeResSuccess(
+      'Detalle del Apartado',
+      {
+        pagina,
+        limit,
+        total: res[0]?.total || 0,
+        data: res,
+      },
+    );
+
+  } catch (error) {
+
+    if (queryRunner.isTransactionActive) {
+      await queryRunner.rollbackTransaction();
+    }
+
+    if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+
+  } finally {
+
+    if (!queryRunner.isReleased) {
+      await queryRunner.release();
+    }
+
+  }
+}
 
 }
