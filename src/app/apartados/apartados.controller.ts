@@ -39,7 +39,7 @@ export class ApartadosController {
         }
 
 
-         @ApiOperation({ summary: 'Obtener Lista General de Apartados' })
+         @ApiOperation({ summary: 'Obtener Lista General de Apartados Afectados' })
           @Get() 
           ObteneGeneralApartados(
           @Query('page') page?: number,
