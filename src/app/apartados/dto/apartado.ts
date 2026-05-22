@@ -4,9 +4,9 @@ import { IsArray, IsNumber, IsOptional, IsString, ValidateNested } from "class-v
 
 export class ApartadoDto {
 
-  @ApiProperty({ description: 'Clave de bodega de la sucursal' })
+  @ApiProperty({ description: 'Clave de bodega de la sucursal Origen' })
   @IsNumber()
-  cvebod: number;
+  cvebodOrigen: number;
 
 
   @ApiProperty({ description: 'Serie de la sucursal' })
@@ -25,10 +25,6 @@ export class ApartadoDto {
   @ApiProperty({ description: 'Login del usuario' })
   @IsString()
   login: string;
-
-  @ApiProperty({ description: 'UsuarioId' })
-  @IsNumber()
-  usuarioId: number;
 
 
 
