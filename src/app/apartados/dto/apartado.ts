@@ -69,12 +69,14 @@ export class MovimientoApartadoDto {
   @IsNumber()
   cveVen: number;
 
+    @ApiProperty({ description: 'Importe Total' })
+  @IsNumber()
+  impTot: number;
+
   @ApiProperty({ description: 'Importe de Letra' })
   @IsString()
   impLet: string;
-  @ApiProperty({ description: 'Importe Total' })
-  @IsNumber()
-  impTot: number;
+
 }
 
 
@@ -91,9 +93,9 @@ export class ArticuloApartadoDto {
   @IsNumber()
   lisPre: number;
 
-  @ApiProperty({ description: 'Precio unitario' })
+/*   @ApiProperty({ description: 'Precio unitario' })
   @IsNumber()
-  preUni: number;
+  preUni: number; */
 
   @ApiProperty({ description: 'Cantidad' })
   @IsNumber()
@@ -112,7 +114,7 @@ export class PagoApartadoInicialDto {
 
 
 
-
+ // es el 10% del pago inicial
   @ApiProperty({ description: 'Importe programado por pago' })
   @IsNumber()
   impPagoProg: number;

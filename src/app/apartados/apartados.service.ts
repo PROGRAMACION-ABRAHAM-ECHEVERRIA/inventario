@@ -41,7 +41,6 @@ export class ApartadosService {
         cvebodOrigen,
         serMov,
         login,
- 
         UsuarioAlta,
         articulo,
         movimiento,
@@ -49,7 +48,7 @@ export class ApartadosService {
         detallePagos
 
       } = createApartadoDto;
-      console.log(createApartadoDto);
+     // console.log(createApartadoDto);
 
       /* ================= VALIDACIONES ================= */
 
@@ -64,11 +63,11 @@ export class ApartadosService {
       // validando el CveProvCli
       if (!cveProvCli) {
         this.ApiJson.customeHttpExeption(
-          'Ingresa un proveedor',
+          'Ingresa el cliente',
           HttpStatus.BAD_REQUEST,
         );
       }
-
+/* 
       let [findProv] = await entityManager.query(
         `SELECT 1 FROM [dbo].[CATPROV] WHERE CVEPROV = @0`,
         [cveProvCli],
@@ -79,7 +78,7 @@ export class ApartadosService {
           'No existe el proveedor',
           HttpStatus.NOT_FOUND,
         );
-      }
+      } */
 
       // ============================================
       // 1. INSERTAR MOVIMIENTO
@@ -88,32 +87,32 @@ export class ApartadosService {
         resApartadosMovtoResponse & { Folmov: number; fecmov: string }
       > = await entityManager.query(
         `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
-                      @CVEBOD        = @0,//
-                      @CveMov        = @1, //
-                      @SerMov        = @2,//
-                      @OrdCom        = @3,//
-                      @NumDoc        = @4,//
-                      @CveProvCli    = @5,//
-                      @DiasCred      = @6,//
-                      @ImpMov        = @7,//
-                      @ImpDes        = @8,//
-                      @PorcDesc      = @9,//
-                      @ImpFle        = @10,//
-                      @ImpSub        = @11,//
-                      @ImpIva        = @12,//
-                      @PorcIva       = @13,//
-                      @ImpTot        = @14,//
-                      @Login         = @15,//
-                      @CveVen        = @16,//
-                      @Observ        = @17,//
-                      @ImpLet        = @18,//
-                      @Facturada     = @19,//
-                      @Cancelada     = @20,//
-                      @Devuelto      = @21,//
-                      @Afectado      = @22,//
-                      @NumDias       = @23,//
-                      @RepEntregada  = @24,//
-                      @Garantia      = @25,//
+                      @CVEBOD        = @0,
+                      @CveMov        = @1, 
+                      @SerMov        = @2,
+                      @OrdCom        = @3,
+                      @NumDoc        = @4,
+                      @CveProvCli    = @5,
+                      @DiasCred      = @6,
+                      @ImpMov        = @7,
+                      @ImpDes        = @8,
+                      @PorcDesc      = @9,
+                      @ImpFle        = @10,
+                      @ImpSub        = @11,
+                      @ImpIva        = @12,
+                      @PorcIva       = @13,
+                      @ImpTot        = @14,
+                      @Login         = @15,
+                      @CveVen        = @16,
+                      @Observ        = @17,
+                      @ImpLet        = @18,
+                      @Facturada     = @19,
+                      @Cancelada     = @20,
+                      @Devuelto      = @21,
+                      @Afectado      = @22,
+                      @NumDias       = @23,
+                      @RepEntregada  = @24,
+                      @Garantia      = @25,
                       @UsuarioAlta   = @26,
                       @UsuarioId = @27`,
         [
@@ -144,11 +143,13 @@ export class ApartadosService {
           0,
           '',
           UsuarioAlta,
-          payloadToken.UsuarioId ? payloadToken.UsuarioId : 0,
+          payloadToken.UsuarioId ? payloadToken.UsuarioId : 0,    //27 
+         
         ],
       );
 
       if (!resMovtos[0] || resMovtos[0].error) {
+      // console.log(resMovtos)
         const mensaje = resMovtos[0]?.mensaje || 'Error al crear el movimiento';
         const estatus =
           resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -192,7 +193,10 @@ export class ApartadosService {
           ],
         );
 
+            
+
         if (resDetmovtos?.error) {
+             //console.log(resDetmovtos)
           const mensaje =
             resDetmovtos.mensaje || 'Error al crear detalle de movimiento';
           const estatus =
@@ -210,14 +214,14 @@ export class ApartadosService {
         resApartadosMovtoResponse & { FolPag: number; }
       > = await entityManager.query(
         `EXEC [dbo].[SP_GV_AgregarPagoApartado]
-                      @Cvebod        = @0,//
-                      @SerMov       = @1, //
-                      @CveMov       = @2,//
-                      @Folmov        = @3,//
-                      @CveProCli        = @4,//
-                      @ImpTot   = @5,//
-                     @Observa      = @6,//
-                      @Login        = @7,//
+                      @Cvebod        = @0,
+                      @SerMov       = @1, 
+                      @CveMov       = @2,
+                      @Folmov        = @3,
+                      @CveProCli        = @4,
+                      @ImpTot   = @5,
+                     @Observa      = @6,
+                      @Login        = @7,
                       @UsuarioAlta        = @8`,
         [
           100,
@@ -227,13 +231,14 @@ export class ApartadosService {
           cveProvCli,
           movimiento[0].impTot,
           observ ? observ : '',
-          movimiento[0].impTot,
           login,
           UsuarioAlta ? UsuarioAlta : ''
         ],
       );
+    
 
       if (!resPagoApartado[0] || resPagoApartado[0].error) {
+            // console.log('ResPago Apartado',resPagoApartado)
         const mensaje = resPagoApartado[0]?.mensaje || 'Error al crear el pago apartado';
         const estatus =
           resPagoApartado[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -250,10 +255,10 @@ export class ApartadosService {
         resApartadosMovtoResponse & {}
       > = await entityManager.query(
         `EXEC [dbo].[SP_GV_AgregarDetallePagoApartado]
-                      @FolPag        = @0,//
-                      @CveTpPgo      = @1, //
-                      @Imppag      = @2,//
-                      @observa       = @3,//
+                      @FolPag        = @0,
+                      @CveTpPgo      = @1, 
+                      @Imppag      = @2,
+                      @observa       = @3,
                     @UsuarioAlta   = @4`,
         [
           FolPag,
@@ -264,7 +269,10 @@ export class ApartadosService {
         ],
       );
 
+           
+
       if (!resDetPagoApartado[0] || resDetPagoApartado[0].error) {
+       // console.log(resDetPagoApartado)
         const mensaje = resDetPagoApartado[0]?.mensaje || 'Error al crear el detalle del pago apartado';
         const estatus =
           resDetPagoApartado[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -279,14 +287,14 @@ export class ApartadosService {
         resApartadosMovtoResponse & {}
       > = await entityManager.query(
         `EXEC [dbo].[SP_GV_AgregarPagoApartadoInicial]
-                  @Cvebod        = @0,//
-                      @SerMov       = @1, //
-                      @CveMov       = @2,//
-                      @Folmov        = @3,//
-                      @NumPagosTotal        = @4,//
-                      @UltFolPag     = @5, //
-                      @ImpTotalApar    = @6,//
-                     @ImpPagoProg      = @7,//
+                  @Cvebod        = @0,
+                      @SerMov       = @1, 
+                      @CveMov       = @2,
+                      @Folmov        = @3,
+                      @NumPagosTotal        = @4,
+                      @UltFolPag     = @5, 
+                      @ImpTotalApar    = @6,
+                     @ImpPagoProg      = @7,
                   	@Login  = @8`,
         [
           100,
@@ -301,7 +309,10 @@ export class ApartadosService {
         ],
       );
 
+           
+
       if (!resPagoApartadoInicial[0] || resPagoApartadoInicial[0].error) {
+             //console.log(resPagoApartadoInicial)
         const mensaje = resPagoApartadoInicial[0]?.mensaje || 'Error al crear el pago del apartado Inicial';
         const estatus =
           resPagoApartadoInicial[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -318,10 +329,10 @@ export class ApartadosService {
         resApartadosMovtoResponse & {}
       > = await entityManager.query(
         `EXEC [dbo].[SP_GV_AgregarCambioExisteBodCien]
-                @CveProd     = @0,//
-                    	@CveBod      = @1, //
-                     	@Cant      = @2,//
-                     	@Login       = @3,//`,
+                @CveProd     = @0,
+                    	@CveBod      = @1,
+                     	@Cant      = @2,
+                     	@Login       = @3`,
         [
           articulo[0].cveProd,
           cvebodOrigen,
@@ -329,28 +340,53 @@ export class ApartadosService {
           login
         ],
       );
+        
 
       if (!resCambioExiste[0] || resCambioExiste[0].error) {
+        // console.log(resCambioExiste)
         const mensaje = resCambioExiste[0]?.mensaje || 'Error al cambiar la existencia a la bodega 100';
         const estatus =
           resCambioExiste[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
         this.ApiJson.customeHttpExeption(mensaje, estatus);
       }
 
+           
+
+       await queryRunner.commitTransaction();
+
+    return this.ApiJson.customeResSuccess(
+      'Apartado Creado Exitosamente',
+      {
+        FolMov,
+        fecMov,
+  
+      },
+    );
+
     } catch (error) {
+
+   //console.log('ERROR ORIGINAL => ', error);
+
+   try {
+
       if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction();
+         await queryRunner.rollbackTransaction();
       }
 
-      if (error instanceof HttpException) {
-        throw error;
-      }
+   } catch (rollbackError) {
 
-      throw new InternalServerErrorException(
-        `Error ${error['message'] || 'Ocurrió un error interno'}`,
-      );
+     // console.log('ROLLBACK ERROR => ', rollbackError);
 
-    } finally {
+   }
+
+   if (error instanceof HttpException) {
+      throw error;
+   }
+
+   throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`
+   );
+} finally {
       // Siempre liberar el queryRunner
       if (!queryRunner.isReleased) {
         await queryRunner.release();
