@@ -5,6 +5,7 @@ import { resJsonClass } from 'src/utils/resJsonClass';
 import { DataSource, EntityManager } from 'typeorm';
 import { CreateApartadoDto } from './dto/createApartado.dto';
 import { SpResponse } from 'src/types/resJson';
+import { TicketService } from 'src/globalServices/ticket-service/ticket-service-custom';
 
 
 interface resApartadosMovtoResponse {
@@ -18,6 +19,7 @@ export class ApartadosService {
 
   constructor(
     private JwtServiceCustom: JwtServiceCustom,
+      private readonly ticketService: TicketService,
     private readonly dataSource: DataSource,
     private readonly manager: EntityManager,
   ) { }
@@ -288,16 +290,18 @@ export class ApartadosService {
       > = await entityManager.query(
         `EXEC [dbo].[SP_GV_AgregarPagoApartadoInicial]
                   @Cvebod        = @0,
-                      @SerMov       = @1, 
-                      @CveMov       = @2,
-                      @Folmov        = @3,
-                      @NumPagosTotal        = @4,
-                      @UltFolPag     = @5, 
-                      @ImpTotalApar    = @6,
-                     @ImpPagoProg      = @7,
-                  	@Login  = @8`,
+                  @CvebodOrigen = @1,
+                      @SerMov       = @2, 
+                      @CveMov       = @3,
+                      @Folmov        = @4,
+                      @NumPagosTotal        = @5,
+                      @UltFolPag     = @6, 
+                      @ImpTotalApar    = @7,
+                     @ImpPagoProg      = @8,
+                  	@Login  = @9`,
         [
           100,
+          cvebodOrigen,
           serMov,
           16,
           FolMov,
@@ -353,15 +357,21 @@ export class ApartadosService {
            
 
        await queryRunner.commitTransaction();
+       const ticket = await this.ticketService.getTicket(
+  entityManager,
+  100,
+  FolMov,
+  16,
+  serMov,
+  false,
+);
 
-    return this.ApiJson.customeResSuccess(
-      'Apartado Creado Exitosamente',
-      {
-        FolMov,
-        fecMov,
-  
-      },
-    );
+return this.ApiJson.customeResSuccess(
+  'Apartado Creado Exitosamente',
+  {
+    ticket
+  },
+);
 
     } catch (error) {
 
