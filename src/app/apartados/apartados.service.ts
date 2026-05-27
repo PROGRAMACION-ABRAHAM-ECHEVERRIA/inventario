@@ -373,7 +373,7 @@ return this.ApiJson.customeResSuccess(
   },
 );
 
-    } catch (error) {
+    } catch (error : any) {
 
    //console.log('ERROR ORIGINAL => ', error);
 
@@ -441,7 +441,7 @@ return this.ApiJson.customeResSuccess(
         },
       );
 
-    } catch (error) {
+    } catch (error: any) {
 
       throw new InternalServerErrorException(
         `Error ${error['message'] || 'Ocurrió un error interno'}`,
@@ -491,7 +491,7 @@ return this.ApiJson.customeResSuccess(
         },
       );
 
-    } catch (error) {
+    } catch (error : any) {
 
       if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();
@@ -553,7 +553,7 @@ return this.ApiJson.customeResSuccess(
         },
       );
 
-    } catch (error) {
+    } catch (error : any) {
 
       if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();
