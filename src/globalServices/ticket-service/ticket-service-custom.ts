@@ -12,6 +12,7 @@ export class TicketService {
     FolMov: number,
     CveMov: number,
     SerMov: string,
+      FolPag:number,
     isReimp: boolean,
   ) {
 
@@ -70,12 +71,46 @@ export class TicketService {
       @SerMov = @3
     `;
 
+
+
     const getDetallePagos = await manager.query(queryDetallePagos, [
       CveBod,
       CveMov,
       FolMov,
       SerMov,
     ]);
+
+    
+    const querySiguientePagoApartado = `
+      EXEC SP_GV_ObtenerProximoPagoApartado
+      @FolPag = @0,
+      @FolMov = @1
+    `;
+
+
+
+    const getSiguientePagoApartado = await manager.query(querySiguientePagoApartado, [
+       FolPag,
+      FolMov,
+
+    ]);
+
+      const queryDescuentoApartado = `
+      EXEC SP_GV_ObtenerProximoPagoApartado
+      @FolPag = @0,
+      @FolMov = @1
+    `;
+
+
+
+    const getDescuentoApartado = await manager.query(queryDescuentoApartado, [
+       FolPag,
+      FolMov,
+
+    ]);
+
+
+
 
     const queryClausulas = `
       EXEC SP_GV_Obtener_Clausulas_Ticket
@@ -97,6 +132,8 @@ export class TicketService {
       articulos: ArtSinPre,
       servicios,
       pagos: getDetallePagos,
+      pagoProximo: getSiguientePagoApartado,
+      escuento : getDescuentoApartado,
       clausulas: getClausulas,
       reimpresion: isReimp,
     };
