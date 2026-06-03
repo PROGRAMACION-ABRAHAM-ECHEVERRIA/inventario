@@ -48,7 +48,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
       cveMov,
       serMovOrig
     } = createTraspasoDto;
-     console.log(createTraspasoDto);
+    // console.log(createTraspasoDto);
     /* ================= VALIDACIONES ================= */
 
     if (!movimiento?.length)
@@ -64,7 +64,7 @@ async createMovimientoTraspaso(createTraspasoDto: CreateTraspasoDto) {
       throw new HttpException('No se puede hacer un traspaso a la misma bodega', HttpStatus.BAD_REQUEST);
 
 
-    /* ================= VALIDAR INVENTARIO CON TU SP ================= */
+    /* ================= VALIDAR EXISTENCIAS DEL ARTICULO ================= */
 
     for (const art of articulo) {
 
@@ -302,7 +302,7 @@ if ( resEstatusTraspaso?.error) {
     );
 
 
-  } catch (err) {
+  } catch (err:any) {
     console.log(err)
     await queryRunner.rollbackTransaction();
 
@@ -401,7 +401,7 @@ async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
        
 
 
-  } catch (err) {
+  } catch (err:any) {
 
     await queryRunner.rollbackTransaction();
 
@@ -450,7 +450,7 @@ async aceptarMovimientoTraspaso(aceptarTraspaso: AceptarTraspaso) {
           res
         },
       );
-    } catch (err) {
+    } catch (err:any) {
       if (err instanceof HttpException) {
         throw err;
       }
@@ -533,7 +533,7 @@ async obtenerGeneralTraspasoMov(
       },
     );
 
-  } catch (err) {
+  } catch (err:any) {
     if (err instanceof HttpException) {
       throw err;
     }
@@ -612,7 +612,7 @@ async rechazarTraspaso(rechazarTraspaso: RechazarTraspaso) {
       }
     );
 
-  } catch (err) {
+  } catch (err:any) {
 
     await queryRunner.rollbackTransaction();
 
@@ -704,7 +704,7 @@ cveMov ?? '',
    cancelarTraspasoDto
     );
 
-  } catch (err) {
+  } catch (err:any) {
     await queryRunner.rollbackTransaction();
 
     if (err instanceof HttpException) {
@@ -773,7 +773,7 @@ cveMov ?? '',
       },
     );
       
-    } catch (err) {
+    } catch (err:any) {
              if (err instanceof HttpException) {
         throw err;
       }
@@ -830,7 +830,7 @@ cveMov ?? '',
       { res }
     );
 
-  } catch (err) {
+  } catch (err:any) {
     console.log(err);
     if (err instanceof HttpException) {
       throw err;

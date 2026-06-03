@@ -63,6 +63,36 @@ export class ApartadosService {
         throw new HttpException('Debe existir al menos un artículo', HttpStatus.BAD_REQUEST);
 
 
+       if (cvebodOrigen === 100)
+      throw new HttpException('La bodega origen  no puede ser la bodega de venta de apartados', HttpStatus.BAD_REQUEST);
+
+    /* ================= VALIDAR EXISTENCIAS DEL ARTICULO ================= */
+
+    for (const art of articulo) {
+
+      const [resValidacion]: SpResponse = await entityManager.query(
+        `EXEC SP_GV_ValidarIfExisProdInBod
+          @CVEBOD = @0,
+          @CVEPROD = @1,
+          @CANTIDAD = @2`,
+        [
+          cvebodOrigen,
+          art.cveProd,
+          art.cant
+        ]
+      );
+  
+      if (resValidacion?.error) {
+
+        throw this.ApiJson.customeHttpExeption(
+          
+          resValidacion.mensaje,
+          resValidacion.estatus
+        );
+      }
+
+    }
+
 
       // validando el CveProvCli
       if (!cveProvCli) {
@@ -83,6 +113,13 @@ export class ApartadosService {
           HttpStatus.NOT_FOUND,
         );
       } */
+        
+
+        
+
+
+
+
 
       // ============================================
       // 1. INSERTAR MOVIMIENTO
@@ -343,7 +380,7 @@ export class ApartadosService {
           articulo[0].cveProd,
           cvebodOrigen,
           articulo[0].cant,
-           payloadToken.Usuario? payloadToken.Usuario : 'sin usuario'
+           payloadToken.Usuario ?? 'sin usuario'
         ],
       );
         
