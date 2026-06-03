@@ -6,7 +6,8 @@ import { DataSource, EntityManager } from 'typeorm';
 import { CreateApartadoDto } from './dto/createApartado.dto';
 import { SpResponse } from 'src/types/resJson';
 import { TicketService } from 'src/globalServices/ticket-service/ticket-service-custom';
-import { CreatePagoApartadoProgramado } from './dto/pagoApartadoProgramado';
+import { CreatePagoApartadoProgramadoDto } from './dto/pagoApartadoProgramado';
+
 
 
 interface resApartadosMovtoResponse {
@@ -581,8 +582,8 @@ return this.ApiJson.customeResSuccess(
 }
 
 
-async pagoApartadoProgramado(
-  createPagoApartadoProgramadoDto: CreatePagoApartadoProgramado
+async createPagoApartadoProgramado(
+  createPagoApartadoProgramadoDto: CreatePagoApartadoProgramadoDto
 ) {
 
   const queryRunner = this.dataSource.createQueryRunner();

@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } 
 import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { ApartadosService } from './apartados.service';
 import { CreateApartadoDto } from './dto/createApartado.dto';
+import { CreatePagoApartadoProgramadoDto } from './dto/pagoApartadoProgramado';
+
 
 @ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
@@ -25,6 +27,25 @@ export class ApartadosController {
     return this.apartadosService.create(createApartadoDto);
 
   }
+
+  
+
+  @Post('realizarPagoProgramado')
+  @ApiOperation({
+    summary: 'Pago de apartado',
+    description: 'Reliza un pago de apartado ',
+  })
+  @ApiBody({
+    type: CreatePagoApartadoProgramadoDto,
+    description: 'Datos delpago de apartado',
+  })
+  createPagoApartadoProgramado(@Body() CreatePagoApartadoProgramadoDto: CreatePagoApartadoProgramadoDto) {
+    return this.apartadosService.createPagoApartadoProgramado(CreatePagoApartadoProgramadoDto);
+
+  }
+
+
+
 
 
   @ApiOperation({ summary: 'Obtener Lista General de Apartados Pagados' })
