@@ -22,10 +22,10 @@ export class ApartadoDto {
   observ: string;
 
   
-  @ApiProperty({ description: 'Login del usuario' })
+/*   @ApiProperty({ description: 'Login del usuario' })
   @IsString()
   login: string;
-
+ */
 
 
 

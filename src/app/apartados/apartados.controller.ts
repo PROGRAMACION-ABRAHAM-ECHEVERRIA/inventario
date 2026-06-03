@@ -21,18 +21,6 @@ export class ApartadosController {
     type: CreateApartadoDto,
     description: 'Datos del movimiento de apartado',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Traspaso aceptado Exitosamente',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Datos inválidos en la solicitud',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Error interno del servidor',
-  })
   create(@Body() createApartadoDto: CreateApartadoDto) {
     return this.apartadosService.create(createApartadoDto);
 

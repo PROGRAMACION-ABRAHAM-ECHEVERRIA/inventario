@@ -6,136 +6,129 @@ export class TicketService {
 
   constructor() {}
 
-  async getTicket(
-    manager: EntityManager,
-    CveBod: number,
-    FolMov: number,
-    CveMov: number,
-    SerMov: string,
-      FolPag:number,
-    isReimp: boolean,
-  ) {
+async getTicket(
+  manager: EntityManager,
+  CveBod: number,
+  FolMov: number,
+  CveMov: number,
+  SerMov: string,
+  FolPag: number,
+  isReimp: boolean,
+  isLiquidacion: boolean
+) {
 
-    const queryEncabezado = `
-      EXEC SP_GV_Obtener_encabezado_ticket
-      @CveBod = @0,
-      @CveMov = @1,
-      @FolMov = @2,
-      @SerMov = @3
-    `;
+  const queryEncabezado = `
+    EXEC SP_GV_Obtener_encabezado_ticket
+    @CveBod = @0,
+    @CveMov = @1,
+    @FolMov = @2,
+    @SerMov = @3
+  `;
 
-    let servicios: Object[] = [];
+  const [getEncabezadoTicket] = await manager.query(queryEncabezado, [
+    CveBod,
+    CveMov,
+    FolMov,
+    SerMov,
+  ]);
 
-    const [getEncabezadoTicket] = await manager.query(queryEncabezado, [
-      CveBod,
-      CveMov,
-      FolMov,
-      SerMov,
-    ]);
+  const queryDetalleArticulo = `
+    EXEC SP_GV_Obtener_Detalle_Reimpresion
+    @CveBod = @0,
+    @CveMov = @1,
+    @FolMov = @2,
+    @SerMov = @3
+  `;
 
-    const queryDetalleArticulo = `
-      EXEC SP_GV_Obtener_Detalle_Reimpresion
-      @CveBod = @0,
-      @CveMov = @1,
-      @FolMov = @2,
-      @SerMov = @3
-    `;
+  const getDetalleArticulos = await manager.query(queryDetalleArticulo, [
+    CveBod,
+    CveMov,
+    FolMov,
+    SerMov,
+  ]);
 
-    const getDetalleArticulos = await manager.query(queryDetalleArticulo, [
-      CveBod,
-      CveMov,
-      FolMov,
-      SerMov,
-    ]);
+  const CvePRE = 'PRE';
 
-    // ejemplo temporal
-    const CvePRE = 'PRE';
+  const productoPRE = getDetalleArticulos.find(p => p.CveProd === CvePRE);
 
-    const productoPRE = getDetalleArticulos.find(
-      (p) => p.CveProd === CvePRE,
-    );
+  const ArtSinPre = getDetalleArticulos.filter(item => item.CveProd !== CvePRE);
 
-    const ArtSinPre = getDetalleArticulos.filter(
-      (item) => item.CveProd !== CvePRE,
-    );
+  const servicios = productoPRE ? [productoPRE] : [];
 
-    if (productoPRE) {
-      servicios.push(productoPRE);
-    }
+  const queryDetallePagos = `
+    EXEC SP_GV_Obtener_pago_reimpresion
+    @CveBod = @0,
+    @CveMov = @1,
+    @FolMov = @2,
+    @SerMov = @3
+  `;
 
-    const queryDetallePagos = `
-      EXEC SP_GV_Obtener_pago_reimpresion
-      @CveBod = @0,
-      @CveMov = @1,
-      @FolMov = @2,
-      @SerMov = @3
-    `;
+  const getDetallePagos = await manager.query(queryDetallePagos, [
+    CveBod,
+    CveMov,
+    FolMov,
+    SerMov,
+  ]);
 
+  // =====================================================
+  // SOLO SI NO ES LIQUIDACIÓN
+  // =====================================================
+  let getSiguientePagoApartado = [];
+  let getDescuentoApartado = [];
 
+  if (isLiquidacion) {
 
-    const getDetallePagos = await manager.query(queryDetallePagos, [
-      CveBod,
-      CveMov,
-      FolMov,
-      SerMov,
-    ]);
-
-    
     const querySiguientePagoApartado = `
       EXEC SP_GV_ObtenerProximoPagoApartado
       @FolPag = @0,
       @FolMov = @1
     `;
 
-
-
-    const getSiguientePagoApartado = await manager.query(querySiguientePagoApartado, [
-       FolPag,
+    getSiguientePagoApartado = await manager.query(querySiguientePagoApartado, [
+      FolPag,
       FolMov,
-
     ]);
 
-      const queryDescuentoApartado = `
-      EXEC SP_GV_ObtenerProximoPagoApartado
+    const queryDescuentoApartado = `
+      EXEC SP_GV_ObtenerDescuentoApartado
       @FolPag = @0,
       @FolMov = @1
     `;
 
-
-
-    const getDescuentoApartado = await manager.query(queryDescuentoApartado, [
-       FolPag,
+    getDescuentoApartado = await manager.query(queryDescuentoApartado, [
+      FolPag,
       FolMov,
-
     ]);
-
-
-
-
-    const queryClausulas = `
-      EXEC SP_GV_Obtener_Clausulas_Ticket
-      @CveBod = @0,
-      @CveMov = @1,
-      @FolMov = @2,
-      @SerMov = @3
-    `;
-
-    const getClausulas = await manager.query(queryClausulas, [
-      CveBod,
-      CveMov,
-      FolMov,
-      SerMov,
-    ]);
-
-    return {
-      encabezadoTicket: getEncabezadoTicket,
-      articulos: ArtSinPre,
-      servicios,
-      pagos: getDetallePagos,
-      pagoProximo: getSiguientePagoApartado,
-      escuento : getDescuentoApartado,
-      clausulas: getClausulas,
-      reimpresion: isReimp,
-    };
   }
+
+  const queryClausulas = `
+    EXEC SP_GV_Obtener_Clausulas_Ticket
+    @CveBod = @0,
+    @CveMov = @1,
+    @FolMov = @2,
+    @SerMov = @3
+  `;
+
+  const getClausulas = await manager.query(queryClausulas, [
+    CveBod,
+    CveMov,
+    FolMov,
+    SerMov,
+  ]);
+
+  return {
+    encabezadoTicket: getEncabezadoTicket,
+    articulos: ArtSinPre,
+    servicios,
+    pagos: getDetallePagos,
+
+    // SOLO SE LLENAN SI APLICA LIQUIDACIÓN
+    pagoProximo: isLiquidacion ? getSiguientePagoApartado : [],
+    descuentoApartado: isLiquidacion ? getDescuentoApartado : [],
+
+    clausulas: getClausulas,
+    reimpresion: isReimp,
+    isLiquidacion
+  };
+}
 }

@@ -6,6 +6,7 @@ import { DataSource, EntityManager } from 'typeorm';
 import { CreateApartadoDto } from './dto/createApartado.dto';
 import { SpResponse } from 'src/types/resJson';
 import { TicketService } from 'src/globalServices/ticket-service/ticket-service-custom';
+import { CreatePagoApartadoProgramado } from './dto/pagoApartadoProgramado';
 
 
 interface resApartadosMovtoResponse {
@@ -42,7 +43,7 @@ export class ApartadosService {
         observ,
         cvebodOrigen,
         serMov,
-        login,
+        //login,
         UsuarioAlta,
         articulo,
         movimiento,
@@ -233,7 +234,7 @@ export class ApartadosService {
           cveProvCli,
           movimiento[0].impTot,
           observ ? observ : '',
-          login,
+          payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', // payloadToken.UsuarioId ? payloadToken.UsuarioId : 0
           UsuarioAlta ? UsuarioAlta : ''
         ],
       );
@@ -309,7 +310,7 @@ export class ApartadosService {
           FolPag,
           movimiento[0].impTot,
           pagos[0].impPagoProg,
-          login
+           payloadToken.Usuario? payloadToken.Usuario : 'sin usuario'
         ],
       );
 
@@ -341,7 +342,7 @@ export class ApartadosService {
           articulo[0].cveProd,
           cvebodOrigen,
           articulo[0].cant,
-          login
+           payloadToken.Usuario? payloadToken.Usuario : 'sin usuario'
         ],
       );
         
@@ -365,6 +366,7 @@ export class ApartadosService {
   serMov,
   FolPag,
   false,
+  false
 );
 
 return this.ApiJson.customeResSuccess(
@@ -576,6 +578,214 @@ return this.ApiJson.customeResSuccess(
 
     }
 
+}
+
+
+async pagoApartadoProgramado(
+  createPagoApartadoProgramadoDto: CreatePagoApartadoProgramado
+) {
+
+  const queryRunner = this.dataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+
+    const entityManager = queryRunner.manager;
+    const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
+
+    const {
+      cvebod,
+      serMov,
+      folMov,
+      cveMov,
+      cveProvCli,
+      numPago,
+      cveTpPgo,
+      impPagoProg,
+      observ
+    } = createPagoApartadoProgramadoDto;
+
+    // =====================================================
+    // 1. VALIDAR LIQUIDACIÓN
+    // =====================================================
+    const validacion = await entityManager.query(
+      `EXEC [dbo].[SP_GV_ValidarLiquidacionApartado]
+        @CveBod = @0,
+        @SerMov = @1,
+        @CveMov = @2,
+        @FolMov = @3,
+        @NumPago = @4,
+        @ImpPagoProg = @5`,
+      [
+        cvebod,
+        serMov,
+        cveMov,
+        folMov,
+        numPago,
+        impPagoProg
+      ],
+    );
+
+    const result = validacion?.[0];
+
+    if (!result) {
+      throw new Error('No se pudo validar la liquidación');
+    }
+
+    const esLiquidacion = result.EsLiquidacion === 1;
+    const totalLiquidacion = result.TotalLiquidacion;
+
+    // =====================================================
+    // 2. VALIDACIÓN DE IMPORTE
+    // =====================================================
+    if (esLiquidacion && Number(impPagoProg) !== Number(totalLiquidacion)) {
+      throw new Error(
+        `El importe no coincide con la liquidación calculada. Debe ser: ${totalLiquidacion}`
+      );
+    }
+
+    // =====================================================
+    // 3. INSERTAR ENCABEZADO
+    // =====================================================
+    const resPagoApartado = await entityManager.query(
+      `EXEC [dbo].[SP_GV_AgregarPagoApartado]
+        @Cvebod = @0,
+        @SerMov = @1,
+        @CveMov = @2,
+        @Folmov = @3,
+        @CveProCli = @4,
+        @ImpTot = @5,
+        @Observa = @6,
+        @Login = @7,
+        @UsuarioAlta = @8`,
+      [
+        cvebod,
+        serMov,
+        cveMov,
+        folMov,
+        cveProvCli,
+        impPagoProg,
+        observ ?? '',
+        payloadToken.Usuario ?? 'sin usuario',
+        payloadToken.Usuario ?? 'sin usuario'
+      ],
+    );
+
+    if (!resPagoApartado[0] || resPagoApartado[0].error) {
+      throw new Error(resPagoApartado[0]?.mensaje || 'Error al crear pago');
+    }
+
+    const FolPag = resPagoApartado[0].FolPag;
+
+    // =====================================================
+    // 4. INSERTAR DETALLE
+    // =====================================================
+    const resDetPagoApartado = await entityManager.query(
+      `EXEC [dbo].[SP_GV_AgregarDetallePagoApartado]
+        @FolPag = @0,
+        @CveTpPgo = @1,
+        @Imppag = @2,
+        @observa = @3,
+        @UsuarioAlta = @4`,
+      [
+        FolPag,
+        cveTpPgo,
+        impPagoProg,
+        observ ?? '',
+        payloadToken.Usuario ?? 'sin usuario'
+      ],
+    );
+
+    if (!resDetPagoApartado[0] || resDetPagoApartado[0].error) {
+      throw new Error(
+        resDetPagoApartado[0]?.mensaje || 'Error al crear detalle pago'
+      );
+    }
+
+    // =====================================================
+    // 5. SP FINAL (PROGRAMACIÓN O LIQUIDACIÓN)
+    // =====================================================
+    const spFinal = esLiquidacion
+      ? 'SP_GV_AgregarPagoApartadoProgramadoLiquidación'
+      : 'SP_GV_AgregarPagoApartadoProgramado';
+
+    const resFinal = await entityManager.query(
+      `EXEC [dbo].[${spFinal}]
+        @CveBod = @0,
+        @SerMov = @1,
+        @CveMov = @2,
+        @FolMov = @3,
+        @NumPago = @4,
+        @UltFolPag = @5,
+        @ImpPagoProg = @6,
+        @Login = @7`,
+      [
+        cvebod,
+        serMov,
+        cveMov,
+        folMov,
+        numPago,
+        FolPag,
+        impPagoProg,
+        payloadToken.Usuario ?? 'sin usuario'
+      ],
+    );
+
+    if (!resFinal[0] || resFinal[0].error) {
+      throw new Error(
+        resFinal[0]?.mensaje || 'Error al procesar pago programado'
+      );
+    }
+
+    // =====================================================
+    // 6. GENERAR TICKET
+    // =====================================================
+
+    // =====================================================
+    // 7. COMMIT
+    // =====================================================
+
+    await queryRunner.commitTransaction();
+        const ticket = await this.ticketService.getTicket(
+  entityManager,
+  100,
+  folMov,
+  16,
+  serMov,
+  FolPag,
+  false,
+  esLiquidacion
+);
+
+    return {
+      error: 0,
+      FolPag,
+      esLiquidacion,
+      mensaje: esLiquidacion
+        ? 'Pago procesado como LIQUIDACIÓN'
+        : 'Pago procesado como PAGO PROGRAMADO',
+
+      ticket
+    };
+
+  } catch (error: any) {
+
+    try {
+      if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction();
+      }
+    } catch {}
+
+    throw new InternalServerErrorException(
+      error?.message || 'Error interno del sistema'
+    );
+
+  } finally {
+    if (!queryRunner.isReleased) {
+      await queryRunner.release();
+    }
+  }
 }
 
 }
