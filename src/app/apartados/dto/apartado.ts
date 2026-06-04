@@ -29,10 +29,10 @@ export class ApartadoDto {
 
 
 
-  @ApiProperty({ description: 'UsuarioAlta' })
+/*   @ApiProperty({ description: 'UsuarioAlta' })
   @IsString()
   UsuarioAlta: string;
-
+ */
   @ApiProperty({ type: () => ArticuloApartadoDto, isArray: true })
   @IsArray()
   @ValidateNested({ each: true })

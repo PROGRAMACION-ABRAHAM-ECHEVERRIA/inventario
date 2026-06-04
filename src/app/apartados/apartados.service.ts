@@ -45,7 +45,7 @@ export class ApartadosService {
         cvebodOrigen,
         serMov,
         //login,
-        UsuarioAlta,
+        //UsuarioAlta,
         articulo,
         movimiento,
         pagos,
@@ -155,7 +155,8 @@ export class ApartadosService {
                       @RepEntregada  = @24,
                       @Garantia      = @25,
                       @UsuarioAlta   = @26,
-                      @UsuarioId = @27`,
+                      @UsuarioId = @27,
+                       @IsApartado = @28`,
         [
           100,
           16,
@@ -172,7 +173,7 @@ export class ApartadosService {
           0,
           0,
           movimiento[0].impTot,
-          UsuarioAlta,
+         payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', //  'IARCI'
           movimiento[0].cveVen,
           observ ? observ : '',
           movimiento[0].impLet,
@@ -183,14 +184,14 @@ export class ApartadosService {
           0,
           0,
           '',
-          UsuarioAlta,
-          payloadToken.UsuarioId ? payloadToken.UsuarioId : 0,    //27 
-         
+           payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', // 'IARCI'
+          payloadToken.UsuarioId ? payloadToken.UsuarioId : 0,    //  112
+         1
         ],
       );
 
       if (!resMovtos[0] || resMovtos[0].error) {
-      // console.log(resMovtos)
+       //console.log('Movtos','',resMovtos)
         const mensaje = resMovtos[0]?.mensaje || 'Error al crear el movimiento';
         const estatus =
           resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -230,14 +231,14 @@ export class ApartadosService {
             art.lisPre,
             movimiento[0].impTot,
             art.desProd,
-            UsuarioAlta,
+           payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', //   'IARCI'
           ],
         );
 
             
 
         if (resDetmovtos?.error) {
-             //console.log(resDetmovtos)
+            // console.log('DetMovtos','',resDetmovtos)
           const mensaje =
             resDetmovtos.mensaje || 'Error al crear detalle de movimiento';
           const estatus =
@@ -272,8 +273,8 @@ export class ApartadosService {
           cveProvCli,
           movimiento[0].impTot,
           observ ? observ : '',
-          payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', // payloadToken.UsuarioId ? payloadToken.UsuarioId : 0
-          UsuarioAlta ? UsuarioAlta : ''
+          payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', //   'IARCI'
+          payloadToken.Usuario? payloadToken.Usuario : 'sin usuario' //   'IARCI'
         ],
       );
     
@@ -306,14 +307,14 @@ export class ApartadosService {
           detallePagos[0].cveTpPgo,
           movimiento[0].impTot,
           observ ? observ : '',
-          UsuarioAlta ? UsuarioAlta : ''
+         payloadToken.Usuario? payloadToken.Usuario : 'sin usuario' // 'IARCI'
         ],
       );
 
            
 
       if (!resDetPagoApartado[0] || resDetPagoApartado[0].error) {
-       // console.log(resDetPagoApartado)
+       // console.log('DetPagoApartado','',resDetPagoApartado)
         const mensaje = resDetPagoApartado[0]?.mensaje || 'Error al crear el detalle del pago apartado';
         const estatus =
           resDetPagoApartado[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -348,14 +349,14 @@ export class ApartadosService {
           FolPag,
           movimiento[0].impTot,
           pagos[0].impPagoProg,
-           payloadToken.Usuario? payloadToken.Usuario : 'sin usuario'
+          payloadToken.Usuario? payloadToken.Usuario : 'sin usuario' //   'IARCI'
         ],
       );
 
            
 
       if (!resPagoApartadoInicial[0] || resPagoApartadoInicial[0].error) {
-             //console.log(resPagoApartadoInicial)
+             console.log('PagoApartadoInicial','',resPagoApartadoInicial)
         const mensaje = resPagoApartadoInicial[0]?.mensaje || 'Error al crear el pago del apartado Inicial';
         const estatus =
           resPagoApartadoInicial[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -380,13 +381,13 @@ export class ApartadosService {
           articulo[0].cveProd,
           cvebodOrigen,
           articulo[0].cant,
-           payloadToken.Usuario ?? 'sin usuario'
+           payloadToken.Usuario ?? 'sin usuario' // 'IARCI'
         ],
       );
         
 
       if (!resCambioExiste[0] || resCambioExiste[0].error) {
-        // console.log(resCambioExiste)
+         //console.log('CambioExiste','',resCambioExiste)
         const mensaje = resCambioExiste[0]?.mensaje || 'Error al cambiar la existencia a la bodega 100';
         const estatus =
           resCambioExiste[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -416,7 +417,7 @@ return this.ApiJson.customeResSuccess(
 
     } catch (error : any) {
 
-   //console.log('ERROR ORIGINAL => ', error);
+  console.log('ERROR ORIGINAL => ', error);
 
    try {
 
