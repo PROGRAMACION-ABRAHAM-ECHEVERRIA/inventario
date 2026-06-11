@@ -55,6 +55,9 @@ async getTicket(
 
   const servicios = productoPRE ? [productoPRE] : [];
 
+    let getSiguientePagoApartado = [];
+  let getDescuentoApartado = [];
+
   const queryDetallePagos = `
     EXEC SP_GV_Obtener_pago_reimpresion
     @CveBod = @0,
@@ -70,15 +73,8 @@ async getTicket(
     SerMov,
   ]);
 
-  // =====================================================
-  // SOLO SI NO ES LIQUIDACIÓN
-  // =====================================================
-  let getSiguientePagoApartado = [];
-  let getDescuentoApartado = [];
 
-  if (isLiquidacion) {
-
-    const querySiguientePagoApartado = `
+        const querySiguientePagoApartado = `
       EXEC SP_GV_ObtenerProximoPagoApartado
       @FolPag = @0,
       @FolMov = @1
@@ -99,7 +95,6 @@ async getTicket(
       FolPag,
       FolMov,
     ]);
-  }
 
   const queryClausulas = `
     EXEC SP_GV_Obtener_Clausulas_Ticket
@@ -123,8 +118,8 @@ async getTicket(
     pagos: getDetallePagos,
 
     // SOLO SE LLENAN SI APLICA LIQUIDACIÓN
-    pagoProximo: isLiquidacion ? getSiguientePagoApartado : [],
-    descuentoApartado: isLiquidacion ? getDescuentoApartado : [],
+    pagoProximo: getSiguientePagoApartado,
+    descuentoApartado:  getDescuentoApartado,
 
     clausulas: getClausulas,
     reimpresion: isReimp,
