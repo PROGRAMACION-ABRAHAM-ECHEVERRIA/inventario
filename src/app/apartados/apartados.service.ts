@@ -218,7 +218,8 @@ export class ApartadosService {
                         @PreUni      = @8,
                         @ImpSub      = @9,
                         @DesProd     = @10,
-                        @UsuarioAlta = @11`,
+                        @UsuarioAlta = @11, 
+                        @IsApartado = @12`,
           [
             100,
             FolMov,
@@ -231,7 +232,8 @@ export class ApartadosService {
             art.lisPre,
             movimiento[0].impTot,
             art.desProd,
-           payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', //   'IARCI'
+           payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', //   'IARCI' 
+           1
           ],
         );
 
