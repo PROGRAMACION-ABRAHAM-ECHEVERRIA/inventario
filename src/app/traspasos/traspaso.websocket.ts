@@ -36,7 +36,7 @@ export class TraspasoWebsocket {
 
         //  Respuesta al cliente que envió el evento
         return { ok: true, data: res };
-       } catch (err) {
+       } catch (err:any) {
         console.error('Error al crear traspaso:', err);
             console.log(err);
             // Emitir error controlado al cliente
@@ -65,7 +65,7 @@ export class TraspasoWebsocket {
  
         // Respuesta al cliente que hizo la solicitud
         return { ok: true, data: res };
-       } catch (err) {
+       } catch (err:any) {
          console.error('Error al aceptar traspaso:', err);
             console.log(err);
             // Emitir error controlado al cliente
@@ -100,7 +100,7 @@ export class TraspasoWebsocket {
             this.server.to(roomDes).emit('traspaso-cancelado-destino', res);
     
 
-        } catch (err) {
+        } catch (err:any) {
             console.error('Error al cancelar traspaso:', err);
             console.log(err);
             // Emitir error controlado al cliente
@@ -110,6 +110,7 @@ export class TraspasoWebsocket {
             });
         }
     }
+
     @SubscribeMessage('rechazar-traspaso')
     async rechazarTraspaso(@MessageBody() dto: RechazarTraspaso, @ConnectedSocket() client: Socket) {
         console.log(dto)
@@ -128,7 +129,7 @@ export class TraspasoWebsocket {
         return { ok: true, data: res };
 
         
-       } catch (err) {
+       } catch (err: any) {
          console.error('Error al rechazar traspaso:', err);
             console.log(err);
             // Emitir error controlado al cliente

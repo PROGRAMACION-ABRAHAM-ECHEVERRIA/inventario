@@ -143,6 +143,8 @@ ObtenerGeneralTraspasoMov(
     Number(limit) || 30,
   );
 }
+
+
   @ApiOperation({ summary: 'Obtener detalle por traspaso' })
   @ApiQuery({ name: 'SERIEORIGEN', required: false })
   @ApiQuery({ name: 'SERIEDESTINO', required: false })

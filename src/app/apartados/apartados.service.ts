@@ -66,6 +66,7 @@ export class ApartadosService {
        if (cvebodOrigen === 100)
       throw new HttpException('La bodega origen  no puede ser la bodega de venta de apartados', HttpStatus.BAD_REQUEST);
 
+
     /* ================= VALIDAR EXISTENCIAS DEL ARTICULO ================= */
 
     for (const art of articulo) {
