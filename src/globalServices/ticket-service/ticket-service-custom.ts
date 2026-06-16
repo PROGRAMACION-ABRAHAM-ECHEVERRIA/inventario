@@ -117,7 +117,6 @@ async getTicket(
     servicios,
     pagos: getDetallePagos,
 
-    // SOLO SE LLENAN SI APLICA LIQUIDACIÓN
     pagoProximo: getSiguientePagoApartado,
     descuentoApartado:  getDescuentoApartado,
 

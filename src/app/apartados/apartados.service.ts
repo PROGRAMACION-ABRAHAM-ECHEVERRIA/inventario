@@ -21,7 +21,7 @@ export class ApartadosService {
 
   constructor(
     private JwtServiceCustom: JwtServiceCustom,
-      private readonly ticketService: TicketService,
+    private readonly ticketService: TicketService,
     private readonly dataSource: DataSource,
     private readonly manager: EntityManager,
   ) { }
@@ -52,7 +52,7 @@ export class ApartadosService {
         detallePagos
 
       } = createApartadoDto;
-     // console.log(createApartadoDto);
+      // console.log(createApartadoDto);
 
       /* ================= VALIDACIONES ================= */
 
@@ -63,36 +63,36 @@ export class ApartadosService {
         throw new HttpException('Debe existir al menos un artículo', HttpStatus.BAD_REQUEST);
 
 
-       if (cvebodOrigen === 100)
-      throw new HttpException('La bodega origen  no puede ser la bodega de venta de apartados', HttpStatus.BAD_REQUEST);
+      if (cvebodOrigen === 100)
+        throw new HttpException('La bodega origen  no puede ser la bodega de venta de apartados', HttpStatus.BAD_REQUEST);
 
 
-    /* ================= VALIDAR EXISTENCIAS DEL ARTICULO ================= */
+      /* ================= VALIDAR EXISTENCIAS DEL ARTICULO ================= */
 
-    for (const art of articulo) {
+      for (const art of articulo) {
 
-      const [resValidacion]: SpResponse = await entityManager.query(
-        `EXEC SP_GV_ValidarIfExisProdInBod
+        const [resValidacion]: SpResponse = await entityManager.query(
+          `EXEC SP_GV_ValidarIfExisProdInBod
           @CVEBOD = @0,
           @CVEPROD = @1,
           @CANTIDAD = @2`,
-        [
-          cvebodOrigen,
-          art.cveProd,
-          art.cant
-        ]
-      );
-  
-      if (resValidacion?.error) {
-
-        throw this.ApiJson.customeHttpExeption(
-          
-          resValidacion.mensaje,
-          resValidacion.estatus
+          [
+            cvebodOrigen,
+            art.cveProd,
+            art.cant
+          ]
         );
-      }
 
-    }
+        if (resValidacion?.error) {
+
+          throw this.ApiJson.customeHttpExeption(
+
+            resValidacion.mensaje,
+            resValidacion.estatus
+          );
+        }
+
+      }
 
 
       // validando el CveProvCli
@@ -102,21 +102,21 @@ export class ApartadosService {
           HttpStatus.BAD_REQUEST,
         );
       }
-/* 
-      let [findProv] = await entityManager.query(
-        `SELECT 1 FROM [dbo].[CATPROV] WHERE CVEPROV = @0`,
-        [cveProvCli],
-      );
+      /* 
+            let [findProv] = await entityManager.query(
+              `SELECT 1 FROM [dbo].[CATPROV] WHERE CVEPROV = @0`,
+              [cveProvCli],
+            );
+      
+            if (!findProv) {
+              this.ApiJson.customeHttpExeption(
+                'No existe el proveedor',
+                HttpStatus.NOT_FOUND,
+              );
+            } */
 
-      if (!findProv) {
-        this.ApiJson.customeHttpExeption(
-          'No existe el proveedor',
-          HttpStatus.NOT_FOUND,
-        );
-      } */
-        
 
-        
+
 
 
 
@@ -174,7 +174,7 @@ export class ApartadosService {
           0,
           0,
           movimiento[0].impTot,
-         payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', //  'IARCI'
+          payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //  'IARCI'
           movimiento[0].cveVen,
           observ ? observ : '',
           movimiento[0].impLet,
@@ -185,14 +185,14 @@ export class ApartadosService {
           0,
           0,
           '',
-           payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', // 'IARCI'
+          payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', // 'IARCI'
           payloadToken.UsuarioId ? payloadToken.UsuarioId : 0,    //  112
-         1
+          1
         ],
       );
 
       if (!resMovtos[0] || resMovtos[0].error) {
-       //console.log('Movtos','',resMovtos)
+        //console.log('Movtos','',resMovtos)
         const mensaje = resMovtos[0]?.mensaje || 'Error al crear el movimiento';
         const estatus =
           resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -233,15 +233,15 @@ export class ApartadosService {
             art.lisPre,
             movimiento[0].impTot,
             art.desProd,
-           payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', //   'IARCI' 
-           1
+            payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //   'IARCI' 
+            1
           ],
         );
 
-            
+
 
         if (resDetmovtos?.error) {
-            // console.log('DetMovtos','',resDetmovtos)
+          // console.log('DetMovtos','',resDetmovtos)
           const mensaje =
             resDetmovtos.mensaje || 'Error al crear detalle de movimiento';
           const estatus =
@@ -276,14 +276,14 @@ export class ApartadosService {
           cveProvCli,
           movimiento[0].impTot,
           observ ? observ : '',
-          payloadToken.Usuario? payloadToken.Usuario : 'sin usuario', //   'IARCI'
-          payloadToken.Usuario? payloadToken.Usuario : 'sin usuario' //   'IARCI'
+          payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //   'IARCI'
+          payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' //   'IARCI'
         ],
       );
-    
+
 
       if (!resPagoApartado[0] || resPagoApartado[0].error) {
-            // console.log('ResPago Apartado',resPagoApartado)
+        // console.log('ResPago Apartado',resPagoApartado)
         const mensaje = resPagoApartado[0]?.mensaje || 'Error al crear el pago apartado';
         const estatus =
           resPagoApartado[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -308,16 +308,16 @@ export class ApartadosService {
         [
           FolPag,
           detallePagos[0].cveTpPgo,
-          movimiento[0].impTot,
+          pagos[0].impPagoProg,
           observ ? observ : '',
-         payloadToken.Usuario? payloadToken.Usuario : 'sin usuario' // 'IARCI'
+          payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' // 'IARCI'
         ],
       );
 
-           
+
 
       if (!resDetPagoApartado[0] || resDetPagoApartado[0].error) {
-       // console.log('DetPagoApartado','',resDetPagoApartado)
+        // console.log('DetPagoApartado','',resDetPagoApartado)
         const mensaje = resDetPagoApartado[0]?.mensaje || 'Error al crear el detalle del pago apartado';
         const estatus =
           resDetPagoApartado[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -352,14 +352,14 @@ export class ApartadosService {
           FolPag,
           movimiento[0].impTot,
           pagos[0].impPagoProg,
-          payloadToken.Usuario? payloadToken.Usuario : 'sin usuario' //   'IARCI'
+          payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' //   'IARCI'
         ],
       );
 
-           
+
 
       if (!resPagoApartadoInicial[0] || resPagoApartadoInicial[0].error) {
-             console.log('PagoApartadoInicial','',resPagoApartadoInicial)
+        console.log('PagoApartadoInicial', '', resPagoApartadoInicial)
         const mensaje = resPagoApartadoInicial[0]?.mensaje || 'Error al crear el pago del apartado Inicial';
         const estatus =
           resPagoApartadoInicial[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -377,71 +377,71 @@ export class ApartadosService {
       > = await entityManager.query(
         `EXEC [dbo].[SP_GV_AgregarCambioExisteBodCien]
                 @CveProd     = @0,
-                    	@CveBod      = @1,
-                     	@Cant      = @2,
-                     	@Login       = @3`,
+                @CveBod      = @1,
+                @Cant      = @2,
+                @Login       = @3`,
         [
           articulo[0].cveProd,
           cvebodOrigen,
           articulo[0].cant,
-           payloadToken.Usuario ?? 'sin usuario' // 'IARCI'
+          payloadToken.Usuario ?? 'sin usuario' // 'IARCI'
         ],
       );
-        
+
 
       if (!resCambioExiste[0] || resCambioExiste[0].error) {
-         //console.log('CambioExiste','',resCambioExiste)
+        //console.log('CambioExiste','',resCambioExiste)
         const mensaje = resCambioExiste[0]?.mensaje || 'Error al cambiar la existencia a la bodega 100';
         const estatus =
           resCambioExiste[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
         this.ApiJson.customeHttpExeption(mensaje, estatus);
       }
 
-           
 
-       await queryRunner.commitTransaction();
-       const ticket = await this.ticketService.getTicket(
-  entityManager,
-  100,
-  FolMov,
-  16,
-  serMov,
-  FolPag,
-  false,
-  false
-);
 
-return this.ApiJson.customeResSuccess(
-  'Apartado Creado Exitosamente',
-  {
-    ticket
-  },
-);
+      await queryRunner.commitTransaction();
+      const ticket = await this.ticketService.getTicket(
+        entityManager,
+        100,
+        FolMov,
+        16,
+        serMov,
+        FolPag,
+        false,
+        false
+      );
 
-    } catch (error : any) {
+      return this.ApiJson.customeResSuccess(
+        'Apartado Creado Exitosamente',
+        {
+          ticket
+        },
+      );
 
-  console.log('ERROR ORIGINAL => ', error);
+    } catch (error: any) {
 
-   try {
+      console.log('ERROR ORIGINAL => ', error);
 
-      if (queryRunner.isTransactionActive) {
-         await queryRunner.rollbackTransaction();
+      try {
+
+        if (queryRunner.isTransactionActive) {
+          await queryRunner.rollbackTransaction();
+        }
+
+      } catch (rollbackError) {
+
+        // console.log('ROLLBACK ERROR => ', rollbackError);
+
       }
 
-   } catch (rollbackError) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
 
-     // console.log('ROLLBACK ERROR => ', rollbackError);
-
-   }
-
-   if (error instanceof HttpException) {
-      throw error;
-   }
-
-   throw new InternalServerErrorException(
-      `Error ${error['message'] || 'Ocurrió un error interno'}`
-   );
-} finally {
+      throw new InternalServerErrorException(
+        `Error ${error['message'] || 'Ocurrió un error interno'}`
+      );
+    } finally {
       // Siempre liberar el queryRunner
       if (!queryRunner.isReleased) {
         await queryRunner.release();
@@ -536,7 +536,7 @@ return this.ApiJson.customeResSuccess(
         },
       );
 
-    } catch (error : any) {
+    } catch (error: any) {
 
       if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();
@@ -559,12 +559,12 @@ return this.ApiJson.customeResSuccess(
     }
   }
 
-    async obtenerApartadosPendientes(
-          pagina: number,
+  async obtenerApartadosPendientes(
+    pagina: number,
     limit: number,
-    ){
+  ) {
 
-     
+
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
@@ -575,7 +575,7 @@ return this.ApiJson.customeResSuccess(
       const query = `EXEC [dbo].[SP_GV_ApartadosPendientes] `;
 
       const res: any[] = await queryRunner.manager.query(query);
-   const inicio = (pagina - 1) * limit;
+      const inicio = (pagina - 1) * limit;
       const fin = inicio + limit;
 
       const dataPaginada = res.slice(inicio, fin);
@@ -598,7 +598,7 @@ return this.ApiJson.customeResSuccess(
         },
       );
 
-    } catch (error : any) {
+    } catch (error: any) {
 
       if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();
@@ -620,78 +620,78 @@ return this.ApiJson.customeResSuccess(
 
     }
 
-}
+  }
 
 
-async createPagoApartadoProgramado(
-  createPagoApartadoProgramadoDto: CreatePagoApartadoProgramadoDto
-) {
+  async createPagoApartadoProgramado(
+    createPagoApartadoProgramadoDto: CreatePagoApartadoProgramadoDto
+  ) {
 
-  const queryRunner = this.dataSource.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-  try {
+    try {
 
-    const entityManager = queryRunner.manager;
-    const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
+      const entityManager = queryRunner.manager;
+      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
 
-    const {
-      cvebod,
-      serMov,
-      folMov,
-      cveMov,
-      cveProvCli,
-      numPago,
-      cveTpPgo,
-      impPagoProg,
-      observ
-    } = createPagoApartadoProgramadoDto;
+      const {
+        cvebod,
+        serMov,
+        folMov,
+        cveMov,
+        cveProvCli,
+        numPago,
+        cveTpPgo,
+        impPagoProg,
+        observ
+      } = createPagoApartadoProgramadoDto;
 
-    // =====================================================
-    // 1. VALIDAR LIQUIDACIÓN
-    // =====================================================
-    const validacion = await entityManager.query(
-      `EXEC [dbo].[SP_GV_ValidarLiquidacionApartado]
+      // =====================================================
+      // 1. VALIDAR LIQUIDACIÓN
+      // =====================================================
+      const validacion = await entityManager.query(
+        `EXEC [dbo].[SP_GV_ValidarLiquidacionApartado]
         @CveBod = @0,
         @SerMov = @1,
         @CveMov = @2,
         @FolMov = @3,
         @NumPago = @4,
         @ImpPagoProg = @5`,
-      [
-        cvebod,
-        serMov,
-        cveMov,
-        folMov,
-        numPago,
-        impPagoProg
-      ],
-    );
-
-    const result = validacion?.[0];
-
-    if (!result) {
-      throw new Error('No se pudo validar la liquidación');
-    }
-
-    const esLiquidacion = result.EsLiquidacion === 1;
-    const totalLiquidacion = result.TotalLiquidacion;
-
-    // =====================================================
-    // 2. VALIDACIÓN DE IMPORTE
-    // =====================================================
-    if (esLiquidacion && Number(impPagoProg) !== Number(totalLiquidacion)) {
-      throw new Error(
-        `El importe no coincide con la liquidación calculada. Debe ser: ${totalLiquidacion}`
+        [
+          cvebod,
+          serMov,
+          cveMov,
+          folMov,
+          numPago,
+          impPagoProg
+        ],
       );
-    }
 
-    // =====================================================
-    // 3. INSERTAR ENCABEZADO
-    // =====================================================
-    const resPagoApartado = await entityManager.query(
-      `EXEC [dbo].[SP_GV_AgregarPagoApartado]
+      const result = validacion?.[0];
+
+      if (!result) {
+        throw new Error('No se pudo validar la liquidación');
+      }
+
+      const esLiquidacion = result.EsLiquidacion === 1;
+      const totalLiquidacion = result.TotalLiquidacion;
+
+      // =====================================================
+      // 2. VALIDACIÓN DE IMPORTE
+      // =====================================================
+      if (esLiquidacion && Number(impPagoProg) !== Number(totalLiquidacion)) {
+        throw new Error(
+          `El importe no coincide con la liquidación calculada. Debe ser: ${totalLiquidacion}`
+        );
+      }
+
+      // =====================================================
+      // 3. INSERTAR ENCABEZADO
+      // =====================================================
+      const resPagoApartado = await entityManager.query(
+        `EXEC [dbo].[SP_GV_AgregarPagoApartado]
         @Cvebod = @0,
         @SerMov = @1,
         @CveMov = @2,
@@ -701,59 +701,59 @@ async createPagoApartadoProgramado(
         @Observa = @6,
         @Login = @7,
         @UsuarioAlta = @8`,
-      [
-        cvebod,
-        serMov,
-        cveMov,
-        folMov,
-        cveProvCli,
-        impPagoProg,
-        observ ?? '',
-        payloadToken.Usuario ?? 'sin usuario',
-        payloadToken.Usuario ?? 'sin usuario'
-      ],
-    );
+        [
+          cvebod,
+          serMov,
+          cveMov,
+          folMov,
+          cveProvCli,
+          impPagoProg,
+          observ ?? '',
+          payloadToken.Usuario ?? 'sin usuario',
+          payloadToken.Usuario ?? 'sin usuario'
+        ],
+      );
 
-    if (!resPagoApartado[0] || resPagoApartado[0].error) {
-      throw new Error(resPagoApartado[0]?.mensaje || 'Error al crear pago');
-    }
+      if (!resPagoApartado[0] || resPagoApartado[0].error) {
+        throw new Error(resPagoApartado[0]?.mensaje || 'Error al crear pago');
+      }
 
-    const FolPag = resPagoApartado[0].FolPag;
+      const FolPag = resPagoApartado[0].FolPag;
 
-    // =====================================================
-    // 4. INSERTAR DETALLE
-    // =====================================================
-    const resDetPagoApartado = await entityManager.query(
-      `EXEC [dbo].[SP_GV_AgregarDetallePagoApartado]
+      // =====================================================
+      // 4. INSERTAR DETALLE
+      // =====================================================
+      const resDetPagoApartado = await entityManager.query(
+        `EXEC [dbo].[SP_GV_AgregarDetallePagoApartado]
         @FolPag = @0,
         @CveTpPgo = @1,
         @Imppag = @2,
         @observa = @3,
         @UsuarioAlta = @4`,
-      [
-        FolPag,
-        cveTpPgo,
-        impPagoProg,
-        observ ?? '',
-        payloadToken.Usuario ?? 'sin usuario'
-      ],
-    );
-
-    if (!resDetPagoApartado[0] || resDetPagoApartado[0].error) {
-      throw new Error(
-        resDetPagoApartado[0]?.mensaje || 'Error al crear detalle pago'
+        [
+          FolPag,
+          cveTpPgo,
+          impPagoProg,
+          observ ?? '',
+          payloadToken.Usuario ?? 'sin usuario'
+        ],
       );
-    }
 
-    // =====================================================
-    // 5. SP FINAL (PROGRAMACIÓN O LIQUIDACIÓN)
-    // =====================================================
-    const spFinal = esLiquidacion
-      ? 'SP_GV_AgregarPagoApartadoProgramadoLiquidación'
-      : 'SP_GV_AgregarPagoApartadoProgramado';
+      if (!resDetPagoApartado[0] || resDetPagoApartado[0].error) {
+        throw new Error(
+          resDetPagoApartado[0]?.mensaje || 'Error al crear detalle pago'
+        );
+      }
 
-    const resFinal = await entityManager.query(
-      `EXEC [dbo].[${spFinal}]
+      // =====================================================
+      // 5. SP FINAL (PROGRAMACIÓN O LIQUIDACIÓN)
+      // =====================================================
+      const spFinal = esLiquidacion
+        ? 'SP_GV_AgregarPagoApartadoProgramadoLiquidación'
+        : 'SP_GV_AgregarPagoApartadoProgramado';
+
+      const resFinal = await entityManager.query(
+        `EXEC [dbo].[${spFinal}]
         @CveBod = @0,
         @SerMov = @1,
         @CveMov = @2,
@@ -762,72 +762,72 @@ async createPagoApartadoProgramado(
         @UltFolPag = @5,
         @ImpPagoProg = @6,
         @Login = @7`,
-      [
-        cvebod,
-        serMov,
-        cveMov,
-        folMov,
-        numPago,
-        FolPag,
-        impPagoProg,
-        payloadToken.Usuario ?? 'sin usuario'
-      ],
-    );
-
-    if (!resFinal[0] || resFinal[0].error) {
-      throw new Error(
-        resFinal[0]?.mensaje || 'Error al procesar pago programado'
+        [
+          cvebod,
+          serMov,
+          cveMov,
+          folMov,
+          numPago,
+          FolPag,
+          impPagoProg,
+          payloadToken.Usuario ?? 'sin usuario'
+        ],
       );
-    }
 
-    // =====================================================
-    // 6. GENERAR TICKET
-    // =====================================================
-
-    // =====================================================
-    // 7. COMMIT
-    // =====================================================
-
-    await queryRunner.commitTransaction();
-        const ticket = await this.ticketService.getTicket(
-  entityManager,
-  100,
-  folMov,
-  16,
-  serMov,
-  FolPag,
-  false,
-  esLiquidacion
-);
-
-    return {
-      error: 0,
-      FolPag,
-      esLiquidacion,
-      mensaje: esLiquidacion
-        ? 'Pago procesado como LIQUIDACIÓN'
-        : 'Pago procesado como PAGO PROGRAMADO',
-
-      ticket
-    };
-
-  } catch (error: any) {
-
-    try {
-      if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction();
+      if (!resFinal[0] || resFinal[0].error) {
+        throw new Error(
+          resFinal[0]?.mensaje || 'Error al procesar pago programado'
+        );
       }
-    } catch {}
 
-    throw new InternalServerErrorException(
-      error?.message || 'Error interno del sistema'
-    );
+      // =====================================================
+      // 6. GENERAR TICKET
+      // =====================================================
 
-  } finally {
-    if (!queryRunner.isReleased) {
-      await queryRunner.release();
+      // =====================================================
+      // 7. COMMIT
+      // =====================================================
+
+      await queryRunner.commitTransaction();
+      const ticket = await this.ticketService.getTicket(
+        entityManager,
+        100,
+        folMov,
+        16,
+        serMov,
+        FolPag,
+        false,
+        esLiquidacion
+      );
+
+      return {
+        error: 0,
+        FolPag,
+        esLiquidacion,
+        mensaje: esLiquidacion
+          ? 'Pago procesado como LIQUIDACIÓN'
+          : 'Pago procesado como PAGO PROGRAMADO',
+
+        ticket
+      };
+
+    } catch (error: any) {
+
+      try {
+        if (queryRunner.isTransactionActive) {
+          await queryRunner.rollbackTransaction();
+        }
+      } catch { }
+
+      throw new InternalServerErrorException(
+        error?.message || 'Error interno del sistema'
+      );
+
+    } finally {
+      if (!queryRunner.isReleased) {
+        await queryRunner.release();
+      }
     }
   }
-}
 
 }
