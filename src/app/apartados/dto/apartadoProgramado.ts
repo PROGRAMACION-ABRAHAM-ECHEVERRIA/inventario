@@ -15,7 +15,7 @@ export class ApartadoProgramadoDto{
       serMov: string;
 
             @ApiProperty({ description: 'clave de movimiento' })
-      @IsString()
+      @IsNumber()
       cveMov: number;
 
           @ApiProperty({ description: 'folio de movimiento' })
