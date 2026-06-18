@@ -40,7 +40,7 @@ export class ApartadosService {
       const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
 
       const {
-        cveProvCli,
+        CVECLI,
         observ,
         cvebodOrigen,
         serMov,
@@ -96,7 +96,7 @@ export class ApartadosService {
 
 
       // validando el CveProvCli
-      if (!cveProvCli) {
+      if (!CVECLI) {
         this.ApiJson.customeHttpExeption(
           'Ingresa el cliente',
           HttpStatus.BAD_REQUEST,
@@ -129,42 +129,41 @@ export class ApartadosService {
         resApartadosMovtoResponse & { Folmov: number; fecmov: string }
       > = await entityManager.query(
         `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
-                      @CVEBOD        = @0,
-                      @CveMov        = @1, 
-                      @SerMov        = @2,
-                      @OrdCom        = @3,
-                      @NumDoc        = @4,
-                      @CveProvCli    = @5,
-                      @DiasCred      = @6,
-                      @ImpMov        = @7,
-                      @ImpDes        = @8,
-                      @PorcDesc      = @9,
-                      @ImpFle        = @10,
-                      @ImpSub        = @11,
-                      @ImpIva        = @12,
-                      @PorcIva       = @13,
-                      @ImpTot        = @14,
-                      @Login         = @15,
-                      @CveVen        = @16,
-                      @Observ        = @17,
-                      @ImpLet        = @18,
-                      @Facturada     = @19,
-                      @Cancelada     = @20,
-                      @Devuelto      = @21,
-                      @Afectado      = @22,
-                      @NumDias       = @23,
-                      @RepEntregada  = @24,
-                      @Garantia      = @25,
-                      @UsuarioAlta   = @26,
-                      @UsuarioId = @27,
-                       @IsApartado = @28`,
+            @CVEBOD        = @0,
+            @CveMov        = @1, 
+            @SerMov        = @2,
+            @OrdCom        = @3,
+            @NumDoc        = @4,
+            @DiasCred      = @5,
+            @ImpMov        = @6,
+            @ImpDes        = @7,
+            @PorcDesc      = @8,
+            @ImpFle        = @9,
+            @ImpSub        = @10,
+            @ImpIva        = @11,
+            @PorcIva       = @12,
+            @ImpTot        = @13,
+            @Login         = @14,
+            @CveVen        = @15,
+            @Observ        = @16,
+            @ImpLet        = @17,
+            @Facturada     = @18,
+            @Cancelada     = @19,
+            @Devuelto      = @20,
+            @Afectado      = @21,
+            @NumDias       = @22,
+            @RepEntregada  = @23,
+            @Garantia      = @24,
+            @UsuarioAlta   = @25,
+            @UsuarioId     = @26,
+            @IsApartado    = @27, 
+            @CVECLI = @28`,
         [
           100,
           16,
           serMov,
           0,
           0,
-          cveProvCli,
           0,
           movimiento[0].impTot,
           0,
@@ -187,7 +186,8 @@ export class ApartadosService {
           '',
           payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', // 'IARCI'
           payloadToken.UsuarioId ? payloadToken.UsuarioId : 0,    //  112
-          1
+          1,
+          CVECLI
         ],
       );
 
@@ -263,9 +263,9 @@ export class ApartadosService {
                       @SerMov       = @1, 
                       @CveMov       = @2,
                       @Folmov        = @3,
-                      @CveProCli        = @4,
+                      @CVECLI        = @4,
                       @ImpTot   = @5,
-                     @Observa      = @6,
+                      @Observa      = @6,
                       @Login        = @7,
                       @UsuarioAlta        = @8`,
         [
@@ -273,7 +273,7 @@ export class ApartadosService {
           serMov,
           16,
           FolMov,
-          cveProvCli,
+          CVECLI,
           movimiento[0].impTot,
           observ ? observ : '',
           payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //   'IARCI'

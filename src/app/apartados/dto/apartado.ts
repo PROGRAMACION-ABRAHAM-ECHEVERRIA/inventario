@@ -14,9 +14,14 @@ export class ApartadoDto {
   serMov: string;
 
 
+  // @ApiProperty({ description: 'Clave del cliente' })
+  // @IsNumber()
+  // cveProvCli: number;
+
   @ApiProperty({ description: 'Clave del cliente' })
   @IsNumber()
-  cveProvCli: number;
+  CVECLI: number;
+
   @ApiProperty({ description: 'Observa' })
   @IsString()
   observ: string;
