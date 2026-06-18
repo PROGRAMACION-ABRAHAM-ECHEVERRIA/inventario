@@ -25,7 +25,7 @@ export class ApartadoProgramadoDto{
       
     @ApiProperty({ description: 'Clave del cliente' })
   @IsNumber()
-  cveProvCli: number;
+  CVECLI: number;
 
              @ApiProperty({ description: 'Numero de Pago' })
       @IsNumber()
