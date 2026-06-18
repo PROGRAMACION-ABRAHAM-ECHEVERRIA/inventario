@@ -359,7 +359,7 @@ export class ApartadosService {
 
 
       if (!resPagoApartadoInicial[0] || resPagoApartadoInicial[0].error) {
-        console.log('PagoApartadoInicial', '', resPagoApartadoInicial)
+        //console.log('PagoApartadoInicial', '', resPagoApartadoInicial)
         const mensaje = resPagoApartadoInicial[0]?.mensaje || 'Error al crear el pago del apartado Inicial';
         const estatus =
           resPagoApartadoInicial[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -631,7 +631,8 @@ async createPagoApartadoProgramado(
   await queryRunner.startTransaction();
 
   try {
-    const entityManager = queryRunner.manager;
+     const entityManager = queryRunner.manager;
+      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
 
     const {
       cvebod,
@@ -667,8 +668,8 @@ async createPagoApartadoProgramado(
         cveProvCli,
         impPagoProg,
         observ ?? '',
-        'IARCI',
-        'IARCI'
+         payloadToken.Usuario ?? 'sin usuario',
+        payloadToken.Usuario ?? 'sin usuario'
       ]
     );
 
@@ -693,7 +694,7 @@ async createPagoApartadoProgramado(
         cveTpPgo,
         impPagoProg,
         observ ?? '',
-        'IARCI'
+        payloadToken.Usuario ?? 'sin usuario'
       ]
     );
 
@@ -728,7 +729,7 @@ async createPagoApartadoProgramado(
       throw new Error('No se pudo validar la liquidación');
     }
 
-    // 🚨 BLOQUEO ABSOLUTO POR NEGOCIO
+  
     if (result.Mensaje && result.EsLiquidacion === false) {
       throw new Error(result.Mensaje);
     }
@@ -780,7 +781,7 @@ async createPagoApartadoProgramado(
         numPago,
         FolPagNuevo,
         impPagoProg,
-        'IARCI'
+        payloadToken.Usuario ?? 'sin usuario'
       ]
     );
 
