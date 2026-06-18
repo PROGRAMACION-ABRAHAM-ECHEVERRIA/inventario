@@ -174,7 +174,7 @@ export class ApartadosService {
           0,
           0,
           movimiento[0].impTot,
-          'IARCI',//  payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //  'IARCI'
+            payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //  'IARCI'
           movimiento[0].cveVen,
           observ ? observ : '',
           movimiento[0].impLet,
@@ -185,8 +185,8 @@ export class ApartadosService {
           0,
           0,
           '',
-          'IARCI',// payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', // 'IARCI'
-           112,//payloadToken.UsuarioId ? payloadToken.UsuarioId : 0,    //  112
+           payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', // 'IARCI'
+           payloadToken.UsuarioId ? payloadToken.UsuarioId : 0,    //  112
           1
         ],
       );
@@ -233,7 +233,7 @@ export class ApartadosService {
             art.lisPre,
             movimiento[0].impTot,
             art.desProd,
-            'IARCI' ,//payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //   'IARCI' 
+            payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //   'IARCI' 
             1
           ],
         );
@@ -276,8 +276,8 @@ export class ApartadosService {
           cveProvCli,
           movimiento[0].impTot,
           observ ? observ : '',
-         'IARCI',// payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //   'IARCI'
-          'IARCI' //payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' //   'IARCI'
+         payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //   'IARCI'
+          payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' //   'IARCI'
         ],
       );
 
@@ -310,7 +310,7 @@ export class ApartadosService {
           detallePagos[0].cveTpPgo,
           pagos[0].impPagoProg,
           observ ? observ : '',
-         'IARCI', //payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' // 'IARCI'
+         payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' ,// 'IARCI'
         ],
       );
 
@@ -352,7 +352,7 @@ export class ApartadosService {
           FolPag,
           movimiento[0].impTot,
           pagos[0].impPagoProg,
-         'IARCI',// payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' //   'IARCI'
+          payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' ,//   'IARCI'
         ],
       );
 
@@ -384,7 +384,7 @@ export class ApartadosService {
           articulo[0].cveProd,
           cvebodOrigen,
           articulo[0].cant,
-         'IARCI'// payloadToken.Usuario ?? 'sin usuario' // 'IARCI'
+          payloadToken.Usuario ?? 'sin usuario' // 'IARCI'
         ],
       );
 
@@ -668,13 +668,13 @@ async createPagoApartadoProgramado(
         cveProvCli,
         impPagoProg,
         observ ?? '',
-       'IARCI',//  payloadToken.Usuario ?? 'sin usuario',
-       'IARCI'// payloadToken.Usuario ?? 'sin usuario'
+      payloadToken.Usuario ?? 'sin usuario',//  payloadToken.Usuario ?? 'sin usuario' //  'IARCI'
+        payloadToken.Usuario ?? 'sin usuario'// payloadToken.Usuario ?? 'sin usuario' //  'IARCI'
       ]
     );
 
     if (!resPagoApartado?.[0] || resPagoApartado[0].error) {
-      console.log(resPagoApartado[0])
+     // console.log(resPagoApartado[0])
       throw new Error(resPagoApartado?.[0]?.mensaje || 'Error al crear pago');
     }
 
@@ -695,12 +695,12 @@ async createPagoApartadoProgramado(
         cveTpPgo,
         impPagoProg,
         observ ?? '',
-      'IARCI'//  payloadToken.Usuario ?? 'sin usuario'
+         payloadToken.Usuario ?? 'sin usuario'//'IARCI'//  payloadToken.Usuario ?? 'sin usuario'
       ]
     );
 
     if (!resDetPagoApartado?.[0] || resDetPagoApartado[0].error) {
-      console.log(resDetPagoApartado[0])
+      //console.log(resDetPagoApartado[0])
       throw new Error(resDetPagoApartado?.[0]?.mensaje || 'Error al crear detalle');
     }
 
@@ -726,7 +726,7 @@ async createPagoApartadoProgramado(
     );
 
     const result = validacion?.[0];
-      console.log(result)
+    //  console.log(result)
     if (!result) {
       throw new Error('No se pudo validar la liquidación');
     }
@@ -737,7 +737,7 @@ async createPagoApartadoProgramado(
     }
 
     const esLiquidacion = result.EsLiquidacion === 1;
-    const totalLiquidacion = Number(result.TotalLiquidacion ?? 0);
+   // const totalLiquidacion = Number(result.TotalLiquidacion ?? 0);
 
     // =====================================================
     // 4. DECISIÓN DE FLUJO
@@ -777,15 +777,15 @@ async createPagoApartadoProgramado(
         numPago,
         FolPagNuevo,
         impPagoProg,
-        'IARCI'//payloadToken.Usuario ?? 'sin usuario'
+        payloadToken.Usuario ?? 'sin usuario' //'IARCI'//payloadToken.Usuario ?? 'sin usuario'
       ]
     );
 
     if (!resFinal?.[0] || resFinal[0].error) {
-      console.log(resFinal[0])
+      //console.log(resFinal[0])
       throw new Error(resFinal?.[0]?.mensaje || 'Error al procesar pago');
     }
-console.log(FolPagNuevo)
+//console.log(FolPagNuevo)
     // =====================================================
     // 6. COMMIT
     // =====================================================

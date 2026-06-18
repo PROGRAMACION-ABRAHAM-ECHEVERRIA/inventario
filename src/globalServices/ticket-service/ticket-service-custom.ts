@@ -94,12 +94,18 @@ console.log(FolPag)
     const queryDescuentoApartado = `
       EXEC SP_GV_ObtenerDescuentoApartado
       @FolPag = @0,
-      @FolMov = @1
+      @FolMov = @1,
+      @CveBod = @2,
+      @CveMov = @3,
+      @SerMov = @4
     `;
 
     getDescuentoApartado = await manager.query(queryDescuentoApartado, [
       FolPag,
       FolMov,
+      CveBod,
+      CveMov,
+      SerMov
     ]);
 
   const queryClausulas = `
