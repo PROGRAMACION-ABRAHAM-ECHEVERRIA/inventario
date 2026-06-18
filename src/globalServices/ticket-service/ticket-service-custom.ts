@@ -16,7 +16,7 @@ async getTicket(
   isReimp: boolean,
   isLiquidacion: boolean
 ) {
-
+console.log(FolPag)
   const queryEncabezado = `
     EXEC SP_GV_Obtener_encabezado_ticket
     @CveBod = @0,
@@ -77,23 +77,35 @@ async getTicket(
         const querySiguientePagoApartado = `
       EXEC SP_GV_ObtenerProximoPagoApartado
       @FolPag = @0,
-      @FolMov = @1
+      @FolMov = @1,
+      	@CveBod = @2,
+	@CveMov = @3,
+	@SerMov = @4
     `;
 
     getSiguientePagoApartado = await manager.query(querySiguientePagoApartado, [
       FolPag,
       FolMov,
+      CveBod,
+      CveMov,
+      SerMov
     ]);
 
     const queryDescuentoApartado = `
       EXEC SP_GV_ObtenerDescuentoApartado
       @FolPag = @0,
-      @FolMov = @1
+      @FolMov = @1,
+      @CveBod = @2,
+      @CveMov = @3,
+      @SerMov = @4
     `;
 
     getDescuentoApartado = await manager.query(queryDescuentoApartado, [
       FolPag,
       FolMov,
+      CveBod,
+      CveMov,
+      SerMov
     ]);
 
   const queryClausulas = `
