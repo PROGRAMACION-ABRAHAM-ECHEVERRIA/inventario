@@ -127,7 +127,7 @@ export class ComprasService {
       const resMovtos: Array<
         resCompraMovtoResponse & { Folmov: number; fecmov: string }
       > = await entityManager.query(
-        `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
+        `EXEC [dbo].[SP_GV_AgregarMovTosBoolCompras]
           @CVEBOD        = @0,
           @CveMov        = @1,
           @SerMov        = @2,
@@ -345,7 +345,7 @@ export class ComprasService {
         UsuarioAlta: CreateCompraDto.UsuarioAlta,
         totalArticulos: CreateCompraDto.Articulos.length,
       });
-    } catch (error) {
+    } catch (error: any) {
       // Rollback en caso de error
       if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();
@@ -391,7 +391,7 @@ export class ComprasService {
       const getCompras = await this.manager.query(query);
 
       return this.ApiJson.customeResSuccess('Compras Obtenidas', getCompras);
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof HttpException) {
         throw error;
       }
@@ -424,7 +424,7 @@ export class ComprasService {
       ]);  
 
       return this.ApiJson.customeResSuccess('Compras Obtenidas', getCompras);
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof HttpException) {
         throw error;
       }
@@ -521,7 +521,7 @@ export class ComprasService {
       }
 
       return this.ApiJson.customeResSuccess('Totales obtenidos', getTotales[0]);
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof HttpException) {
         throw error;
       }
@@ -581,7 +581,7 @@ export class ComprasService {
       );
 
       return this.ApiJson.customeResSuccess(res.mensaje, findEncabezado);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof HttpException) {
         throw err;
       }
