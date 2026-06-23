@@ -199,7 +199,7 @@ export class SalidasService {
             }
 
             return this.ApiJson.customeResSuccess('Salidas obtenidas exitosamente', res)
-        } catch (error) {
+        } catch (error: any) {
             throw new InternalServerErrorException(
                 `Error ${error['message'] || 'Ocurrió un error interno'}`,
             )
