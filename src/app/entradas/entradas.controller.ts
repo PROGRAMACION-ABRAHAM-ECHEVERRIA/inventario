@@ -22,7 +22,7 @@ export class EntradasController {
   }
 
  @ApiOperation({ summary: 'Obtener todas las entradas por bodega' })
-  @Get(':Folmov/') 
+  @Get(':CVEBOD/') 
   ObteneTotalProdMov(@Param('CVEBOD') CVEBOD: number,
   @Query('page') page?: number,
   @Query('limit') limit?: number,){

@@ -262,11 +262,11 @@ async ObteneTotalProdMov(
       EXEC dbo.SP_GV_ObteneTotalProdMov @CVEBOD = @0
     `;
 
-    const res: any[] = await this.manager.query(query, [CVEBOD]);
+    const res: any[] | SpResponse = await this.manager.query(query, [CVEBOD]);
 
-  if (res[0].error) {
-        this.ApiJson.customeHttpExeption(res[0].mensaje, res[0].estatus); 
-      };
+    if ('error' in res) {
+        this.ApiJson.customeHttpExeption(res[0].mensaje, HttpStatus.BAD_REQUEST)
+    }
           // Función para formatear Date a SQL Server sin conversión de zona horaria
     const formatDateToSQL = (date: Date | string | null): string | null => {
       if (!date) return null;
