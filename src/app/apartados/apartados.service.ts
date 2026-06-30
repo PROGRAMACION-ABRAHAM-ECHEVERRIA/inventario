@@ -452,49 +452,6 @@ export class ApartadosService {
   }
 
 
-  async obtenerApartadosPagados(
-    pagina: number,
-    limit: number,
-  ) {
-
-    try {
-
-      const res: any[] = await this.dataSource.query(`
-      EXEC SP_GV_ApartadosPagados
-    `);
-
-      const inicio = (pagina - 1) * limit;
-      const fin = inicio + limit;
-
-      const dataPaginada = res.slice(inicio, fin);
-
-      if (res.length == 0) {
-        return this.ApiJson.customeHttpExeption(
-          'No hay Apartados Pagados',
-          404
-        )
-      }
-
-      return this.ApiJson.customeResSuccess(
-        'Apartados Obtenidos',
-        {
-          pagina,
-          limit,
-          total: res.length,
-          totalPaginas: Math.ceil(res.length / limit),
-          data: dataPaginada,
-        },
-      );
-
-    } catch (error: any) {
-
-      throw new InternalServerErrorException(
-        `Error ${error['message'] || 'Ocurrió un error interno'}`,
-      );
-
-    }
-  }
-
   async obtenerApartadoDetalle(
     Folmov: number,
     SerMov: string
@@ -559,7 +516,227 @@ export class ApartadosService {
     }
   }
 
-  async obtenerApartadosPendientes(
+async obtenerApartadosVigentesByBodega(
+    CVEBOD: number,
+  BUSCADOR: string,
+  pagina: number,
+  limit: number,
+){
+  try {
+       const query = `
+      EXEC SP_GV_ObtenerApartadosVigentesByBodegaOrigen
+        @CVEBOD = @0,
+        @BUSCADOR = @1
+    `;
+
+     const res: any[] = await this.manager.query(query, [
+      CVEBOD,
+     BUSCADOR || '', // por si viene null o undefined
+    ]);
+
+     if (res.length === 0) {
+      this.ApiJson.customeHttpExeption('No hay apartados vigentes', 404);
+    }
+
+        // Función para formatear Date a SQL Server sin conversión de zona horaria
+    const formatDateToSQL = (date: Date | string | null): string | null => {
+      if (!date) return null;
+
+      let d: Date;
+      if (typeof date === 'string') {
+        d = new Date(date);
+      } else {
+        d = date;
+      }
+
+      const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
+
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+             `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+    };
+
+    // Formateamos la fecha y los decimales para que sean strings consistentes
+    const formattedRes = res.map(item => ({
+      ...item,
+      FechaAlta: formatDateToSQL(item.FechaAlta),
+      Cant: item.Cant != null ? Number(item.Cant).toFixed(2) : null,
+      ImpTot: item.ImpTot != null ? Number(item.ImpTot).toFixed(2) : null,
+    }));
+
+    // PAGINACIÓN
+    const total = formattedRes.length;
+    const totalPginas = Math.ceil(total / limit);
+    const start = (pagina - 1) * limit;
+    const data = formattedRes.slice(start, start + limit);
+
+    return this.ApiJson.customeResSuccess(
+      res[0]?.mensaje || 'Consulta exitosa',
+      {
+        pagina,
+        limit,
+        total,
+        totalPginas,
+        data,
+      },
+    );
+  } catch (error:any) {
+        if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+  }
+}
+async obtenerApartadosPagadosByBodega(
+    CVEBOD: number,
+  BUSCADOR: string,
+  pagina: number,
+  limit: number,
+){
+    try {
+           const query = `
+      EXEC SP_GV_ObtenerApartadosPagadosByBodegaOrigen
+        @CVEBOD = @0,
+        @BUSCADOR = @1
+    `;
+
+     const res: any[] = await this.manager.query(query, [
+      CVEBOD,
+     BUSCADOR || '', // por si viene null o undefined
+    ]);
+
+    
+
+     if (res.length === 0) {
+      this.ApiJson.customeHttpExeption('No hay Apartados Pagados', 404);
+    }
+        // Función para formatear Date a SQL Server sin conversión de zona horaria
+    const formatDateToSQL = (date: Date | string | null): string | null => {
+      if (!date) return null;
+
+      let d: Date;
+      if (typeof date === 'string') {
+        d = new Date(date);
+      } else {
+        d = date;
+      }
+
+      const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
+
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+             `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+    };
+
+    // Formateamos la fecha y los decimales para que sean strings consistentes
+    const formattedRes = res.map(item => ({
+      ...item,
+      FechaAlta: formatDateToSQL(item.FechaAlta),
+      Cant: item.Cant != null ? Number(item.Cant).toFixed(2) : null,
+      ImpTot: item.ImpTot != null ? Number(item.ImpTot).toFixed(2) : null,
+    }));
+
+    // PAGINACIÓN
+    const total = formattedRes.length;
+    const totalPginas = Math.ceil(total / limit);
+    const start = (pagina - 1) * limit;
+    const data = formattedRes.slice(start, start + limit);
+
+    return this.ApiJson.customeResSuccess(
+      res[0]?.mensaje || 'Consulta exitosa',
+      {
+        pagina,
+        limit,
+        total,
+        totalPginas,
+        data,
+      },
+    );
+  } catch (error:any) {
+      if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+  }
+}
+async obtenerApartadosCanceladosByBodega(
+    CVEBOD: number,
+  BUSCADOR: string,
+  pagina: number,
+  limit: number,
+){
+     try {
+           const query = `
+      EXEC SP_GV_ObtenerApartadosCanceladosByBodegaOrigen
+        @CVEBOD = @0,
+        @BUSCADOR = @1
+    `;
+         const res: any[] = await this.manager.query(query, [
+      CVEBOD,
+     BUSCADOR || '', // por si viene null o undefined
+    ]);
+
+      if (res.length === 0) {
+      this.ApiJson.customeHttpExeption('No hay Apartados Cancelados', 404);
+    }
+
+        // Función para formatear Date a SQL Server sin conversión de zona horaria
+    const formatDateToSQL = (date: Date | string | null): string | null => {
+      if (!date) return null;
+
+      let d: Date;
+      if (typeof date === 'string') {
+        d = new Date(date);
+      } else {
+        d = date;
+      }
+
+      const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
+
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+             `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+    };
+
+    // Formateamos la fecha y los decimales para que sean strings consistentes
+    const formattedRes = res.map(item => ({
+      ...item,
+      FechaAlta: formatDateToSQL(item.FechaAlta),
+      Cant: item.Cant != null ? Number(item.Cant).toFixed(2) : null,
+      ImpTot: item.ImpTot != null ? Number(item.ImpTot).toFixed(2) : null,
+    }));
+
+    // PAGINACIÓN
+    const total = formattedRes.length;
+    const totalPginas = Math.ceil(total / limit);
+    const start = (pagina - 1) * limit;
+    const data = formattedRes.slice(start, start + limit);
+
+    return this.ApiJson.customeResSuccess(
+      res[0]?.mensaje || 'Consulta exitosa',
+      {
+        pagina,
+        limit,
+        total,
+        totalPginas,
+        data,
+      },
+    );
+
+  } catch (error:any) {
+      if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+  }
+}
+/*   async obtenerApartadosPendientes(
     pagina: number,
     limit: number,
   ) {
@@ -620,8 +797,50 @@ export class ApartadosService {
 
     }
 
-  }
+  } */
 
+/*       async obtenerApartadosPagados(
+    pagina: number,
+    limit: number,
+  ) {
+
+    try {
+
+      const res: any[] = await this.dataSource.query(`
+      EXEC SP_GV_ApartadosPagados
+    `);
+
+      const inicio = (pagina - 1) * limit;
+      const fin = inicio + limit;
+
+      const dataPaginada = res.slice(inicio, fin);
+
+      if (res.length == 0) {
+        return this.ApiJson.customeHttpExeption(
+          'No hay Apartados Pagados',
+          404
+        )
+      }
+
+      return this.ApiJson.customeResSuccess(
+        'Apartados Obtenidos',
+        {
+          pagina,
+          limit,
+          total: res.length,
+          totalPaginas: Math.ceil(res.length / limit),
+          data: dataPaginada,
+        },
+      );
+
+    } catch (error: any) {
+
+      throw new InternalServerErrorException(
+        `Error ${error['message'] || 'Ocurrió un error interno'}`,
+      );
+
+    }
+  } */
 
 async createPagoApartadoProgramado(
   createPagoApartadoProgramadoDto: CreatePagoApartadoProgramadoDto
@@ -829,300 +1048,5 @@ async createPagoApartadoProgramado(
     }
   }
 }
-/*  async createPagoApartadoProgramado( createPagoApartadoProgramadoDto: CreatePagoApartadoProgramadoDto){
-      const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-  try {
-        const entityManager = queryRunner.manager;
-      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
-          const {
-        cvebod,
-        serMov,
-        folMov,
-        cveMov,
-        cveProvCli,
-        numPago,
-        cveTpPgo,
-        impPagoProg,
-        observ
-      } = createPagoApartadoProgramadoDto;
-    // =====================================================
-// 1. VALIDAR LIQUIDACIÓN
-// =====================================================
-const validacion = await entityManager.query(
-  `EXEC [dbo].[SP_GV_ValidarLiquidacionApartado]
-  @CveBod = @0,
-  @SerMov = @1,
-  @CveMov = @2,
-  @FolMov = @3,
-  @NumPago = @4,
-  @ImpPagoProg = @5`,
-  [
-    cvebod,
-    serMov,
-    cveMov,
-    folMov,
-    numPago,
-    impPagoProg
-  ],
-);
-
-//  LOG IMPORTANTE
-console.log('RESPUESTA SP VALIDACIÓN LIQUIDACIÓN =>', validacion);
-
-const result = validacion?.[0];
-
-if (!result) {
-  console.log('VALIDACIÓN VACÍA =>', validacion);
-  throw new Error('No se pudo validar la liquidación');
-}
-
-const esLiquidacion = result.EsLiquidacion === 1;
-const totalLiquidacion = result.TotalLiquidacion;
-if(esLiquidacion){
-  console.log('Tiene liquidacion')
-  console.log('INTERPRETADO =>', {
-  esLiquidacion,
-  totalLiquidacion,
-  recibido: impPagoProg
-});
-}else{
-  console.log('No tiene liquidacion')
-
-
-console.log('INTERPRETADO =>', {
-  esLiquidacion,
-  totalLiquidacion,
-  recibido: impPagoProg
-});
-}
-
-
-    
-  } catch (error:any) {
-      throw new InternalServerErrorException(
-        error?.message || 'Error interno del sistema'
-      );
-  }finally {
-      if (!queryRunner.isReleased) {
-        await queryRunner.release();
-      }
-    }
-}  */
-
-  /* async createPagoApartadoProgramado(
-    createPagoApartadoProgramadoDto: CreatePagoApartadoProgramadoDto
-  ) {
-
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-
-      const entityManager = queryRunner.manager;
-      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
-
-      const {
-        cvebod,
-        serMov,
-        folMov,
-        cveMov,
-        cveProvCli,
-        numPago,
-        cveTpPgo,
-        impPagoProg,
-        observ
-      } = createPagoApartadoProgramadoDto;
-    console.log(numPago)
-      // =====================================================
-      // 1. VALIDAR LIQUIDACIÓN
-      // =====================================================
-      const validacion = await entityManager.query(
-        `EXEC [dbo].[SP_GV_ValidarLiquidacionApartado]
-        @CveBod = @0,
-        @SerMov = @1,
-        @CveMov = @2,
-        @FolMov = @3,
-        @NumPago = @4,
-        @ImpPagoProg = @5`,
-        [
-          cvebod,
-          serMov,
-          cveMov,
-          folMov,
-          numPago,
-          impPagoProg
-        ],
-      );
-
-      const result = validacion?.[0];
-
-      if (!result) {
-        throw new Error('No se pudo validar la liquidación');
-      }
-
-      const esLiquidacion = result.EsLiquidacion === 1;
-      const totalLiquidacion = result.TotalLiquidacion;
-
-      // =====================================================
-      // 2. VALIDACIÓN DE IMPORTE
-      // =====================================================
-      if (esLiquidacion && Number(impPagoProg) !== Number(totalLiquidacion)) {
-
-             console.log('Validacion','',validacion)
-        throw new Error(
-          `El importe no coincide con la liquidación calculada. Debe ser: ${totalLiquidacion}`
-        );
-      }
-
-      // =====================================================
-      // 3. INSERTAR ENCABEZADO
-      // =====================================================
-      const resPagoApartado = await entityManager.query(
-        `EXEC [dbo].[SP_GV_AgregarPagoApartado]
-        @Cvebod = @0,
-        @SerMov = @1,
-        @CveMov = @2,
-        @Folmov = @3,
-        @CveProCli = @4,
-        @ImpTot = @5,
-        @Observa = @6,
-        @Login = @7,
-        @UsuarioAlta = @8`,
-        [
-          cvebod,
-          serMov,
-          cveMov,
-          folMov,
-          cveProvCli,
-          impPagoProg,
-          observ ?? '',
-         'IARCI',    //payloadToken.Usuario ?? 'sin usuario',   
-          'IARCI' //payloadToken.Usuario ?? 'sin usuario'
-        ],
-      );
-
-      if (!resPagoApartado[0] || resPagoApartado[0].error) {
-           console.log('PagoApartado','',resPagoApartado[0])
-        throw new Error(resPagoApartado[0]?.mensaje || 'Error al crear pago');
-      }
-
-      const FolPagNuevo = resPagoApartado[0].FolPag;
-      console.log(FolPagNuevo)
-
-      // =====================================================
-      // 4. INSERTAR DETALLE
-      // =====================================================
-      const resDetPagoApartado = await entityManager.query(
-        `EXEC [dbo].[SP_GV_AgregarDetallePagoApartado]
-        @FolPag = @0,
-        @CveTpPgo = @1,
-        @Imppag = @2,
-        @observa = @3,
-        @UsuarioAlta = @4`,
-        [
-          FolPagNuevo,
-          cveTpPgo,
-          impPagoProg,
-          observ ?? '',
-         'IARCI'   //payloadToken.Usuario ?? 'sin usuario'
-        ],
-      );
-
-      if (!resDetPagoApartado[0] || resDetPagoApartado[0].error) {
-          console.log('DetApartado','',resDetPagoApartado[0])
-        throw new Error(
-          resDetPagoApartado[0]?.mensaje || 'Error al crear detalle pago'
-        );
-      }
-
-      // =====================================================
-      // 5. SP FINAL (PROGRAMACIÓN O LIQUIDACIÓN)
-      // =====================================================
-      const spFinal = esLiquidacion
-        ? 'SP_GV_AgregarPagoApartadoProgramadoLiquidación'
-        : 'SP_GV_AgregarPagoApartadoProgramado';
-
-      const resFinal = await entityManager.query(
-        `EXEC [dbo].[${spFinal}]
-        @CveBod = @0,
-        @SerMov = @1,
-        @CveMov = @2,
-        @FolMov = @3,
-        @FolPagNuevo = @4,
-        @NumPago = @5,
-        @ImpPagoProg = @6,
-        @Login = @7`,
-        [
-          100,
-          serMov,
-          16,
-          folMov,
-          FolPagNuevo,
-          numPago,
-          impPagoProg,
-          'IARCI' //payloadToken.Usuario ?? 'sin usuario'
-        ],
-      );
-
-      if (!resFinal[0] || resFinal[0].error) {
-          console.log('resFinal',resFinal)
-        throw new Error(
-          resFinal[0]?.mensaje || 'Error al procesar pago programado'
-        );
-      }
-
-      // =====================================================
-      // 6. GENERAR TICKET
-      // =====================================================
-
-      // =====================================================
-      // 7. COMMIT
-      // =====================================================
-
-      await queryRunner.commitTransaction();
-      const ticket = await this.ticketService.getTicket(
-        entityManager,
-        100,
-        folMov,
-        16,
-        serMov,
-        FolPagNuevo,
-        false,
-        esLiquidacion
-      );
-
-      return {
-        error: 0,
-        FolPagNuevo,
-        esLiquidacion,
-        mensaje: esLiquidacion
-          ? 'Pago procesado como LIQUIDACIÓN'
-          : 'Pago procesado como PAGO PROGRAMADO',
-
-        ticket
-      };
-
-    } catch (error: any) {
-       console.log('error','',error)
-      try {
-        if (queryRunner.isTransactionActive) {
-          await queryRunner.rollbackTransaction();
-        }
-      } catch { }
-
-      throw new InternalServerErrorException(
-        error?.message || 'Error interno del sistema'
-      );
-
-    } finally {
-      if (!queryRunner.isReleased) {
-        await queryRunner.release();
-      }
-    }
-  } */
 
 }

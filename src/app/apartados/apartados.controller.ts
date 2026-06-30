@@ -28,8 +28,6 @@ export class ApartadosController {
 
   }
 
-  
-
   @Post('realizarPagoProgramado')
   @ApiOperation({
     summary: 'Pago de apartado',
@@ -44,10 +42,7 @@ export class ApartadosController {
 
   }
 
-
-
-
-
+/* 
   @ApiOperation({ summary: 'Obtener Lista General de Apartados Pagados' })
   @Get('obtenerApartadosPagados')
   ObteneGeneralApartados(
@@ -70,7 +65,7 @@ export class ApartadosController {
        Number(page) || 1,
       Number(limit) || 30)
     
-  }
+  } */
 
 
   @ApiOperation({ summary: 'Obtener el detalle de un Apartado' })
@@ -87,5 +82,60 @@ ObteneDetalleApartados(
   const serieFinal = SerMov?.trim() ? SerMov : '';
   return this.apartadosService.obtenerApartadoDetalle(Folmov, serieFinal);
 }
+
+
+  @ApiOperation({ summary: 'Obtener apartados vigentes(Pendientes)' })
+@ApiQuery({ name: 'BUSQUEDA', required: false })
+@Get('ObtenerApartadosVigentes')
+ObtenerApartadosVigentes(
+  @Query('CVEBOD') CVEBOD: number,
+  @Query('BUSQUEDA') BUSQUEDA?: string,
+  @Query('page') page?: number,
+  @Query('limit') limit?: number,
+) {
+  return this.apartadosService.obtenerApartadosVigentesByBodega(
+    Number(CVEBOD),
+    BUSQUEDA ?? '',
+    Number(page) || 1,
+    Number(limit) || 30,
+  );
+}
+
+  @ApiOperation({ summary: 'Obtener apartados Pagados' })
+@ApiQuery({ name: 'BUSQUEDA', required: false })
+@Get('ObtenerApartadosPagados')
+ObtenerApartadosPagados(
+  @Query('CVEBOD') CVEBOD: number,
+  @Query('BUSQUEDA') BUSQUEDA?: string,
+  @Query('page') page?: number,
+  @Query('limit') limit?: number,
+) {
+  return this.apartadosService.obtenerApartadosPagadosByBodega(
+    Number(CVEBOD),
+    BUSQUEDA ?? '',
+    Number(page) || 1,
+    Number(limit) || 30,
+  );
+}
+
+  @ApiOperation({ summary: 'Obtener apartados Cancelados' })
+@ApiQuery({ name: 'BUSQUEDA', required: false })
+@Get('ObtenerApartadosCancelados')
+ObtenerApartadosCancelados(
+  @Query('CVEBOD') CVEBOD: number,
+  @Query('BUSQUEDA') BUSQUEDA?: string,
+  @Query('page') page?: number,
+  @Query('limit') limit?: number,
+) {
+  return this.apartadosService.obtenerApartadosPagadosByBodega(
+    Number(CVEBOD),
+    BUSQUEDA ?? '',
+    Number(page) || 1,
+    Number(limit) || 30,
+  );
+}
+
+
+
 
 }
