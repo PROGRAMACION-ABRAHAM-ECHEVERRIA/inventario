@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { ApartadosService } from './apartados.service';
@@ -6,10 +6,11 @@ import { CreateApartadoDto } from './dto/createApartado.dto';
 import { CreatePagoApartadoProgramadoDto } from './dto/pagoApartadoProgramado';
 
 
+
 @ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Apartados')
-@UseAuth()   
+//@UseAuth()   
 @Controller('Apartados')
 export class ApartadosController {
 
@@ -77,7 +78,7 @@ export class ApartadosController {
 @Get('obtenerDetalleApartado/:FolMov')
 ObteneDetalleApartados(
   @Param('FolMov') Folmov: number,
-  @Query('SerMov') SerMov?: string,
+ @Query('SerMov') SerMov: string = '',
 ) {
   const serieFinal = SerMov?.trim() ? SerMov : '';
   return this.apartadosService.obtenerApartadoDetalle(Folmov, serieFinal);
@@ -135,7 +136,28 @@ ObtenerApartadosCancelados(
   );
 }
 
+  @ApiOperation({ summary: 'Obtener apartados Cancelados' })
+@ApiQuery({
+  name: 'SerMov',
+  required: false,
+  type: String,
+})
+@Get('reimpresionTicketPagoApartado/:CveBodDes/:Folmov/:CveMov/:Folpag')
+ObtenerTicktReImpresion(
+  @Param('CveBodDes', ParseIntPipe) CveBodDes: number,
+  @Param('Folmov', ParseIntPipe) Folmov: number,
+  @Param('CveMov', ParseIntPipe) CveMov: number,
+  @Param('Folpag', ParseIntPipe) FolPag: number,
+  @Query('SerMov') SerMov: string = '',
+) {
 
-
+  return this.apartadosService.getTicketReimpresionPagoApartado(
+    CveBodDes,
+    Folmov,
+    CveMov,
+    SerMov ?? '',
+    FolPag,
+  );
+}
 
 }

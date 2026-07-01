@@ -16,7 +16,7 @@ async getTicket(
   isReimp: boolean,
   isLiquidacion: boolean
 ) {
-console.log(FolPag)
+
   const queryEncabezado = `
     EXEC SP_GV_Obtener_encabezado_ticket
     @CveBod = @0,
