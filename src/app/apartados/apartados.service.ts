@@ -524,7 +524,7 @@ async obtenerApartadosVigentesByBodega(
 ){
   try {
        const query = `
-      EXEC SP_GV_ObtenerApartadosVigentesByBodegaOrigen
+      EXEC [dbo].[SP_GV_ObtenerApartadosVigentesByBodegaOrigen]
         @CVEBOD = @0,
         @BUSCADOR = @1
     `;
@@ -538,30 +538,10 @@ async obtenerApartadosVigentesByBodega(
       this.ApiJson.customeHttpExeption('No hay apartados vigentes', 404);
     }
 
-        // Función para formatear Date a SQL Server sin conversión de zona horaria
-    const formatDateToSQL = (date: Date | string | null): string | null => {
-      if (!date) return null;
-
-      let d: Date;
-      if (typeof date === 'string') {
-        d = new Date(date);
-      } else {
-        d = date;
-      }
-
-      const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
-
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
-             `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
-    };
-
-    // Formateamos la fecha y los decimales para que sean strings consistentes
-    const formattedRes = res.map(item => ({
-      ...item,
-      FechaAlta: formatDateToSQL(item.FechaAlta),
-      Cant: item.Cant != null ? Number(item.Cant).toFixed(2) : null,
-      ImpTot: item.ImpTot != null ? Number(item.ImpTot).toFixed(2) : null,
-    }));
+    //CALCULO DEL TOTAL DE REGISTROS
+const formattedRes = res.map(item => ({
+  ...item,
+}));
 
     // PAGINACIÓN
     const total = formattedRes.length;
@@ -612,30 +592,13 @@ async obtenerApartadosPagadosByBodega(
      if (res.length === 0) {
       this.ApiJson.customeHttpExeption('No hay Apartados Pagados', 404);
     }
-        // Función para formatear Date a SQL Server sin conversión de zona horaria
-    const formatDateToSQL = (date: Date | string | null): string | null => {
-      if (!date) return null;
+      
 
-      let d: Date;
-      if (typeof date === 'string') {
-        d = new Date(date);
-      } else {
-        d = date;
-      }
 
-      const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
-
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
-             `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
-    };
-
-    // Formateamos la fecha y los decimales para que sean strings consistentes
-    const formattedRes = res.map(item => ({
-      ...item,
-      FechaAlta: formatDateToSQL(item.FechaAlta),
-      Cant: item.Cant != null ? Number(item.Cant).toFixed(2) : null,
-      ImpTot: item.ImpTot != null ? Number(item.ImpTot).toFixed(2) : null,
-    }));
+    //CALCULO DEL TOTAL DE REGISTROS
+const formattedRes = res.map(item => ({
+  ...item,
+}));
 
     // PAGINACIÓN
     const total = formattedRes.length;
