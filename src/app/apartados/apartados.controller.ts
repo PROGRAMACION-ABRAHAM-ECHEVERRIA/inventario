@@ -4,6 +4,7 @@ import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { ApartadosService } from './apartados.service';
 import { CreateApartadoDto } from './dto/createApartado.dto';
 import { CreatePagoApartadoProgramadoDto } from './dto/pagoApartadoProgramado';
+import { CancelarApartadoDto } from './dto/cancelacionApartado';
 
 
 
@@ -29,6 +30,8 @@ export class ApartadosController {
 
   }
 
+
+
   @Post('realizarPagoProgramado')
   @ApiOperation({
     summary: 'Pago de apartado',
@@ -42,6 +45,7 @@ export class ApartadosController {
     return this.apartadosService.createPagoApartadoProgramado(CreatePagoApartadoProgramadoDto);
 
   }
+
 
   /* 
     @ApiOperation({ summary: 'Obtener Lista General de Apartados Pagados' })
@@ -161,5 +165,22 @@ export class ApartadosController {
       FolPag,
     );
   }
+
+
+    @Post('CancelarApartado')
+  @ApiOperation({
+    summary: 'Cancelar un apartado',
+    description: 'Cancelar un apartado',
+  })
+  @ApiBody({
+    type: CancelarApartadoDto,
+    description: 'Datos del cancelado de apartado',
+  })
+  cancelar(@Body() cancelarApartadoDto: CancelarApartadoDto) {
+    return this.apartadosService.cancelarApartado(cancelarApartadoDto);
+
+  }
+
+
 
 }

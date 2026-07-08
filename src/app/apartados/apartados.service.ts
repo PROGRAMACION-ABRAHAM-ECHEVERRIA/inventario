@@ -7,8 +7,14 @@ import { CreateApartadoDto } from './dto/createApartado.dto';
 import { SpResponse } from 'src/types/resJson';
 import { TicketService } from 'src/globalServices/ticket-service/ticket-service-custom';
 import { CreatePagoApartadoProgramadoDto } from './dto/pagoApartadoProgramado';
+import { CancelarApartadoDto } from './dto/cancelacionApartado';
 
 
+
+interface returnIntento { 
+    IntentoValido: boolean
+    TotalIntentos:number
+} 
 
 interface resApartadosMovtoResponse {
   error: boolean;
@@ -1048,5 +1054,63 @@ entityManager,CveBodDes, FolMov,CveMov,SerMov,FolPag, true,false
 
    }
 }
+
+async cancelarApartado(cancelarApartado:CancelarApartadoDto){
+       const queryRunner = this.dataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+    try {
+        const entityManager = queryRunner.manager;
+       const {
+          cvebodOrigen,
+          serMovOrigen,
+          cvebodDes,
+          serMovDes,
+          cveMov,
+          folMov,
+          CVECLI,
+          observa,
+          refLlave
+          
+    } = cancelarApartado;
+
+        const isIntentoValido : returnIntento = await entityManager.query(
+      `EXEC [dbo].[SP_ValidarIntentosCancelacionApartado]
+      @CvebodDes = @0,
+      @SerMov = @1,
+      @CveMov = @2,
+      @Folmov = @3`,
+      [
+        cvebodDes,
+        serMovOrigen,
+        cveMov,
+        folMov
+      ]
+    );
+
+    if(!isIntentoValido.IntentoValido){
+         this.ApiJson.customeHttpExeption(
+            'No se puede cancelar, el apartado eccede el numero de intentos',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+    }
+
+
+    } catch (error: any) {
+       if (queryRunner.isTransactionActive) {
+      await queryRunner.rollbackTransaction();
+    }
+
+    throw new InternalServerErrorException(
+      error?.message || 'Error interno del sistema'
+    );
+    } finally {
+    if (!queryRunner.isReleased) {
+      await queryRunner.release();
+    }
+  }
+
+}
+
 
 }
