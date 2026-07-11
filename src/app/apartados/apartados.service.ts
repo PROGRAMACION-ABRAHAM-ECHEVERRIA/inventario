@@ -1190,6 +1190,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
         cvebodOrg,
         serMovOrg,
         folMov,
+        tipCancel,
         cvecli,
         usuarioBaja,
         refLlave
