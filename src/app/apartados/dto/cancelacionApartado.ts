@@ -1,44 +1,36 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CancelarApartadoDto {
   
-  @ApiProperty({ description: 'Clave de bodega de la sucursal Origen' })
+    @ApiProperty({ description: 'Clave de la bodega origen' })
   @IsNumber()
-  cvebodOrigen: number;
+  cvebodOrg: number;
 
-
-  @ApiProperty({ description: 'Serie de la sucursal Destino' })
+  @ApiProperty({ description: 'Serie del movimiento origen' })
   @IsString()
-  serMovOrigen: string;
+  serMovOrg: string;
 
-  @ApiProperty({ description: 'Clave de bodega de la sucursal Destino' })
-  @IsNumber()
-  cvebodDes: number;
-
-
-  @ApiProperty({ description: 'Serie de la sucursal Destino' })
-  @IsString()
-  serMovDes: string;
-
-  @ApiProperty({ description: 'clave de movimiento' })
-  @IsNumber()
-  cveMov: number;
-
-  @ApiProperty({ description: 'folio de movimiento' })
+  @ApiProperty({ description: 'Folio del movimiento' })
   @IsNumber()
   folMov: number;
 
+  @ApiProperty({ description: 'Tipo de cancelación' })
+  @IsNumber()
+  tipCancel: number;
+
   @ApiProperty({ description: 'Clave del cliente' })
   @IsNumber()
-  CVECLI: number;
+  cvecli: number;
 
+  @ApiProperty({ description: 'Usuario que realiza la cancelación' })
   @IsString()
-  observa: string;
+  usuarioBaja: string;
 
+  @ApiPropertyOptional({ description: 'Llave de autorización para la cancelación' })
   @IsOptional()
-  @ApiProperty({ description: 'LLave de acceso' })
   @IsString()
   refLlave?: string;
+
 
 }

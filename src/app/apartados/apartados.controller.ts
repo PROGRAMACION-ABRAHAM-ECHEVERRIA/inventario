@@ -182,5 +182,20 @@ export class ApartadosController {
   }
 
 
+    @ApiOperation({ summary: 'Obtener el detalle de un Apartado' })
+  
+  @Get('obtenerTipMovCancelacion/AC')
+  ObtenerCancelacionAC() {
+    return this.apartadosService.obtenerCancelacionApartadoAC();
+  }
 
-}
+  @ApiOperation({ summary: 'Obtener el detalle de un Apartado' })
+  
+  @Get('obtenerTipMovCancelacion/BA')
+  ObtenerCancelacionBA() {
+    return this.apartadosService.obtenerCancelacionApartadoBA};
+  }
+
+
+
+

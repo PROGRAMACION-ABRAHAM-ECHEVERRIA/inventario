@@ -522,6 +522,87 @@ export class ApartadosService {
     }
   }
 
+  async obtenerCancelacionApartadoAC(){
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+
+      
+      const query = `EXEC [dbo].[VW_GV_CatMotCancApar_AC]`;
+
+      const res: any[] = await queryRunner.manager.query(query);
+
+      if (res.length == 0) {
+        return this.ApiJson.customeHttpExeption(
+          'No se encontraron tipos  movimientos de cancelacion activos ',
+          404
+        )
+      }
+
+
+
+
+      return this.ApiJson.customeResSuccess(
+       'Tipo movimientos cancelacion obtenidos',
+        {
+
+          res
+        },
+      );
+
+      
+    } catch (error:any) {
+       if (queryRunner.isTransactionActive) {
+      await queryRunner.rollbackTransaction();
+    }
+
+    throw new InternalServerErrorException(
+      error?.message || 'Error interno del sistema'
+    );
+    }
+  }
+  async obtenerCancelacionApartadoBA(){
+     const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+       const query = `EXEC [dbo].[VW_GV_CatMotCancApar_AC]`;
+
+      const res: any[] = await queryRunner.manager.query(query);
+
+      if (res.length == 0) {
+        return this.ApiJson.customeHttpExeption(
+          'No se encontraron tipos  movimientos de cancelacion no activos ',
+          404
+        )
+      }
+
+
+
+
+      return this.ApiJson.customeResSuccess(
+        'Tipo movimientos cancelacion obtenidos',
+        {
+
+          res
+        },
+      );
+      
+    } catch (error:any) {
+          if (queryRunner.isTransactionActive) {
+      await queryRunner.rollbackTransaction();
+    }
+
+    throw new InternalServerErrorException(
+      error?.message || 'Error interno del sistema'
+    );
+    }
+  }
+
 async obtenerApartadosVigentesByBodega(
     CVEBOD: number,
   BUSCADOR: string,
@@ -1062,14 +1143,12 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
     try {
         const entityManager = queryRunner.manager;
        const {
-          cvebodOrigen,
-          serMovOrigen,
-          cvebodDes,
-          serMovDes,
-          cveMov,
+          cvebodOrg,
+          serMovOrg,
           folMov,
-          CVECLI,
-          observa,
+          tipCancel,
+          cvecli,
+          usuarioBaja,
           refLlave
           
     } = cancelarApartado;
@@ -1081,9 +1160,9 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
       @CveMov = @2,
       @Folmov = @3`,
       [
-        cvebodDes,
-        serMovOrigen,
-        cveMov,
+        100,
+        serMovOrg,
+        16,
         folMov
       ]
     );
@@ -1094,6 +1173,48 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
             HttpStatus.INTERNAL_SERVER_ERROR,
         );
     }
+
+     // =====================================================
+    // 1. CREAR ENCABEZADO
+    // =====================================================
+    const resCancelacionApartado = await entityManager.query(
+      `EXEC [dbo].[SP_GV_CancelarApartadoVigente]
+        @CvebodOrg  = @0,
+         @SerMovOrg = @1,
+      @FolMov = @2,
+           @TipCancel = @3,
+      @CVECLI = @4,
+      @UsuarioBaja = @5,
+      @RefLlave = @6`,
+      [
+        cvebodOrg,
+        serMovOrg,
+        folMov,
+        cvecli,
+        usuarioBaja,
+        refLlave
+      ]
+    );
+
+    if (!resCancelacionApartado?.[0] || resCancelacionApartado[0].error) {
+     // console.log(resPagoApartado[0])
+      throw new Error(resCancelacionApartado?.[0]?.mensaje || 'Error al crear pago');
+    }
+
+      // 6. COMMIT
+    // =====================================================
+    await queryRunner.commitTransaction();
+
+    // =====================================================
+
+
+    return {
+      error: 0,
+      mensaje: resCancelacionApartado,
+      //Falta servicio global vale
+    };
+
+    
 
 
     } catch (error: any) {
