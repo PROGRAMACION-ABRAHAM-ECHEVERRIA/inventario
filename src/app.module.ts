@@ -11,6 +11,8 @@ import { TraspasosModule } from './app/traspasos/traspasos.module';
 import { AuthGuardWebsocketModule } from './guards/authGuard/authGuardWebsocket.module';
 import { ApartadosModule } from './app/apartados/apartados.module';
 import { TicketModule } from './globalServices/ticket-service/ticket-service.module';
+import { ValeModule } from './globalServices/vale-service/vale-service.module';
+
 
 // se necesita para poder llamar las variables de entorno
 require('dotenv').config();
@@ -42,7 +44,8 @@ require('dotenv').config();
   ComprasModule,
   TraspasosModule, 
   ApartadosModule,
-  TicketModule
+  TicketModule,
+  ValeModule
 ],
   controllers: [AppController],
   providers: [AppService],
