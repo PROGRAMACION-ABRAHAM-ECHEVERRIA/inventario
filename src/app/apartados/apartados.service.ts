@@ -8,6 +8,7 @@ import { SpResponse } from 'src/types/resJson';
 import { TicketService } from 'src/globalServices/ticket-service/ticket-service-custom';
 import { CreatePagoApartadoProgramadoDto } from './dto/pagoApartadoProgramado';
 import { CancelarApartadoDto } from './dto/cancelacionApartado';
+import { ValeService } from 'src/globalServices/vale-service/vale-service.custom';
 
 
 
@@ -28,6 +29,7 @@ export class ApartadosService {
   constructor(
     private JwtServiceCustom: JwtServiceCustom,
     private readonly ticketService: TicketService,
+    private readonly valeService: ValeService,
     private readonly dataSource: DataSource,
     private readonly manager: EntityManager,
     
@@ -1206,13 +1208,22 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
     // =====================================================
     await queryRunner.commitTransaction();
 
-    // =====================================================
 
+    // Vale
+    // =====================================================
+    const vale = await this.valeService.getVale(
+      entityManager,
+      100,
+      folMov,
+      16,
+      serMovOrg,
+      false
+    );
 
     return {
       error: 0,
       mensaje: resCancelacionApartado,
-      //Falta servicio global vale
+      vale: vale
     };
 
     
