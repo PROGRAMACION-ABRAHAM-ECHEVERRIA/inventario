@@ -169,7 +169,7 @@ export class ApartadosController {
 
 
 
-  @ApiOperation({ summary: 'Reimpresion ticket' })
+  @ApiOperation({ summary: 'Reimpresion Vale' })
   @ApiQuery({
     name: 'SerMov',
     required: false,
