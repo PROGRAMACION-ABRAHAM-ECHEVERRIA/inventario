@@ -789,6 +789,72 @@ async obtenerApartadosCanceladosByBodega(
   }
 }
 
+async obtenerTicketReimpresionPagoApartado(
+    CveBodDes: number,
+  FolMov: number,
+  CveMov: number,
+  SerMov: string,
+  FolPag: number,
+){
+
+    const queryRunner = this.dataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+   try {
+
+       const entityManager = queryRunner.manager;
+  const ticket = await this.ticketService.getTicket(
+entityManager,CveBodDes, FolMov,CveMov,SerMov,FolPag, true,false
+    );
+
+
+    return{
+      ticket
+    }
+
+   } catch (error:any) {
+      if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+
+   }
+}
+
+async obtenerValesReimpresionCancelacionApartado(
+  FolMov: number,
+      SerMovOrg: string,
+){
+    const queryRunner = this.dataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+  try {
+        const entityManager = queryRunner.manager;
+  const vale = await this.valeService.getVale(
+entityManager,100, FolMov, 16, SerMovOrg, true
+    );
+
+ return{
+      vale
+    }
+    
+  } catch (error: any) {
+     if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+  }
+
+}
+
+
+
 
 /*   async obtenerApartadosPendientes(
     pagina: number,
@@ -1103,40 +1169,7 @@ async createPagoApartadoProgramado(
   }
 }
 
-async getTicketReimpresionPagoApartado(
-    CveBodDes: number,
-  FolMov: number,
-  CveMov: number,
-  SerMov: string,
-  FolPag: number,
-){
 
-    const queryRunner = this.dataSource.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
-   try {
-
-       const entityManager = queryRunner.manager;
-  const ticket = await this.ticketService.getTicket(
-entityManager,CveBodDes, FolMov,CveMov,SerMov,FolPag, true,false
-    );
-
-
-    return{
-      ticket
-    }
-
-   } catch (error:any) {
-      if (error instanceof HttpException) {
-      throw error;
-    }
-
-    throw new InternalServerErrorException(
-      `Error ${error['message'] || 'Ocurrió un error interno'}`,
-    );
-
-   }
-}
 
 async cancelarApartado(cancelarApartado:CancelarApartadoDto){
        const queryRunner = this.dataSource.createQueryRunner();
@@ -1244,6 +1277,9 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
   }
 
 }
+
+
+
 
 
 }

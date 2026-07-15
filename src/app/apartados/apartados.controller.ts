@@ -141,13 +141,14 @@ export class ApartadosController {
     );
   }
 
-  @ApiOperation({ summary: 'Obtener apartados Cancelados' })
+  @ApiOperation({ summary: 'Reimpresion ticket' })
   @ApiQuery({
     name: 'SerMov',
     required: false,
     type: String,
     description: 'Serie del movimiento (opcional)',
   })
+
   @Get('reimpresionTicketPagoApartado/:CveBodDes/:Folmov/:CveMov/:Folpag/:SerMov')
   ObtenerTicktReImpresion(
     @Param('CveBodDes', ParseIntPipe) CveBodDes: number,
@@ -157,12 +158,34 @@ export class ApartadosController {
     @Query('SerMov') SerMov: string = '',
   ) {
 
-    return this.apartadosService.getTicketReimpresionPagoApartado(
+    return this.apartadosService.obtenerTicketReimpresionPagoApartado(
       CveBodDes,
       Folmov,
       CveMov,
       SerMov ?? '',
       FolPag,
+    );
+  }
+
+
+
+  @ApiOperation({ summary: 'Reimpresion ticket' })
+  @ApiQuery({
+    name: 'SerMov',
+    required: false,
+    type: String,
+    description: 'Serie del movimiento (opcional)',
+  })
+
+  @Get('reimpresionTicketPagoApartado/:Folmov/:SerMov')
+  ObtenerValeReimPresion(
+    @Param('Folmov', ParseIntPipe) Folmov: number,
+    @Query('SerMov') SerMov: string = '',
+  ) {
+
+    return this.apartadosService.obtenerValesReimpresionCancelacionApartado(
+      Folmov,
+      SerMov ?? ''
     );
   }
 

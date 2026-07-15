@@ -12,7 +12,7 @@ export class ValeService{
       isReimp: boolean,
   ){
      const queryVale = `
-    EXEC [dbo].[SP_GV_Obtener_vale] 
+    EXEC [dbo].[SP_GV_Obtener_vale_Reimpresion] 
     @CveBod = @0,
     @CveMov = @1,
     @FolMov = @2,
