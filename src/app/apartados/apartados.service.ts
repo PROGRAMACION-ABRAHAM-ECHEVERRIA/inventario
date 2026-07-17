@@ -790,11 +790,11 @@ async obtenerApartadosCanceladosByBodega(
 }
 
 async obtenerTicketReimpresionPagoApartado(
-    CveBodDes: number,
+  //  CveBodDes: number,
   FolMov: number,
   CveMov: number,
   SerMov: string,
-  FolPag: number,
+  FolPag: number
 ){
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -804,7 +804,7 @@ async obtenerTicketReimpresionPagoApartado(
 
        const entityManager = queryRunner.manager;
   const ticket = await this.ticketService.getTicket(
-entityManager,CveBodDes, FolMov,CveMov,SerMov,FolPag, true,false
+entityManager,100, FolMov,CveMov,SerMov,FolPag, true,false
     );
 
 

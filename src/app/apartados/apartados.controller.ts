@@ -149,9 +149,9 @@ export class ApartadosController {
     description: 'Serie del movimiento (opcional)',
   })
 
-  @Get('reimpresionTicketPagoApartado/:CveBodDes/:Folmov/:CveMov/:Folpag/:SerMov')
+  @Get('reimpresionTicketPagoApartado/:Folmov/:CveMov/:Folpag/:SerMov')
   ObtenerTicktReImpresion(
-    @Param('CveBodDes', ParseIntPipe) CveBodDes: number,
+   // @Param('CveBodDes', ParseIntPipe) CveBodDes: number,
     @Param('Folmov', ParseIntPipe) Folmov: number,
     @Param('CveMov', ParseIntPipe) CveMov: number,
     @Param('Folpag', ParseIntPipe) FolPag: number,
@@ -159,7 +159,7 @@ export class ApartadosController {
   ) {
 
     return this.apartadosService.obtenerTicketReimpresionPagoApartado(
-      CveBodDes,
+      //CveBodDes,
       Folmov,
       CveMov,
       SerMov ?? '',
