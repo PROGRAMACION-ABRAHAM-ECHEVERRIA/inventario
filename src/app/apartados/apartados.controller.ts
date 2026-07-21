@@ -11,14 +11,14 @@ import { CancelarApartadoDto } from './dto/cancelacionApartado';
 @ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Apartados')
-@UseAuth()   
+//@UseAuth()   
 @Controller('Apartados')
 export class ApartadosController {
 
   constructor(private readonly apartadosService: ApartadosService) { }
   @Post('CrearApartado')
   @ApiOperation({
-    summary: 'Crar un apartado',
+    summary: 'Crear un apartado, pago apartado inicial 10%',
     description: 'Crea un apartado',
   })
   @ApiBody({
@@ -133,7 +133,7 @@ export class ApartadosController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.apartadosService.obtenerApartadosPagadosByBodega(
+    return this.apartadosService.obtenerApartadosCanceladosByBodega(
       Number(CVEBOD),
       BUSQUEDA ?? '',
       Number(page) || 1,
@@ -205,20 +205,20 @@ export class ApartadosController {
   }
 
 
-    @ApiOperation({ summary: 'Obtener el detalle de un Apartado' })
+    @ApiOperation({ summary: 'Obtener tipo de cancelcion activos' })
   
   @Get('obtenerTipMovCancelacion/AC')
   ObtenerCancelacionAC() {
     return this.apartadosService.obtenerCancelacionApartadoAC();
   }
 
-  @ApiOperation({ summary: 'Obtener el detalle de un Apartado' })
+  @ApiOperation({ summary: 'Obtener tipo de cancelcion inactivos' })
   
   @Get('obtenerTipMovCancelacion/BA')
   ObtenerCancelacionBA() {
-    return this.apartadosService.obtenerCancelacionApartadoBA};
+    return this.apartadosService.obtenerCancelacionApartadoBA();
   }
 
 
 
-
+}

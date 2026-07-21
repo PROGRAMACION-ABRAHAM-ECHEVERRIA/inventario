@@ -9,6 +9,7 @@ import { TicketService } from 'src/globalServices/ticket-service/ticket-service-
 import { CreatePagoApartadoProgramadoDto } from './dto/pagoApartadoProgramado';
 import { CancelarApartadoDto } from './dto/cancelacionApartado';
 import { ValeService } from 'src/globalServices/vale-service/vale-service.custom';
+import { PreDto } from './dto/apartado';
 
 
 
@@ -31,435 +32,1053 @@ export class ApartadosService {
     private readonly ticketService: TicketService,
     private readonly valeService: ValeService,
     private readonly dataSource: DataSource,
-    private readonly manager: EntityManager,
+    private readonly manager: EntityManager
     
   ) { }
 
   public ApiJson = new resJsonClass();
 
-  async create(createApartadoDto: CreateApartadoDto) {
+async create(createApartadoDto: CreateApartadoDto) {
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  const queryRunner = this.dataSource.createQueryRunner();
 
-    try {
-
-      const entityManager = queryRunner.manager;
-      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
-
-      const {
-        CVECLI,
-        observ,
-        cvebodOrigen,
-        serMov,
-        //login,
-        //UsuarioAlta,
-        articulo,
-        movimiento,
-        pagos,
-        detallePagos
-
-      } = createApartadoDto;
-      // console.log(createApartadoDto);
-
-      /* ================= VALIDACIONES ================= */
-
-      if (!movimiento?.length)
-        throw new HttpException('Debe existir al menos un movimiento', HttpStatus.BAD_REQUEST);
-
-      if (!articulo?.length)
-        throw new HttpException('Debe existir al menos un artículo', HttpStatus.BAD_REQUEST);
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
 
 
-      if (cvebodOrigen === 100)
-        throw new HttpException('La bodega origen  no puede ser la bodega de venta de apartados', HttpStatus.BAD_REQUEST);
+  try {
 
 
-      /* ================= VALIDAR EXISTENCIAS DEL ARTICULO ================= */
-
-      for (const art of articulo) {
-
-        const [resValidacion]: SpResponse = await entityManager.query(
-          `EXEC SP_GV_ValidarIfExisProdInBod
-          @CVEBOD = @0,
-          @CVEPROD = @1,
-          @CANTIDAD = @2`,
-          [
-            cvebodOrigen,
-            art.cveProd,
-            art.cant
-          ]
-        );
-
-        if (resValidacion?.error) {
-
-          throw this.ApiJson.customeHttpExeption(
-
-            resValidacion.mensaje,
-            resValidacion.estatus
-          );
-        }
-
-      }
+    const entityManager = queryRunner.manager;
 
 
-      // validando el CveProvCli
-      if (!CVECLI) {
-        this.ApiJson.customeHttpExeption(
-          'Ingresa el cliente',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      /* 
-            let [findProv] = await entityManager.query(
-              `SELECT 1 FROM [dbo].[CATPROV] WHERE CVEPROV = @0`,
-              [cveProvCli],
-            );
-      
-            if (!findProv) {
-              this.ApiJson.customeHttpExeption(
-                'No existe el proveedor',
-                HttpStatus.NOT_FOUND,
-              );
-            } */
+    const payloadToken: payLoadToken =
+      this.JwtServiceCustom.payloadToken as payLoadToken;
+
+
+
+    const {
+      CVECLI,
+      observ,
+      cvebodOrigen,
+      serMov,
+      articulo,
+      movimiento,
+      pagos,
+      detallePagos,
+      pre
+
+    } = createApartadoDto;
+
+
+
+    const usuario =
+      payloadToken.Usuario ?? 'sin usuario';
+
+
+
+    const CVE_MOV_APARTADO = 16;
+    const BODEGA_APARTADO = 100;
 
 
 
 
+    /* ================= VALIDACIONES ================= */
 
 
+    if (!movimiento?.length) {
 
-
-      // ============================================
-      // 1. INSERTAR MOVIMIENTO
-      // ============================================
-      const resMovtos: Array<
-        resApartadosMovtoResponse & { Folmov: number; fecmov: string }
-      > = await entityManager.query(
-        `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
-            @CVEBOD        = @0,
-            @CveMov        = @1, 
-            @SerMov        = @2,
-            @OrdCom        = @3,
-            @NumDoc        = @4,
-            @DiasCred      = @5,
-            @ImpMov        = @6,
-            @ImpDes        = @7,
-            @PorcDesc      = @8,
-            @ImpFle        = @9,
-            @ImpSub        = @10,
-            @ImpIva        = @11,
-            @PorcIva       = @12,
-            @ImpTot        = @13,
-            @Login         = @14,
-            @CveVen        = @15,
-            @Observ        = @16,
-            @ImpLet        = @17,
-            @Facturada     = @18,
-            @Cancelada     = @19,
-            @Devuelto      = @20,
-            @Afectado      = @21,
-            @NumDias       = @22,
-            @RepEntregada  = @23,
-            @Garantia      = @24,
-            @UsuarioAlta   = @25,
-            @UsuarioId     = @26,
-            @IsApartado    = @27, 
-            @CVECLI = @28`,
-        [
-          100,
-          16,
-          serMov,
-          0,
-          0,
-          0,
-          movimiento[0].impTot,
-          0,
-          0,
-          0,
-          movimiento[0].impTot,
-          0,
-          0,
-          movimiento[0].impTot,
-            payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //  'IARCI'
-          movimiento[0].cveVen,
-          observ ? observ : '',
-          movimiento[0].impLet,
-          0,//Facturada
-          0,//Cancelada
-          0,//Devuelto
-          0,//Afectado
-          0,
-          0,
-          '',
-          payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', // 'IARCI'
-          payloadToken.UsuarioId ? payloadToken.UsuarioId : 0,    //  112
-          1,
-          CVECLI
-        ],
+      throw new HttpException(
+        'Debe existir al menos un movimiento',
+        HttpStatus.BAD_REQUEST
       );
-
-      if (!resMovtos[0] || resMovtos[0].error) {
-        //console.log('Movtos','',resMovtos)
-        const mensaje = resMovtos[0]?.mensaje || 'Error al crear el movimiento';
-        const estatus =
-          resMovtos[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
-        this.ApiJson.customeHttpExeption(mensaje, estatus);
-      }
-
-      const FolMov = resMovtos[0].Folmov;
-      const fecMov = resMovtos[0].fecmov;
-
-      // ============================================
-      // 2. INSERTAR DETALLES DE MOVIMIENTO
-      // ============================================
-      for (const art of articulo) {
-        const [resDetmovtos]: SpResponse = await entityManager.query(
-          `EXEC [dbo].[SP_GV_AgregarDetMovTosBool2]
-                        @CveBod      = @0,
-                        @FolMov      = @1,
-                        @CveMov      = @2,
-                        @SerMov      = @3,
-                        @CveProd     = @4,
-                        @Cant        = @5,
-                        @LisPre      = @6,
-                        @PorcDesc    = @7,
-                        @PreUni      = @8,
-                        @ImpSub      = @9,
-                        @DesProd     = @10,
-                        @UsuarioAlta = @11, 
-                        @IsApartado = @12`,
-          [
-            100,
-            FolMov,
-            16,
-            serMov,
-            art.cveProd,
-            art.cant,
-            art.lisPre ? art.lisPre : 0,
-            0,
-            art.lisPre,
-            movimiento[0].impTot,
-            art.desProd,
-            payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //   'IARCI' 
-            1
-          ],
-        );
-
-
-
-        if (resDetmovtos?.error) {
-          // console.log('DetMovtos','',resDetmovtos)
-          const mensaje =
-            resDetmovtos.mensaje || 'Error al crear detalle de movimiento';
-          const estatus =
-            resDetmovtos.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
-          this.ApiJson.customeHttpExeption(mensaje, estatus);
-        }
-      }
-
-      // ============================================
-      // 3. INSERTAR PAGO DEL APARTADO
-      // ============================================
-
-
-      const resPagoApartado: Array<
-        resApartadosMovtoResponse & { FolPag: number; }
-      > = await entityManager.query(
-        `EXEC [dbo].[SP_GV_AgregarPagoApartado]
-                      @Cvebod        = @0,
-                      @SerMov       = @1, 
-                      @CveMov       = @2,
-                      @Folmov        = @3,
-                      @CVECLI        = @4,
-                      @ImpTot   = @5,
-                      @Observa      = @6,
-                      @Login        = @7,
-                      @UsuarioAlta        = @8`,
-        [
-          100,
-          serMov,
-          16,
-          FolMov,
-          CVECLI,
-          movimiento[0].impTot,
-          observ ? observ : '',
-         payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario', //   'IARCI'
-          payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' //   'IARCI'
-        ],
-      );
-
-
-      if (!resPagoApartado[0] || resPagoApartado[0].error) {
-        // console.log('ResPago Apartado',resPagoApartado)
-        const mensaje = resPagoApartado[0]?.mensaje || 'Error al crear el pago apartado';
-        const estatus =
-          resPagoApartado[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
-        this.ApiJson.customeHttpExeption(mensaje, estatus);
-      }
-
-      const FolPag = resPagoApartado[0].FolPag;
-
-
-      // ============================================
-      // 4. INSERTAR DETALLE DE PAGO DEL APARTADO
-      // ============================================
-      const resDetPagoApartado: Array<
-        resApartadosMovtoResponse & {}
-      > = await entityManager.query(
-        `EXEC [dbo].[SP_GV_AgregarDetallePagoApartado]
-                      @FolPag        = @0,
-                      @CveTpPgo      = @1, 
-                      @Imppag      = @2,
-                      @observa       = @3,
-                    @UsuarioAlta   = @4`,
-        [
-          FolPag,
-          detallePagos[0].cveTpPgo,
-          pagos[0].impPagoProg,
-          observ ? observ : '',
-         payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' ,// 'IARCI'
-        ],
-      );
-
-
-
-      if (!resDetPagoApartado[0] || resDetPagoApartado[0].error) {
-        // console.log('DetPagoApartado','',resDetPagoApartado)
-        const mensaje = resDetPagoApartado[0]?.mensaje || 'Error al crear el detalle del pago apartado';
-        const estatus =
-          resDetPagoApartado[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
-        this.ApiJson.customeHttpExeption(mensaje, estatus);
-      }
-
-      // ============================================
-      // 5. INSERTAR DETALLE DE PAGO INICIAL
-      // ============================================
-
-      const resPagoApartadoInicial: Array<
-        resApartadosMovtoResponse & {}
-      > = await entityManager.query(
-        `EXEC [dbo].[SP_GV_AgregarPagoApartadoInicial]
-                  @Cvebod        = @0,
-                  @CvebodOrigen = @1,
-                      @SerMov       = @2, 
-                      @CveMov       = @3,
-                      @Folmov        = @4,
-                      @NumPagosTotal        = @5,
-                      @UltFolPag     = @6, 
-                      @ImpTotalApar    = @7,
-                     @ImpPagoProg      = @8,
-                  	@Login  = @9`,
-        [
-          100,
-          cvebodOrigen,
-          serMov,
-          16,
-          FolMov,
-          pagos[0].numPagosTotal ? pagos[0].numPagosTotal : 0,
-          FolPag,
-          movimiento[0].impTot,
-          pagos[0].impPagoProg,
-          payloadToken.Usuario ? payloadToken.Usuario : 'sin usuario' ,//   'IARCI'
-        ],
-      );
-
-
-
-      if (!resPagoApartadoInicial[0] || resPagoApartadoInicial[0].error) {
-        //console.log('PagoApartadoInicial', '', resPagoApartadoInicial)
-        const mensaje = resPagoApartadoInicial[0]?.mensaje || 'Error al crear el pago del apartado Inicial';
-        const estatus =
-          resPagoApartadoInicial[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
-        this.ApiJson.customeHttpExeption(mensaje, estatus);
-      }
-
-
-
-      // ============================================
-      // 6. CAMBIAR EXISTENCIA DE LA BODEGA ORIGEN A LA BODEGA 100
-      // ============================================
-
-      const resCambioExiste: Array<
-        resApartadosMovtoResponse & {}
-      > = await entityManager.query(
-        `EXEC [dbo].[SP_GV_AgregarCambioExisteBodCien]
-                @CveProd     = @0,
-                @CveBod      = @1,
-                @Cant      = @2,
-                @Login       = @3`,
-        [
-          articulo[0].cveProd,
-          cvebodOrigen,
-          articulo[0].cant,
-          payloadToken.Usuario ?? 'sin usuario' // 'IARCI'
-        ],
-      );
-
-
-      if (!resCambioExiste[0] || resCambioExiste[0].error) {
-        //console.log('CambioExiste','',resCambioExiste)
-        const mensaje = resCambioExiste[0]?.mensaje || 'Error al cambiar la existencia a la bodega 100';
-        const estatus =
-          resCambioExiste[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR;
-        this.ApiJson.customeHttpExeption(mensaje, estatus);
-      }
-
-
-
-      await queryRunner.commitTransaction();
-      const ticket = await this.ticketService.getTicket(
-        entityManager,
-        100,
-        FolMov,
-        16,
-        serMov,
-        FolPag,
-        false,
-        false
-      );
-
-      return this.ApiJson.customeResSuccess(
-        'Apartado Creado Exitosamente',
-        {
-          ticket
-        },
-      );
-
-    } catch (error: any) {
-
-      console.log('ERROR ORIGINAL => ', error);
-
-      try {
-
-        if (queryRunner.isTransactionActive) {
-          await queryRunner.rollbackTransaction();
-        }
-
-      } catch (rollbackError) {
-
-        // console.log('ROLLBACK ERROR => ', rollbackError);
-
-      }
-
-      if (error instanceof HttpException) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException(
-        `Error ${error['message'] || 'Ocurrió un error interno'}`
-      );
-    } finally {
-      // Siempre liberar el queryRunner
-      if (!queryRunner.isReleased) {
-        await queryRunner.release();
-      }
 
     }
 
+
+
+    if (!articulo?.length) {
+
+      throw new HttpException(
+        'Debe existir al menos un artículo',
+        HttpStatus.BAD_REQUEST
+      );
+
+    }
+
+
+
+    if (cvebodOrigen === BODEGA_APARTADO) {
+
+      throw new HttpException(
+        'La bodega origen no puede ser la bodega 100',
+        HttpStatus.BAD_REQUEST
+      );
+
+    }
+
+
+
+    if (!CVECLI) {
+
+      throw this.ApiJson.customeHttpExeption(
+        'Ingresa el cliente',
+        HttpStatus.BAD_REQUEST
+      );
+
+    }
+
+
+
+
+
+    /* ================= VALIDAR EXISTENCIA ================= */
+
+
+    for (const art of articulo) {
+
+
+      const [resValidacion]: SpResponse =
+
+        await entityManager.query(
+
+        `EXEC SP_GV_ValidarIfExisProdInBod
+
+          @CVEBOD = @0,
+          @CVEPROD = @1,
+          @CANTIDAD = @2`,
+
+        [
+          cvebodOrigen,
+          art.cveProd,
+          art.cant
+        ]
+
+      );
+
+
+
+      if(resValidacion?.error){
+
+
+        throw this.ApiJson.customeHttpExeption(
+
+          resValidacion.mensaje,
+          resValidacion.estatus
+
+        );
+
+
+      }
+
+
+    }
+
+
+    /* ================= CREAR MOVIMIENTO ================= */
+
+
+    const resMovtos:
+      Array<resApartadosMovtoResponse & {
+        Folmov:number;
+        fecmov:string;
+      }>
+
+      = await entityManager.query(
+
+
+      `EXEC [dbo].[SP_GV_AgregarMovTosBool2]
+
+        @CVEBOD        = @0,
+        @CveMov        = @1,
+        @SerMov        = @2,
+        @OrdCom        = @3,
+        @NumDoc        = @4,
+        @DiasCred      = @5,
+        @ImpMov        = @6,
+        @ImpDes        = @7,
+        @PorcDesc      = @8,
+        @ImpFle        = @9,
+        @ImpSub        = @10,
+        @ImpIva        = @11,
+        @PorcIva       = @12,
+        @ImpTot        = @13,
+        @Login         = @14,
+        @CveVen        = @15,
+        @Observ        = @16,
+        @ImpLet        = @17,
+        @Facturada     = @18,
+        @Cancelada     = @19,
+        @Devuelto      = @20,
+        @Afectado      = @21,
+        @NumDias       = @22,
+        @RepEntregada  = @23,
+        @Garantia      = @24,
+        @UsuarioAlta   = @25,
+        @UsuarioId     = @26,
+        @IsApartado    = @27,
+        @CVECLI        = @28`,
+
+      [
+
+        BODEGA_APARTADO,
+        CVE_MOV_APARTADO,
+        serMov,
+        0,
+        0,
+        0,
+
+        movimiento[0].impTot,
+
+        0,
+        0,
+        0,
+
+        movimiento[0].impTot,
+
+        0,
+        0,
+
+        movimiento[0].impTot,
+
+        usuario,
+
+        0,
+
+        observ ?? '',
+
+        movimiento[0].impLet,
+
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+
+        '',
+
+        usuario,
+
+        payloadToken.UsuarioId ?? 0,
+
+        1,
+
+        CVECLI
+
+      ]
+
+    );
+
+
+
+
+    if(!resMovtos[0] || resMovtos[0].error){
+
+
+      throw this.ApiJson.customeHttpExeption(
+
+        resMovtos[0]?.mensaje ??
+        'Error al crear movimiento',
+
+        resMovtos[0]?.estatus ??
+        HttpStatus.INTERNAL_SERVER_ERROR
+
+      );
+
+
+    }
+
+
+
+    const FolMov = resMovtos[0].Folmov;
+
+    const fecMov = resMovtos[0].fecmov;
+
+
+
+
+    /* ================= DETALLE NORMAL ================= */
+
+
+    for(const art of articulo){
+
+
+
+      const [resDetMov]: SpResponse =
+
+        await entityManager.query(
+
+
+        `EXEC [dbo].[SP_GV_AgregarDetMovTosBool2]
+
+          @CveBod      = @0,
+          @FolMov      = @1,
+          @CveMov      = @2,
+          @SerMov      = @3,
+          @CveProd     = @4,
+          @Cant        = @5,
+          @LisPre      = @6,
+          @PorcDesc    = @7,
+          @PreUni      = @8,
+          @ImpSub      = @9,
+          @DesProd     = @10,
+          @UsuarioAlta = @11,
+          @IsApartado  = @12`,
+
+        [
+
+          BODEGA_APARTADO,
+
+          FolMov,
+
+          CVE_MOV_APARTADO,
+
+          serMov,
+
+          art.cveProd,
+
+          art.cant,
+
+          art.lisPre ?? 0,
+
+          0,
+
+          art.lisPre ?? 0,
+
+          art.lisPre * art.cant,
+
+          art.desProd,
+
+          usuario,
+
+          1
+
+        ]
+
+      );
+
+
+
+      if(resDetMov?.error){
+
+
+        throw this.ApiJson.customeHttpExeption(
+
+          resDetMov.mensaje,
+
+          resDetMov.estatus
+
+        );
+
+
+      }
+
+
+    }
+
+        /* =====================================================
+       VALIDAR PRE Y AGREGAR DETALLE REV-EXT-000001
+       (EL PRE ES UN SEGUNDO REGISTRO EN DETMOVTOS)
+    ====================================================== */
+
+
+    for (const art of articulo) {
+
+
+      const [resPre] = await entityManager.query(
+
+        `EXEC SP_GV_ValidarProductoPRE
+            @CveProd = @0`,
+
+        [
+          art.cveProd
+        ]
+
+      );
+
+
+
+      if(resPre?.TienePRE){
+
+
+
+        /*
+          Cuando tiene PRE se agrega un segundo detalle:
+
+          Producto normal:
+          05-383-29254001
+
+          +
+          
+          REV-EXT-000001
+        */
+
+
+        const importePRE =
+          pre?.[0]?.idGar ??
+          pre?.[0]?.impPre ??
+          0;
+
+
+
+
+        const [resDetPRE]: SpResponse =
+
+          await entityManager.query(
+
+          `EXEC [dbo].[SP_GV_AgregarDetMovTosBool2]
+
+            @CveBod      = @0,
+            @FolMov      = @1,
+            @CveMov      = @2,
+            @SerMov      = @3,
+            @CveProd     = @4,
+            @Cant        = @5,
+            @LisPre      = @6,
+            @PorcDesc    = @7,
+            @PreUni      = @8,
+            @ImpSub      = @9,
+            @DesProd     = @10,
+            @UsuarioAlta = @11,
+            @IsApartado  = @12`,
+
+          [
+
+            BODEGA_APARTADO,
+            FolMov,
+            CVE_MOV_APARTADO,
+            serMov,
+            // Producto PRE
+            'REV-EXT-000001',
+            1,
+            pre[0].impPre,
+            0,
+             pre[0].impPre,
+           pre[0].impPre,
+            `PERIODO DE REVISION EXTENDIDA DEL PRODUCTO ${art.cveProd}`,
+            usuario,
+            1
+
+          ]
+
+        );
+
+
+
+
+
+        if(resDetPRE?.error){
+
+
+          throw this.ApiJson.customeHttpExeption(
+
+            resDetPRE.mensaje,
+
+            resDetPRE.estatus
+
+          );
+
+
+        }
+
+
+
+
+
+
+        /* ===========================
+           INSERTAR GARANTIA PRE
+        ============================ */
+
+
+        const [resMovtosGar]: SpResponse =
+
+          await entityManager.query(
+
+          `EXEC SP_GV_Agregar_MovtosGar
+
+            @CveBod = @0,
+            @SerMov = @1,
+            @FolMov = @2,
+            @CveProd = @3,
+            @IdGar = @4,
+            @Finicial = @5,
+            @CveMov = @6,
+            @UsuarioAlta = @7`,
+
+          [
+
+            BODEGA_APARTADO,
+
+            serMov,
+
+            FolMov,
+
+
+            art.cveProd,
+
+
+            pre?.[0]?.idGar ?? null,
+
+
+            fecMov,
+
+
+            CVE_MOV_APARTADO,
+
+
+            usuario
+
+          ]
+
+        );
+
+
+
+
+        if(resMovtosGar?.error){
+
+
+          throw this.ApiJson.customeHttpExeption(
+
+            resMovtosGar.mensaje,
+
+            resMovtosGar.estatus
+
+          );
+
+
+        }
+
+
+      }
+
+
+    }
+
+
+
+
+
+    /* =====================================================
+       CREAR PAGO DEL APARTADO
+    ====================================================== */
+
+
+    const resPagoApartado:
+
+      Array<resApartadosMovtoResponse & {
+        FolPag:number
+      }>
+
+      = await entityManager.query(
+
+
+      `EXEC [dbo].[SP_GV_AgregarPagoApartado]
+
+          @Cvebod        = @0,
+          @SerMov        = @1,
+          @CveMov        = @2,
+          @Folmov        = @3,
+          @CVECLI        = @4,
+          @ImpTot        = @5,
+          @Observa       = @6,
+          @Login         = @7,
+          @UsuarioAlta   = @8`,
+
+      [
+
+        BODEGA_APARTADO,
+
+        serMov,
+
+        CVE_MOV_APARTADO,
+
+        FolMov,
+
+        CVECLI,
+
+
+        movimiento[0].impTot,//pAGO CON PRE SI ESE ES ELcaso
+
+
+        observ ?? '',
+
+
+        usuario,
+
+
+        usuario
+
+      ]
+
+    );
+
+
+
+
+
+    if(!resPagoApartado[0] ||
+       resPagoApartado[0].error){
+
+
+      throw this.ApiJson.customeHttpExeption(
+
+        resPagoApartado[0]?.mensaje ??
+        'Error al crear pago apartado',
+
+        resPagoApartado[0]?.estatus ??
+        HttpStatus.INTERNAL_SERVER_ERROR
+
+      );
+
+
+    }
+
+
+
+
+    const FolPag =
+      resPagoApartado[0].FolPag;
+
+
+
+
+
+
+    /* =====================================================
+   DETALLE DEL PAGO APARTADO NORMAL
+====================================================== */
+
+
+const resDetPagoApartado:
+
+Array<resApartadosMovtoResponse>
+
+= await entityManager.query(
+
+
+`EXEC [dbo].[SP_GV_AgregarDetallePagoApartado]
+
+    @FolPag      = @0,
+    @CveTpPgo    = @1,
+    @Imppag      = @2,
+    @observa     = @3,
+    @UsuarioAlta = @4`,
+
+[
+
+  FolPag,
+
+  detallePagos?.[0]?.cveTpPgo ?? 0,
+
+  pagos?.[0]?.impPagoProg ?? 0,
+
+  observ ?? '',
+
+  usuario
+
+]
+
+);
+
+
+
+if(!resDetPagoApartado[0] ||
+   resDetPagoApartado[0].error){
+
+
+ throw this.ApiJson.customeHttpExeption(
+
+    resDetPagoApartado[0]?.mensaje ??
+    'Error al crear detalle pago apartado',
+
+    resDetPagoApartado[0]?.estatus ??
+    HttpStatus.INTERNAL_SERVER_ERROR
+
+ );
+
+
+}
+
+
+
+
+
+/* =====================================================
+   VALIDAR SI ALGUN ARTICULO TIENE PRE
+====================================================== */
+
+
+for(const art of articulo){
+
+
+ const [resPre] = await entityManager.query(
+
+   `EXEC SP_GV_ValidarProductoPRE
+      @CveProd = @0`,
+
+   [
+     art.cveProd
+   ]
+
+ );
+
+
+
+ if(resPre?.TienePRE){
+
+
+
+   const resDetPagoPRE:
+
+   Array<resApartadosMovtoResponse>
+
+   = await entityManager.query(
+
+
+   `EXEC [dbo].[SP_GV_AgregarDetallePagoApartado]
+
+       @FolPag      = @0,
+       @CveTpPgo    = @1,
+       @Imppag      = @2,
+       @observa     = @3,
+       @UsuarioAlta = @4`,
+
+
+   [
+
+     FolPag,
+
+
+      pre[0].cveTpPgoPre,
+
+
+     pre?.[0]?.impPre ?? 0,
+
+
+     'PAGO PRE',
+
+
+     usuario
+
+
+   ]
+
+ );
+
+
+ if(!resDetPagoPRE[0] ||
+    resDetPagoPRE[0].error){
+
+
+    throw this.ApiJson.customeHttpExeption(
+
+      resDetPagoPRE[0]?.mensaje ??
+      'Error al crear pago PRE',
+
+      resDetPagoPRE[0]?.estatus ??
+      HttpStatus.INTERNAL_SERVER_ERROR
+
+    );
+
+
+ }
+
+
+ }
+
+
+}
+   
+    /* =====================================================
+       INSERTAR PAGO INICIAL DEL APARTADO
+    ====================================================== */
+
+
+    const resPagoApartadoInicial:
+
+      Array<resApartadosMovtoResponse>
+
+      = await entityManager.query(
+
+
+      `EXEC [dbo].[SP_GV_AgregarPagoApartadoInicial]
+
+          @Cvebod          = @0,
+          @CvebodOrigen    = @1,
+          @SerMov          = @2,
+          @CveMov          = @3,
+          @Folmov          = @4,
+          @NumPagosTotal   = @5,
+          @UltFolPag       = @6,
+          @ImpTotalApar    = @7,
+          @ImpPagoProg     = @8,
+          @Login           = @9`,
+
+
+      [
+
+        BODEGA_APARTADO,
+
+        cvebodOrigen,
+
+        serMov,
+
+        CVE_MOV_APARTADO,
+
+        FolMov,
+
+
+        pagos?.[0]?.numPagosTotal ?? 0,
+
+
+        FolPag,
+
+
+        movimiento[0].impTot,
+
+
+        pagos?.[0]?.impPagoProg ?? 0,
+
+
+        usuario
+
+      ]
+
+    );
+
+
+
+
+
+    if(!resPagoApartadoInicial[0] ||
+       resPagoApartadoInicial[0].error){
+
+
+      throw this.ApiJson.customeHttpExeption(
+
+        resPagoApartadoInicial[0]?.mensaje ??
+        'Error al crear pago inicial apartado',
+
+        resPagoApartadoInicial[0]?.estatus ??
+        HttpStatus.INTERNAL_SERVER_ERROR
+
+      );
+
+
+    }
+
+
+
+
+
+
+    /* =====================================================
+       CAMBIAR EXISTENCIA DE TODOS LOS PRODUCTOS
+       BODEGA ORIGEN -> BODEGA 100
+    ====================================================== */
+
+
+    for(const art of articulo){
+
+
+
+      const resCambioExiste:
+
+        Array<resApartadosMovtoResponse>
+
+        = await entityManager.query(
+
+
+        `EXEC [dbo].[SP_GV_AgregarCambioExisteBodCien]
+
+            @CveProd = @0,
+            @CveBod  = @1,
+            @Cant    = @2,
+            @Login   = @3`,
+
+
+        [
+
+          art.cveProd,
+
+          cvebodOrigen,
+
+          art.cant,
+
+          usuario
+
+        ]
+
+      );
+
+
+
+
+
+      if(!resCambioExiste[0] ||
+         resCambioExiste[0].error){
+
+
+        throw this.ApiJson.customeHttpExeption(
+
+          resCambioExiste[0]?.mensaje ??
+          'Error al cambiar existencia a bodega 100',
+
+          resCambioExiste[0]?.estatus ??
+          HttpStatus.INTERNAL_SERVER_ERROR
+
+        );
+
+
+      }
+
+
+    }
+
+
+
+
+
+
+
+    /* =====================================================
+       GENERAR TICKET
+    ====================================================== */
+
+
+    const ticket = await this.ticketService.getTicket(
+
+      entityManager,
+
+      BODEGA_APARTADO,
+
+      FolMov,
+
+      CVE_MOV_APARTADO,
+
+      serMov,
+
+      FolPag,
+
+      false,
+
+      false
+
+    );
+
+
+
+
+
+
+
+    /* =====================================================
+       CONFIRMAR TRANSACCION
+    ====================================================== */
+
+
+    await queryRunner.commitTransaction();
+
+
+
+
+
+    return this.ApiJson.customeResSuccess(
+
+      'Apartado Creado Exitosamente',
+
+      {
+
+        ticket
+
+      }
+
+    );
+
+
+
+
+
+
+  } catch(error:any) {
+
+
+
+    console.log(
+      'ERROR ORIGINAL => ',
+      error
+    );
+
+
+
+
+    try {
+
+
+      if(queryRunner.isTransactionActive){
+
+        await queryRunner.rollbackTransaction();
+
+      }
+
+
+    }
+    catch(rollbackError){
+
+
+      console.log(
+        'ERROR ROLLBACK => ',
+        rollbackError
+      );
+
+
+    }
+
+
+
+
+
+    if(error instanceof HttpException){
+
+      throw error;
+
+    }
+
+
+
+
+    throw new InternalServerErrorException(
+
+      `Error ${
+        error?.message ??
+        'Ocurrió un error interno'
+      }`
+
+    );
+
+
+
+
+
+  } finally {
+
+
+
+    if(!queryRunner.isReleased){
+
+      await queryRunner.release();
+
+    }
+
+
+
   }
 
+
+}
   async obtenerApartadoDetalle(
     Folmov: number,
     SerMov: string
@@ -533,7 +1152,19 @@ export class ApartadosService {
     try {
 
       
-      const query = `EXEC [dbo].[VW_GV_CatMotCancApar_AC]`;
+      const query = `SELECT  [CveMot]
+      ,[DesMot]
+      ,[Habilitado]
+      ,[GeneraNC]
+      ,[PorcPenal]
+      ,[UsuarioAlta]
+      ,[FechaAlta]
+      ,[UsuarioMod]
+      ,[FechaMod]
+      ,[UsuarioBaja]
+      ,[FechaBaja]
+      ,[CveEstatus]
+  FROM [SICAVI].[dbo].[VW_GV_CatMotCancApar_AC]`;
 
       const res: any[] = await queryRunner.manager.query(query);
 
@@ -572,7 +1203,19 @@ export class ApartadosService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-       const query = `EXEC [dbo].[VW_GV_CatMotCancApar_AC]`;
+       const query = `SELECT [CveMot]
+      ,[DesMot]
+      ,[Habilitado]
+      ,[GeneraNC]
+      ,[PorcPenal]
+      ,[UsuarioAlta]
+      ,[FechaAlta]
+      ,[UsuarioMod]
+      ,[FechaMod]
+      ,[UsuarioBaja]
+      ,[FechaBaja]
+      ,[CveEstatus]
+  FROM [SICAVI].[dbo].[VW_GV_CatMotCancApar_BA]`;
 
       const res: any[] = await queryRunner.manager.query(query);
 
@@ -582,9 +1225,6 @@ export class ApartadosService {
           404
         )
       }
-
-
-
 
       return this.ApiJson.customeResSuccess(
         'Tipo movimientos cancelacion obtenidos',
@@ -852,10 +1492,6 @@ entityManager,100, FolMov, 16, SerMovOrg, true
   }
 
 }
-
-
-
-
 /*   async obtenerApartadosPendientes(
     pagina: number,
     limit: number,
@@ -1169,8 +1805,6 @@ async createPagoApartadoProgramado(
   }
 }
 
-
-
 async cancelarApartado(cancelarApartado:CancelarApartadoDto){
        const queryRunner = this.dataSource.createQueryRunner();
   await queryRunner.connect();
@@ -1277,6 +1911,8 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
   }
 
 }
+
+
 
 
 

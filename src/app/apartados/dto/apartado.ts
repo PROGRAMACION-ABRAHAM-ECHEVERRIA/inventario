@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsArray, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
 
@@ -65,15 +65,22 @@ export class ApartadoDto {
   @Type(() => DetallePagoApartadoDto)
   detallePagos: DetallePagoApartadoDto[];
 
+    /* ===== DETALLE PAGOS ===== */
+  @ApiProperty({ type: () => PreDto, isArray: true })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PreDto)
+  pre: PreDto[];
+
 }
 
 export class MovimientoApartadoDto {
 
 
-  @ApiProperty({ description: 'Clave Vendedor' })
+  /* @ApiProperty({ description: 'Clave Vendedor' })
   @IsNumber()
   cveVen: number;
-
+ */
     @ApiProperty({ description: 'Importe Total' })
   @IsNumber()
   impTot: number;
@@ -135,6 +142,36 @@ export class DetallePagoApartadoDto {
   cveTpPgo: number;
 
   
+}
+
+
+export class PreDto {
+
+  @ApiPropertyOptional({
+    description: 'IdGar del PRE'
+  })
+  @IsOptional()
+  @IsNumber()
+  idGar?: number;
+
+
+
+  @ApiPropertyOptional({
+    description: 'Importe del PRE'
+  })
+  @IsOptional()
+  @IsNumber()
+  impPre?: number;
+
+
+
+  @ApiPropertyOptional({
+    description: 'Clave tipo de pago PRE'
+  })
+  @IsOptional()
+  @IsNumber()
+  cveTpPgoPre?: number;
+
 }
 
 
