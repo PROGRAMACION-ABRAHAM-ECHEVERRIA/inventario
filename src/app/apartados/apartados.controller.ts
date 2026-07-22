@@ -11,7 +11,7 @@ import { CancelarApartadoDto } from './dto/cancelacionApartado';
 @ApiBearerAuth()
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @ApiTags('Apartados')
-//@UseAuth()   
+@UseAuth()   
 @Controller('Apartados')
 export class ApartadosController {
 
