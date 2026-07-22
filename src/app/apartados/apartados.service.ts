@@ -1429,6 +1429,51 @@ async obtenerApartadosCanceladosByBodega(
   }
 }
 
+async validarLiquidacionApartado(
+   SerMov:string,
+   FolMov: number,
+   NumPago:number,
+  ImpPagoProg:number,
+
+){
+  try {
+
+     const query = `
+      EXEC SP_GV_ValidarLiquidacionApartado
+        @CveBod = @0,
+    @SerMov = @1,
+    @CveMov = @2,
+    @FolMov = @3,
+    @NumPago = @4,
+    @ImpPagoProg =@5
+    `;
+
+       const res: any[] = await this.manager.query(query, [
+    100, SerMov,16, FolMov, NumPago, ImpPagoProg]);
+
+     if (res.length === 0) {
+      this.ApiJson.customeHttpExeption('No hay Apartados Cancelados', 404);
+    }
+
+    return this.ApiJson.customeResSuccess(
+      res[0]?.mensaje || 'Consulta exitosa',
+      {
+        res,
+      },
+    );
+
+    
+  } catch (error:any) {
+     if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+  }
+}
+
 async obtenerTicketReimpresionPagoApartado(
   //  CveBodDes: number,
   FolMov: number,
@@ -1599,6 +1644,8 @@ entityManager,100, FolMov, 16, SerMovOrg, true
   } */
 
 async createPagoApartadoProgramado(
+  
+  
   createPagoApartadoProgramadoDto: CreatePagoApartadoProgramadoDto
 ) {
   const queryRunner = this.dataSource.createQueryRunner();

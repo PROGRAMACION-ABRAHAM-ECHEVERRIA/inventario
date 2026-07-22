@@ -189,6 +189,30 @@ export class ApartadosController {
     );
   }
 
+   @ApiOperation({ summary: 'Validar Liquidacion Apartado' })
+     @ApiQuery({
+    name: 'SerMov',
+    required: false,
+    type: String,
+    description: 'Serie del movimiento (opcional)',
+  })
+    @Get('validarLiquidacionApartado/:SerMov/:FolMov/:NumPago/:ImpPagoProg')
+  validarLiquidacionApartado(
+    @Param('FolMov', ParseIntPipe) Folmov: number,
+    @Query('SerMov') SerMov: string = '',
+         @Param('NumPago', ParseIntPipe) NumPago: number,
+       @Param('ImpPagoProg', ParseIntPipe) ImpPagoProg: number,
+  ) {
+
+    return this.apartadosService.validarLiquidacionApartado(
+      SerMov ?? '',
+         Folmov,
+      NumPago,
+      ImpPagoProg
+
+    );
+  }
+
 
     @Post('CancelarApartado')
   @ApiOperation({
