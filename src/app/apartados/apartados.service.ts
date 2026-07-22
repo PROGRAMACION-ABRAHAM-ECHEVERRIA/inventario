@@ -1610,10 +1610,10 @@ async createPagoApartadoProgramado(
       const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
 
     const {
-      cvebod,
+     // cvebod,
       serMov,
       folMov,
-      cveMov,
+      //cveMov,
       CVECLI,
       numPago,
       cveTpPgo,
@@ -1636,9 +1636,9 @@ async createPagoApartadoProgramado(
       @Login = @7,
       @UsuarioAlta = @8`,
       [
-        cvebod,
+        100,
         serMov,
-        cveMov,
+        16,
         folMov,
         CVECLI,
         impPagoProg,
@@ -1691,9 +1691,9 @@ async createPagoApartadoProgramado(
       @NumPago = @4,
       @ImpPagoProg = @5`,
       [
-        cvebod,
+        100,
         serMov,
-        cveMov,
+        16,
         folMov,
         numPago,
         impPagoProg
@@ -1736,18 +1736,16 @@ async createPagoApartadoProgramado(
     // =====================================================
     const resFinal = await entityManager.query(
       `EXEC [dbo].[${spFinal}]
-      @CveBod = @0,
+    
       @SerMov = @1,
-      @CveMov = @2,
       @FolMov = @3,
       @NumPago = @4,
       @FolPagNuevo = @5,
       @ImpPagoProg = @6,
       @Login = @7`,
       [
-        cvebod,
+      
         serMov,
-        cveMov,
         folMov,
         numPago,
         FolPagNuevo,
@@ -1771,9 +1769,9 @@ async createPagoApartadoProgramado(
     // =====================================================
     const ticket = await this.ticketService.getTicket(
       entityManager,
-      cvebod,
+      100,
       folMov,
-      cveMov,
+      16,
       serMov,
       FolPagNuevo,
       false,

@@ -3,9 +3,9 @@ import { IsNumber, IsString } from "class-validator";
 
 export class ApartadoProgramadoDto{
 
-        @ApiProperty({ description: 'Clave de bodega de la sucursal Origen' })
+/*         @ApiProperty({ description: 'Clave de bodega de la sucursal Origen' })
       @IsNumber()
-      cvebod: number;
+      cvebod: number; */
 
 
     
@@ -14,9 +14,9 @@ export class ApartadoProgramadoDto{
       @IsString()
       serMov: string;
 
-            @ApiProperty({ description: 'clave de movimiento' })
+/*             @ApiProperty({ description: 'clave de movimiento' })
       @IsNumber()
-      cveMov: number;
+      cveMov: number; */
 
           @ApiProperty({ description: 'folio de movimiento' })
       @IsNumber()
