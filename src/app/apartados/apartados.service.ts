@@ -399,12 +399,10 @@ async create(createApartadoDto: CreateApartadoDto) {
 
 
 
-      if(resPre?.TienePRE){
-
-
+     if (resPre?.TienePRE && Number(pre?.[0]?.idGar) !== 0) {
 
         /*
-          Cuando tiene PRE se agrega un segundo detalle:
+          Cuando tiene PRE y una garantia se agrega un segundo detalle:
 
           Producto normal:
           05-383-29254001
