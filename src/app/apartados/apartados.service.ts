@@ -705,7 +705,7 @@ if(!resDetPagoApartado[0] ||
 
 
 /* =====================================================
-   VALIDAR SI ALGUN ARTICULO TIENE PRE
+   VALIDAR SI ALGUN ARTICULO TIENE PRE y una garantia, se agrega el registro del pago del pre en detPagos con el mismo folpag
 ====================================================== */
 
 
@@ -725,7 +725,7 @@ for(const art of articulo){
 
 
 
- if(resPre?.TienePRE){
+ if (resPre?.TienePRE && Number(pre?.[0]?.idGar) !== 0) {
 
 
 
@@ -749,9 +749,7 @@ for(const art of articulo){
 
      FolPag,
 
-
       pre[0].cveTpPgoPre,
-
 
      pre?.[0]?.impPre ?? 0,
 
