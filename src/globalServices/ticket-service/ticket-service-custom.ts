@@ -18,7 +18,7 @@ async getTicket(
 ) {
 
   const queryEncabezado = `
-    EXEC SP_GV_Obtener_encabezado_ticket
+    EXEC SP_GV_Obtener_encabezado_ticket_Apartado
     @CveBod = @0,
     @CveMov = @1,
     @FolMov = @2,
