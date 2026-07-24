@@ -960,6 +960,7 @@ for(const art of articulo){
       FolPag,
 
       false,
+      false,
 
       false
 
@@ -1463,7 +1464,8 @@ async obtenerTicketReimpresionPagoApartado(
   FolMov: number,
   CveMov: number,
   SerMov: string,
-  FolPag: number
+  FolPag: number,
+  isPago:boolean
 ){
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -1473,7 +1475,7 @@ async obtenerTicketReimpresionPagoApartado(
 
        const entityManager = queryRunner.manager;
   const ticket = await this.ticketService.getTicket(
-entityManager,100, FolMov,CveMov,SerMov,FolPag, true,false
+entityManager,100, FolMov,CveMov,SerMov,FolPag, true,isPago,false
     );
 
 
@@ -1680,7 +1682,7 @@ async createPagoApartadoProgramado(
     );
 
     if (!resPagoApartado?.[0] || resPagoApartado[0].error) {
-     // console.log(resPagoApartado[0])
+      //console.log(resPagoApartado[0])
       throw new Error(resPagoApartado?.[0]?.mensaje || 'Error al crear pago');
     }
 
@@ -1732,7 +1734,7 @@ async createPagoApartadoProgramado(
     );
 
     const result = validacion?.[0];
-    //  console.log(result)
+      console.log(result)
     if (!result) {
       throw new Error('No se pudo validar la liquidación');
     }
@@ -1768,12 +1770,12 @@ async createPagoApartadoProgramado(
     const resFinal = await entityManager.query(
       `EXEC [dbo].[${spFinal}]
     
-      @SerMov = @1,
-      @FolMov = @3,
-      @NumPago = @4,
-      @FolPagNuevo = @5,
-      @ImpPagoProg = @6,
-      @Login = @7`,
+      @SerMov = @0,
+      @FolMov = @1,
+      @NumPago = @2,
+      @FolPagNuevo = @3,
+      @ImpPagoProg = @4,
+      @Login = @5`,
       [
       
         serMov,
@@ -1806,6 +1808,7 @@ async createPagoApartadoProgramado(
       serMov,
       FolPagNuevo,
       false,
+      true,
       esLiquidacion
     );
 
@@ -1818,7 +1821,7 @@ async createPagoApartadoProgramado(
     };
 
   } catch (error: any) {
-
+      console.log(error)
     if (queryRunner.isTransactionActive) {
       await queryRunner.rollbackTransaction();
     }
