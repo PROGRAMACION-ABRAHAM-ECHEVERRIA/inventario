@@ -1128,10 +1128,10 @@ for(const art of articulo){
   }
 
   async obtenerCancelacionApartadoAC(){
-    const queryRunner = this.dataSource.createQueryRunner();
+    //const queryRunner = this.dataSource.createQueryRunner();
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    //await queryRunner.connect();
+    //await queryRunner.startTransaction();
 
     try {
 
@@ -1150,7 +1150,7 @@ for(const art of articulo){
       ,[CveEstatus]
   FROM [SICAVI].[dbo].[VW_GV_CatMotCancApar_AC]`;
 
-      const res: any[] = await queryRunner.manager.query(query);
+      const res: any[] = await this.manager.query(query);
 
       if (res.length == 0) {
         return this.ApiJson.customeHttpExeption(
@@ -1172,20 +1172,20 @@ for(const art of articulo){
 
       
     } catch (error:any) {
-       if (queryRunner.isTransactionActive) {
-      await queryRunner.rollbackTransaction();
+     if (error instanceof HttpException) {
+      throw error;
     }
 
     throw new InternalServerErrorException(
-      error?.message || 'Error interno del sistema'
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
     );
-    }
+  }
   }
   async obtenerCancelacionApartadoBA(){
-     const queryRunner = this.dataSource.createQueryRunner();
+     //const queryRunner = this.dataSource.createQueryRunner();
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    //await queryRunner.connect();
+    //await queryRunner.startTransaction();
     try {
        const query = `SELECT [CveMot]
       ,[DesMot]
@@ -1201,7 +1201,7 @@ for(const art of articulo){
       ,[CveEstatus]
   FROM [SICAVI].[dbo].[VW_GV_CatMotCancApar_BA]`;
 
-      const res: any[] = await queryRunner.manager.query(query);
+      const res: any[] = await this.manager.query(query);
 
       if (res.length == 0) {
         return this.ApiJson.customeHttpExeption(
@@ -1219,14 +1219,14 @@ for(const art of articulo){
       );
       
     } catch (error:any) {
-          if (queryRunner.isTransactionActive) {
-      await queryRunner.rollbackTransaction();
+     if (error instanceof HttpException) {
+      throw error;
     }
 
     throw new InternalServerErrorException(
-      error?.message || 'Error interno del sistema'
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
     );
-    }
+  }
   }
 
 async obtenerApartadosVigentesByBodega(
@@ -1497,11 +1497,11 @@ async obtenerValesReimpresionCancelacionApartado(
   FolMov: number,
       SerMovOrg: string,
 ){
-    const queryRunner = this.dataSource.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
+    //const queryRunner = this.dataSource.createQueryRunner();
+  //await queryRunner.connect();
+  //await queryRunner.startTransaction();
   try {
-        const entityManager = queryRunner.manager;
+        const entityManager = this.manager;
   const vale = await this.valeService.getVale(
 entityManager,100, FolMov, 16, SerMovOrg, true
     );
@@ -1510,7 +1510,7 @@ entityManager,100, FolMov, 16, SerMovOrg, true
       vale
     }
     
-  } catch (error: any) {
+  } catch (error:any) {
      if (error instanceof HttpException) {
       throw error;
     }
