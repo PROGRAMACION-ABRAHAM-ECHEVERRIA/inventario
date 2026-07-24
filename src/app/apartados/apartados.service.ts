@@ -1080,10 +1080,10 @@ for(const art of articulo){
     SerMov: string
   ) {
 
-    const queryRunner = this.dataSource.createQueryRunner();
+    //const queryRunner = this.dataSource.createQueryRunner();
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    //await queryRunner.connect();
+    //await queryRunner.startTransaction();
 
     try {
 
@@ -1093,7 +1093,7 @@ for(const art of articulo){
         @SerMov = @1
     `;
 
-      const res: any[] = await queryRunner.manager.query(query, [
+      const res: any[] = await this.manager.query(query, [
         Folmov,
         SerMov
       ]);
@@ -1116,27 +1116,15 @@ for(const art of articulo){
         },
       );
 
-    } catch (error: any) {
-
-      if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction();
-      }
-
-      if (error instanceof HttpException) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException(
-        `Error ${error['message'] || 'Ocurrió un error interno'}`,
-      );
-
-    } finally {
-
-      if (!queryRunner.isReleased) {
-        await queryRunner.release();
-      }
-
+    } catch (error:any) {
+     if (error instanceof HttpException) {
+      throw error;
     }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+  }
   }
 
   async obtenerCancelacionApartadoAC(){
