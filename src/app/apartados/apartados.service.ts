@@ -1469,12 +1469,12 @@ async obtenerTicketReimpresionPagoApartado(
 ){
 
   
-    const queryRunner = this.dataSource.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
+   // const queryRunner = this.dataSource.createQueryRunner();
+  //await queryRunner.connect();
+  //await queryRunner.startTransaction();
    try {
 
-       const entityManager = queryRunner.manager;
+       const entityManager = this.manager;
   const ticket = await this.ticketService.getTicket(
 entityManager,100, FolMov,CveMov,SerMov,FolPag, true, false//isPago,//false
     );
@@ -1485,7 +1485,7 @@ entityManager,100, FolMov,CveMov,SerMov,FolPag, true, false//isPago,//false
     }
 
    } catch (error:any) {
-      if (error instanceof HttpException) {
+       if (error instanceof HttpException) {
       throw error;
     }
 
