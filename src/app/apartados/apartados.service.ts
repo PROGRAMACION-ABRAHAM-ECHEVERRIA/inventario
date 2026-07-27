@@ -1468,6 +1468,7 @@ async obtenerTicketReimpresionPagoApartado(
   //isPago:boolean
 ){
 
+  
     const queryRunner = this.dataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
@@ -1475,7 +1476,7 @@ async obtenerTicketReimpresionPagoApartado(
 
        const entityManager = queryRunner.manager;
   const ticket = await this.ticketService.getTicket(
-entityManager,100, FolMov,CveMov,SerMov,FolPag, true,  false//isPago,//false
+entityManager,100, FolMov,CveMov,SerMov,FolPag, true, false//isPago,//false
     );
 
 
