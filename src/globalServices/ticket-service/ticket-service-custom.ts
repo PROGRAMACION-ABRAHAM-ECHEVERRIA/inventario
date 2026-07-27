@@ -70,7 +70,8 @@ async getTicket(
     @CveBod = @0,
     @CveMov = @1,
     @FolMov = @2,
-    @SerMov = @3
+    @SerMov = @3,
+    @FolPag = @4
   `;
 
   const getDetallePagos = await manager.query(queryDetallePagos, [
