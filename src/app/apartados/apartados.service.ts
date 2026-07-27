@@ -962,7 +962,7 @@ for(const art of articulo){
       false,
       false,
 
-      false
+     // false
 
     );
 
@@ -1465,7 +1465,7 @@ async obtenerTicketReimpresionPagoApartado(
   CveMov: number,
   SerMov: string,
   FolPag: number,
-  isPago:boolean
+  //isPago:boolean
 ){
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -1475,7 +1475,7 @@ async obtenerTicketReimpresionPagoApartado(
 
        const entityManager = queryRunner.manager;
   const ticket = await this.ticketService.getTicket(
-entityManager,100, FolMov,CveMov,SerMov,FolPag, true,isPago,false
+entityManager,100, FolMov,CveMov,SerMov,FolPag, true,  false//isPago,//false
     );
 
 
@@ -1808,7 +1808,7 @@ async createPagoApartadoProgramado(
       serMov,
       FolPagNuevo,
       false,
-      true,
+      //true,
       esLiquidacion
     );
 

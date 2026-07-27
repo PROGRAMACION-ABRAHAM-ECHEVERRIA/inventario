@@ -14,7 +14,7 @@ async getTicket(
   SerMov: string,
   FolPag: number,
   isReimp: boolean,
-  isPago : boolean,
+  //isPago : boolean,
   isLiquidacion: boolean
 ) {
 
@@ -33,13 +33,14 @@ async getTicket(
     SerMov,
   ]);
   
+
   const queryDetalleArticulo = `
     EXEC SP_GV_Obtener_Detalle_Reimpresion_Apartado
     @CveBod = @0,
     @CveMov = @1,
     @FolMov = @2,
     @SerMov = @3,
-     @IsPago = @4
+    @FolPag = @4
   `;
 
   const getDetalleArticulos = await manager.query(queryDetalleArticulo, [
@@ -47,7 +48,7 @@ async getTicket(
     CveMov,
     FolMov,
     SerMov,
-    isPago
+    FolPag
   ]);
 
  // console.log('isPago:', isPago);
@@ -65,7 +66,7 @@ async getTicket(
   let getDescuentoApartado = [];
 
   const queryDetallePagos = `
-    EXEC SP_GV_Obtener_pago_reimpresion
+    EXEC SP_GV_Obtener_pago_reimpresion_Apartado
     @CveBod = @0,
     @CveMov = @1,
     @FolMov = @2,
