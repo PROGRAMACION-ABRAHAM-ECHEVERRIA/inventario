@@ -79,6 +79,7 @@ async getTicket(
     CveMov,
     FolMov,
     SerMov,
+    FolPag
   ]);
 
 
