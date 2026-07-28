@@ -617,32 +617,36 @@ async create(createApartadoDto: CreateApartadoDto) {
 
 
 
-    if(!resPagoApartado[0] ||
-       resPagoApartado[0].error){
-
-
+    if(!resPagoApartado[0] || resPagoApartado[0].error){
+         //  console.log(resPagoApartado)
       throw this.ApiJson.customeHttpExeption(
 
-        resPagoApartado[0]?.mensaje ??
-        'Error al crear pago apartado',
+        resPagoApartado[0].mensaje,
 
-        resPagoApartado[0]?.estatus ??
-        HttpStatus.INTERNAL_SERVER_ERROR
+        resPagoApartado[0].estatus
 
       );
 
 
-    }
+    } 
 
 
 
 
     const FolPag =
       resPagoApartado[0].FolPag;
+console.log('Folpag',FolPag)
 
 
+if(FolPag === undefined){
+     throw this.ApiJson.customeHttpExeption(
 
+        'No se encontro un folpag',
 
+        404
+
+      );
+}
 
 
     /* =====================================================
@@ -686,7 +690,7 @@ Array<resApartadosMovtoResponse>
 if(!resDetPagoApartado[0] ||
    resDetPagoApartado[0].error){
 
-
+       console.log(resDetPagoApartado)
  throw this.ApiJson.customeHttpExeption(
 
     resDetPagoApartado[0]?.mensaje ??
@@ -726,7 +730,7 @@ for(const art of articulo){
 
 
  if (resPre?.TienePRE && Number(pre?.[0]?.idGar) !== 0) {
-
+     console.log(resPre)
 
 
    const resDetPagoPRE:
@@ -768,7 +772,7 @@ for(const art of articulo){
  if(!resDetPagoPRE[0] ||
     resDetPagoPRE[0].error){
 
-
+     console.log(resDetPagoPRE)
     throw this.ApiJson.customeHttpExeption(
 
       resDetPagoPRE[0]?.mensaje ??
@@ -852,7 +856,7 @@ for(const art of articulo){
     if(!resPagoApartadoInicial[0] ||
        resPagoApartadoInicial[0].error){
 
-
+     console.log(resPagoApartadoInicial)
       throw this.ApiJson.customeHttpExeption(
 
         resPagoApartadoInicial[0]?.mensaje ??
@@ -917,7 +921,7 @@ for(const art of articulo){
       if(!resCambioExiste[0] ||
          resCambioExiste[0].error){
 
-
+       console.log(resCambioExiste)
         throw this.ApiJson.customeHttpExeption(
 
           resCambioExiste[0]?.mensaje ??
@@ -966,6 +970,7 @@ for(const art of articulo){
 
     );
 
+         console.log(ticket)
 
 
 
@@ -1004,12 +1009,9 @@ for(const art of articulo){
 
 
 
-    console.log(
-      'ERROR ORIGINAL => ',
-      error
-    );
 
 
+   
 
 
     try {
@@ -1869,7 +1871,10 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
       ]
     );
 
-    if(!isIntentoValido.IntentoValido){
+   //console.log(isIntentoValido[0].IntentoValido)
+
+    if(!isIntentoValido[0].IntentoValido){
+     
          this.ApiJson.customeHttpExeption(
             'No se puede cancelar, el apartado eccede el numero de intentos',
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -1930,6 +1935,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
 
 
     } catch (error: any) {
+      console.log(error)
        if (queryRunner.isTransactionActive) {
       await queryRunner.rollbackTransaction();
     }
