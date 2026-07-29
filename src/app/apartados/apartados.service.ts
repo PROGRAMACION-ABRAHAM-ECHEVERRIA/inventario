@@ -1884,11 +1884,14 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
         refLlave
       ]
     );
-
+        console.log(resCancelacionApartado[0]);
     if (!resCancelacionApartado?.[0] || resCancelacionApartado[0].error) {
-     // console.log(resPagoApartado[0])
-      throw new Error(resCancelacionApartado?.[0]?.mensaje || 'Error al crear pago');
-    }
+
+ this.ApiJson.customeHttpExeption(
+    resCancelacionApartado?.[0]?.mensaje || 'Error al cancelar apartado',
+    resCancelacionApartado?.[0]?.estatus || 500
+  );
+}
 
       // 6. COMMIT
     // =====================================================
@@ -1915,20 +1918,14 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
     
 
 
-    } catch (error: any) {
-      console.log(error)
-       if (queryRunner.isTransactionActive) {
-      await queryRunner.rollbackTransaction();
-    }
+    }  catch (error: any) {
 
-    throw new InternalServerErrorException(
-      error?.message || 'Error interno del sistema'
-    );
-    } finally {
-    if (!queryRunner.isReleased) {
-      await queryRunner.release();
-    }
+  if (queryRunner.isTransactionActive) {
+    await queryRunner.rollbackTransaction();
   }
+
+  throw error;
+}
 
 }
 
