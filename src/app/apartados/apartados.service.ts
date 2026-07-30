@@ -1833,6 +1833,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
           folMov,
           tipCancel,
           cvecli,
+          cveProd,
           usuarioBaja,
           refLlave
           
@@ -1843,12 +1844,12 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
       @CvebodDes = @0,
       @SerMov = @1,
       @CveMov = @2,
-      @Folmov = @3`,
+       @CveProd = @3`,
       [
         100,
         serMovOrg,
         16,
-        folMov
+        cveProd
       ]
     );
 
