@@ -179,7 +179,7 @@ export class ApartadosController {
     description: 'Serie del movimiento (opcional)',
   })
 
-  @Get('reimpresionTicketPagoApartado/:Folmov/:SerMov')
+  @Get('reimpresionValePagoApartado/:Folmov/:SerMov')
   ObtenerValeReimPresion(
     @Param('Folmov', ParseIntPipe) Folmov: number,
     @Query('SerMov') SerMov: string = '',

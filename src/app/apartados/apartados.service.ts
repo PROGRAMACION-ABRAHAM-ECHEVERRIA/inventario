@@ -1853,7 +1853,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
       ]
     );
 
-   //console.log(isIntentoValido[0].IntentoValido)
+   console.log(isIntentoValido[0].IntentoValido)
 
     if(!isIntentoValido[0].IntentoValido){
      
@@ -1911,8 +1911,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
     );
 
     return {
-      error: 0,
-      mensaje: resCancelacionApartado,
+       resCancelacionApartado,
       vale: vale
     };
 
