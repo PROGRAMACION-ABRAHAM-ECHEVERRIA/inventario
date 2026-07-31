@@ -1005,62 +1005,14 @@ for(const art of articulo){
 
 
 
-  } catch(error:any) {
-
-
-
-
-
-   
-
-
-    try {
-
-
-      if(queryRunner.isTransactionActive){
-
-        await queryRunner.rollbackTransaction();
-
-      }
-
-
+  } catch(err:any) {
+    if (err instanceof HttpException) {
+      throw err;
     }
-    catch(rollbackError){
-
-
-      console.log(
-        'ERROR ROLLBACK => ',
-        rollbackError
-      );
-
-
-    }
-
-
-
-
-
-    if(error instanceof HttpException){
-
-      throw error;
-
-    }
-
-
-
 
     throw new InternalServerErrorException(
-
-      `Error ${
-        error?.message ??
-        'Ocurrió un error interno'
-      }`
-
+      `Error ${err['mensaje'] || 'Ocurrió un error interno'}`
     );
-
-
-
-
 
   } finally {
 
@@ -1804,14 +1756,13 @@ async createPagoApartadoProgramado(
       ticket
     };
 
-  } catch (error: any) {
-      console.log(error)
-    if (queryRunner.isTransactionActive) {
-      await queryRunner.rollbackTransaction();
+  } catch (err: any) {
+     if (err instanceof HttpException) {
+      throw err;
     }
 
     throw new InternalServerErrorException(
-      error?.message || 'Error interno del sistema'
+      `Error ${err['mensaje'] || 'Ocurrió un error interno'}`
     );
 
   } finally {
@@ -1918,13 +1869,15 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
     
 
 
-    }  catch (error: any) {
+    }  catch (err: any) {
 
-  if (queryRunner.isTransactionActive) {
-    await queryRunner.rollbackTransaction();
-  }
+   if (err instanceof HttpException) {
+      throw err;
+    }
 
-  throw error;
+    throw new InternalServerErrorException(
+      `Error ${err['mensaje'] || 'Ocurrió un error interno'}`
+    );
 }
 
 }
