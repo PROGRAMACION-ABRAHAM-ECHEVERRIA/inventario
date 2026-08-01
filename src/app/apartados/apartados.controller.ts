@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UseAuth } from 'src/guards/authGuard/authGuard';
 import { ApartadosService } from './apartados.service';
 import { CreateApartadoDto } from './dto/createApartado.dto';
 import { CreatePagoApartadoProgramadoDto } from './dto/pagoApartadoProgramado';
 import { CancelarApartadoDto } from './dto/cancelacionApartado';
+import { CambiotipoPagoApartadoDto } from './dto/cambiarPagoApartado';
 
 
 
@@ -227,6 +228,20 @@ export class ApartadosController {
   })
   cancelar(@Body() cancelarApartadoDto: CancelarApartadoDto) {
     return this.apartadosService.cancelarApartado(cancelarApartadoDto);
+
+  }
+
+      @Put('CambiarTipoPagoApartado')
+  @ApiOperation({
+    summary: 'Cambiar tipo de pagod de un apartado',
+    description: 'Cambiar tipo de pagod de un apartado',
+  })
+  @ApiBody({
+    type: CambiotipoPagoApartadoDto,
+    description: 'Datos de cambio de un tipo de pago apartado',
+  })
+  cambiarTipoPagoApartado(@Body() cambiarTipoPagoApartadoDto: CambiotipoPagoApartadoDto) {
+    return this.apartadosService.cambiarTipoPago(cambiarTipoPagoApartadoDto);
 
   }
 

@@ -10,6 +10,7 @@ import { CreatePagoApartadoProgramadoDto } from './dto/pagoApartadoProgramado';
 import { CancelarApartadoDto } from './dto/cancelacionApartado';
 import { ValeService } from 'src/globalServices/vale-service/vale-service.custom';
 import { PreDto } from './dto/apartado';
+import { CambiotipoPagoApartadoDto } from './dto/cambiarPagoApartado';
 
 
 
@@ -1056,7 +1057,7 @@ for(const art of articulo){
       if (res.length == 0) {
         return this.ApiJson.customeHttpExeption(
           'No se encontró el detalle del apartado',
-          404
+          HttpStatus.BAD_REQUEST
         )
       }
 
@@ -1372,7 +1373,7 @@ async validarLiquidacionApartado(
     100, SerMov,16, FolMov, NumPago, ImpPagoProg]);
 
      if (res.length === 0) {
-      this.ApiJson.customeHttpExeption('No hay Apartados Cancelados', 404);
+      this.ApiJson.customeHttpExeption('No hay Apartados Cancelados', HttpStatus.BAD_REQUEST);
     }
 
     return this.ApiJson.customeResSuccess(
@@ -1619,7 +1620,11 @@ async createPagoApartadoProgramado(
 
     if (!resPagoApartado?.[0] || resPagoApartado[0].error) {
       //console.log(resPagoApartado[0])
-      throw new Error(resPagoApartado?.[0]?.mensaje || 'Error al crear pago');
+      //throw new Error(resPagoApartado?.[0]?.mensaje || 'Error al crear pago');
+         this.ApiJson.customeHttpExeption(
+           resPagoApartado?.[0]?.mensaje || 'Error al crear pago',
+               HttpStatus.BAD_REQUEST,
+        );
     }
 
     const FolPagNuevo = resPagoApartado[0].FolPag;
@@ -1645,7 +1650,11 @@ async createPagoApartadoProgramado(
 
     if (!resDetPagoApartado?.[0] || resDetPagoApartado[0].error) {
       //console.log(resDetPagoApartado[0])
-      throw new Error(resDetPagoApartado?.[0]?.mensaje || 'Error al crear detalle');
+      //throw new Error(resDetPagoApartado?.[0]?.mensaje || 'Error al crear detalle');
+       this.ApiJson.customeHttpExeption(
+           resDetPagoApartado?.[0]?.mensaje || 'Error al crear detalle del pago',
+               HttpStatus.BAD_REQUEST,
+        );
     }
 
     // =====================================================
@@ -1725,7 +1734,11 @@ async createPagoApartadoProgramado(
 
     if (!resFinal?.[0] || resFinal[0].error) {
       //console.log(resFinal[0])
-      throw new Error(resFinal?.[0]?.mensaje || 'Error al procesar pago');
+     // throw new Error(resFinal?.[0]?.mensaje || 'Error al procesar pago');
+       this.ApiJson.customeHttpExeption(
+            resFinal?.[0]?.mensaje || 'Error al realizar',
+               HttpStatus.BAD_REQUEST,
+        );
     }
 //console.log(FolPagNuevo)
     // =====================================================
@@ -1754,7 +1767,16 @@ async createPagoApartadoProgramado(
       esLiquidacion,
       mensaje: mensajeFinal,
       ticket
-    };
+    }; 
+
+/*     return this.ApiJson.customeResSuccess(
+        mensajeFinal,
+        {
+          FolPagNuevo,
+            esLiquidacion,
+          ticket
+        },
+      ); */
 
   } catch (err: any) {
      if (err instanceof HttpException) {
@@ -1810,7 +1832,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
      
          this.ApiJson.customeHttpExeption(
             'No se puede cancelar, el apartado eccede el numero de intentos',
-            HttpStatus.INTERNAL_SERVER_ERROR,
+               HttpStatus.BAD_REQUEST,
         );
     }
 
@@ -1841,7 +1863,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
 
  this.ApiJson.customeHttpExeption(
     resCancelacionApartado?.[0]?.mensaje || 'Error al cancelar apartado',
-    resCancelacionApartado?.[0]?.estatus || 500
+    resCancelacionApartado?.[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
   );
 }
 
@@ -1861,10 +1883,11 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
       false
     );
 
-    return {
+      return{
+            vale: vale,
        resCancelacionApartado,
-      vale: vale
-    };
+   
+      }
 
     
 
@@ -1882,6 +1905,76 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
 
 }
 
+
+async cambiarTipoPago(cambiotipoPagoApartadoDto: CambiotipoPagoApartadoDto){
+    const queryRunner = this.dataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+  try {
+       const entityManager = queryRunner.manager;
+      const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
+
+          const {
+        folMov,
+        serMov,
+        cveTipPag,
+        folpag,
+         numPago,
+         refLlave
+    } = cambiotipoPagoApartadoDto;
+
+     const res = await entityManager.query(
+      `EXEC  [dbo].[SP_GV_CambioTipoPagoApartado]  
+    @FolMov = @0,
+    @SerMov =  @1,
+	@FolPag = @2 ,
+	@CveTipPag = @3,
+	@NumPago = @4,
+	@UsuarioMod = @5,
+    @RefLlave = @6`,
+      [
+        folMov,
+        serMov,
+        folpag,
+        cveTipPag,
+        numPago,
+       payloadToken.Usuario ?? 'sin usuario',//  payloadToken.Usuario ?? 'sin usuario' //  'IARCI'
+        refLlave
+    
+      ]
+    );
+       console.log(res)
+    if (!res?.[0] || res[0].error) {
+      this.ApiJson.customeHttpExeption(
+            res.mensaje || 'Error al crear existencia',
+            res.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+    }
+
+      // ============================================
+      // 6. COMMIT DE LA TRANSACCIÓN
+      // ============================================
+      await queryRunner.commitTransaction();
+
+     return this.ApiJson.customeResSuccess(
+  res[0].mensaje || 'El tipo de pago se cambio de manera exitosa',
+  []
+);
+  } catch (err: any) {
+      // Rollback en caso de error
+      if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction();
+      }
+
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        `Error ${err['message'] || 'Ocurrió un error interno'}`,
+      );
+  }
+}
 
 
 
