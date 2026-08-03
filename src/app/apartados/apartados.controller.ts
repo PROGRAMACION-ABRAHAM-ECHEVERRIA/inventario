@@ -261,5 +261,25 @@ export class ApartadosController {
   }
 
 
+    @ApiOperation({ summary: 'Obtener Pago by Folpag' })
+    @Get('ObtenerPagoByFolPag/:Folmov/:Folpag/:SerMov')
+  ObtenerPago(
+
+    @Param('Folmov', ParseIntPipe) Folmov: number,
+    @Param('Folpag', ParseIntPipe) FolPag: number,
+    @Query('SerMov') SerMov: string = '',
+       // @Param('IsPago', ParseIntPipe) IsPago: boolean,
+  ) {
+
+    return this.apartadosService.obtenerPagoByFolPag(
+  
+      Folmov,
+      FolPag,
+      SerMov ?? ''
+      //IsPago
+    );
+  }
+
+
 
 }

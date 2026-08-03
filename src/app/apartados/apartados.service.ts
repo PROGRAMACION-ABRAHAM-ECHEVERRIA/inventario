@@ -1981,6 +1981,63 @@ async cambiarTipoPago(cambiotipoPagoApartadoDto: CambiotipoPagoApartadoDto){
   }
 }
 
+async obtenerPagoByFolPag(
+
+            Folmov: number,
+               FolPag: number,
+    SerMov: string,
+
+        
+  ) {
+
+
+    try {
+
+      const query = `
+     EXEC [dbo].[SP_GV_ObtenerPagoByFolPag]
+
+    @FolMov = @0,
+    @SerMov = @1,
+    @FolPag = @2
+    `;
+
+      const res: any[] = await this.manager.query(query, [
+        Folmov,
+        SerMov,
+        FolPag
+      ]);
+
+      if (res.length == 0) {
+        return this.ApiJson.customeHttpExeption(
+          'No se encontró el detalle del apartado',
+          HttpStatus.BAD_REQUEST
+        )
+      }
+
+
+
+
+      return this.ApiJson.customeResSuccess(
+        'Pago obtenido',
+        {
+
+          res
+        },
+      );
+
+    } catch (error:any) {
+     if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+  }
+  }
+
+
+
 
 
 
