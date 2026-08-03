@@ -1874,21 +1874,26 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
 
     // Vale
     // =====================================================
-    const vale = await this.valeService.getVale(
-      entityManager,
-      100,
-      folMov,
-      16,
-      serMovOrg,
-      false
-    );
+    let vale = {};
 
-      return{
-            vale: vale,
-       resCancelacionApartado,
-   
-      }
+if (
+  resCancelacionApartado[0].TotalVales > 0 &&
+  resCancelacionApartado[0].TotalDineroVales > 0
+) {
+  vale = await this.valeService.getVale(
+    entityManager,
+    100,
+    folMov,
+    16,
+    serMovOrg,
+    false
+  );
+}
 
+return {
+  resCancelacionApartado,
+  vale
+};
     
 
 
