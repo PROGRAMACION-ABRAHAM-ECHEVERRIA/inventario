@@ -1065,7 +1065,7 @@ for(const art of articulo){
 
 
       return this.ApiJson.customeResSuccess(
-        'Apartados Obtenidos',
+        'Detalle de pagos obtenidos',
         {
 
           res
