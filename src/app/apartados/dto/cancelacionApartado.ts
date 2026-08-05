@@ -30,10 +30,14 @@ export class CancelarApartadoDto {
   @IsString()
   usuarioBaja: string;
 
-  @ApiPropertyOptional({ description: 'Llave de autorización para la cancelación' })
+/*   @ApiPropertyOptional({ description: 'Llave de autorización para la cancelación' })
   @IsOptional()
   @IsString()
-  refLlave?: string;
+  refLlave?: string; */
+
+    @ApiProperty({ description: 'Observa Cancelacion' })
+  @IsString()
+  observa: string;
 
 
 }

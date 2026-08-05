@@ -1808,7 +1808,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
           cvecli,
           cveProd,
           usuarioBaja,
-          refLlave
+          observa
           
     } = cancelarApartado;
 
@@ -1847,7 +1847,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
            @TipCancel = @3,
       @CVECLI = @4,
       @UsuarioBaja = @5,
-      @RefLlave = @6`,
+        @Observa= @6`,
       [
         cvebodOrg,
         serMovOrg,
@@ -1855,7 +1855,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
         tipCancel,
         cvecli,
         usuarioBaja,
-        refLlave
+        observa
       ]
     );
         console.log(resCancelacionApartado[0]);
