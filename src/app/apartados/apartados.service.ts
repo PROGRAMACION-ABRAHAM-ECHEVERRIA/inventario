@@ -11,6 +11,7 @@ import { CancelarApartadoDto } from './dto/cancelacionApartado';
 import { ValeService } from 'src/globalServices/vale-service/vale-service.custom';
 import { PreDto } from './dto/apartado';
 import { CambiotipoPagoApartadoDto } from './dto/cambiarPagoApartado';
+import { Console } from 'console';
 
 
 
@@ -1432,25 +1433,37 @@ entityManager,100, FolMov,CveMov,SerMov,FolPag, true, false//isPago,//false
    }
 }
 
-async obtenerValesReimpresionCancelacionApartado(
+/* async obtenerValesReimpresionCancelacionApartado(
   FolMov: number,
-      SerMovOrg: string,
-){
-    //const queryRunner = this.dataSource.createQueryRunner();
-  //await queryRunner.connect();
-  //await queryRunner.startTransaction();
+  SerMovOrg: string,
+) {
   try {
-        const entityManager = this.manager;
-  const vale = await this.valeService.getVale(
-entityManager,100, FolMov, 16, SerMovOrg, true
+    const entityManager = this.manager;
+
+
+
+    const vale = await this.valeService.getVale(
+      entityManager,
+      100,
+      FolMov,
+      16,
+      SerMovOrg,
+      true,
     );
 
- return{
-      vale
+    // El apartado cancelado no generó vale
+    if (!vale?.Vale || vale.Vale.length === 0) {
+      this.ApiJson.customeHttpExeption('Este apartado no tiene vales', 404);
     }
-    
-  } catch (error:any) {
-     if (error instanceof HttpException) {
+     console.log(vale)
+    return  this.ApiJson.customeResSuccess(
+
+      'Vales obtenidos correctamente',
+    vale
+  );
+
+  } catch (error: any) {
+    if (error instanceof HttpException) {
       throw error;
     }
 
@@ -1458,8 +1471,110 @@ entityManager,100, FolMov, 16, SerMovOrg, true
       `Error ${error['message'] || 'Ocurrió un error interno'}`,
     );
   }
+} */
 
+  async obtenerValesReimpresionCancelacionApartado(
+  FolMov: number,
+  SerMovOrg: string,
+  Motivo: string
+) {
+  try {
+    const entityManager = this.manager;
+  
+    const payloadToken: payLoadToken =
+      this.JwtServiceCustom.payloadToken as payLoadToken;
+
+         const usuario =
+      payloadToken.Usuario ?? 'sin usuario';
+    // ==========================================
+    // 1. Obtener los vales del apartado
+    // ==========================================
+    const vale = await this.valeService.getVale(
+      entityManager,
+      100,
+      FolMov,
+      16,
+      SerMovOrg,
+      true,
+    );
+
+    // El apartado cancelado no generó vale
+    if (!vale?.Vale || vale.Vale.length === 0) {
+      this.ApiJson.customeHttpExeption(
+        'Este apartado no tiene vales',
+        404,
+      );
+    }
+
+    console.log('Vales encontrados:', vale);
+
+
+    // ==========================================
+    // 2. Validar y registrar reimpresión
+    // ==========================================
+    const resultadoReimpresion = await entityManager.query(
+      `
+      EXEC [dbo].[SP_GV_ValidarReimpresionVale]
+        @CveBod = @0,
+        @CveMov = @1,
+        @FolMov = @2,
+        @SerMov = @3,
+        @Motivo = @4,
+        @UsuarioReimpresion = @5
+      `,
+      [
+        100,                 // CveBod
+        16,                  // CveMov
+        FolMov,              // FolMov
+        SerMovOrg,           // SerMov
+        Motivo,
+         usuario,           // aquí tu usuario real
+      ],
+    );
+
+
+    // ==========================================
+    // 3. Validar respuesta del SP
+    // ==========================================
+    const validacion = resultadoReimpresion?.[0];
+
+    if (!validacion) {
+      this.ApiJson.customeHttpExeption(
+        'No se obtuvo respuesta al validar la reimpresion',
+        500,
+      );
+    }
+
+    if (validacion.PuedeReimprimir !== 1) {
+      this.ApiJson.customeHttpExeption(
+        validacion.Mensaje || 'No se permite la reimpresion, exede el numero de intentos',
+        400,
+      );
+    }
+
+
+    // ==========================================
+    // 4. Regresar vales
+    // ==========================================
+    return this.ApiJson.customeResSuccess(
+      'Vales obtenidos correctamente',
+      vale,
+    );
+
+  } catch (error: any) {
+
+    if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+  }
 }
+
+
+
 /*   async obtenerApartadosPendientes(
     pagina: number,
     limit: number,
@@ -1891,7 +2006,7 @@ if (
 }
 
 return {
-  resCancelacionApartado,
+/*   resCancelacionApartado, */
   vale
 };
     
@@ -2035,6 +2150,50 @@ async obtenerPagoByFolPag(
     );
   }
   }
+
+
+  async validarLlaveAcceso( refLlave : string){
+   
+    try {
+
+            const query = `
+     EXEC [dbo].[SP_GV_ValidadarLlaveAcceso]
+
+    @FolMov = @0,
+    @SerMov = @1,
+    @FolPag = @2
+    `;
+
+     const res: any[] = await this.manager.query(query, [
+     refLlave
+      ]);
+
+
+          if (!res?.[0] || res[0].error) {
+          this.ApiJson.customeHttpExeption(
+              res?.[0]?.mensaje || 'Llave no valida',
+              res?.[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
+            );
+          }
+return this.ApiJson.customeResSuccess(
+        res[0].mensaje,
+        {},
+      );
+
+      
+    } catch (error:any) {
+       if (error instanceof HttpException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      `Error ${error['message'] || 'Ocurrió un error interno'}`,
+    );
+    }
+
+  }
+
+
 
 
 

@@ -6,7 +6,7 @@ import { lastValueFrom } from "rxjs";
 import { JwtServiceCustom } from "src/globalServices/jwt-service/jwt-service-custom";
 import { payLoadToken, resJsonType } from "src/types/types";
 import { resJsonClass } from "src/utils/resJsonClass";
-import { DataSource, Repository } from "typeorm"; 
+import { DataSource, EntityManager, Repository } from "typeorm"; 
 
 interface permisosBody { 
     GrupoPermisoId: number,  
@@ -40,65 +40,105 @@ export class PermisosGuard implements CanActivate{
         private JwtServiceCustom: JwtServiceCustom,  
         private httpService: HttpService,
         private readonly dataSource: DataSource,
+            private readonly manager: EntityManager,
         @InjectRepository(Repository) private Repository: Repository<any> 
     ){}
 
     private ApiJson = new resJsonClass(); 
     
-    async canActivate(context: ExecutionContext): Promise<boolean> {
-        try { 
-            const requiredPermissions = this.reflector.get<{ CveAplicacion: number, CveModulo: number, CveSubmodulo: number, CveAccion: number }>(
-                'permissions',  // La clave que usamos en SetMetadata
-                context.getHandler(),  // El método actual (handler) donde se aplicó el decorador
-            ); 
-
-            if(!requiredPermissions){ 
-                return true;
-            };  
-
-            const { CveAplicacion, CveModulo, CveSubmodulo, CveAccion } = requiredPermissions;  
-            const request = context.switchToHttp().getRequest();
-const { refLlave } = request.body;// obetemos la llave del body
-
-            let payloadToken = this.JwtServiceCustom.payloadToken as payLoadToken; 
-
-            // extraemos el grupo de permisos del token para validar el permiso
-            const { GrupoPermisoId } = payloadToken;    
-
-            let permiso = { GrupoPermisoId, CveAplicacion, CveModulo, CveSubmodulo, CveAccion }; 
-
-            let resTienePermiso: returnTienePermiso = await this.validarPermiso(permiso) as returnTienePermiso;  
-
-if (!resTienePermiso.tienePermiso) {
-
-    if (!refLlave || refLlave.trim() === '') {
-        this.ApiJson.customeHttpExeption(
-            'Se requiere una llave de autorización.',
-            HttpStatus.UNAUTHORIZED,
+async canActivate(context: ExecutionContext): Promise<boolean> {
+    try {
+        const requiredPermissions = this.reflector.get<{
+            CveAplicacion: number;
+            CveModulo: number;
+            CveSubmodulo: number;
+            CveAccion: number;
+  
+        }>(
+            'permissions',
+            context.getHandler(),
         );
-    }
 
-    const llaveValida = await this.validarKey(refLlave);
-
-    if (!llaveValida) {
-        this.ApiJson.customeHttpExeption(
-            'La llave de autorización no es válida.',
-            HttpStatus.UNAUTHORIZED,
-        );
-    }
-}
-
-return true;
-        }catch(err){   
-         
-            if (err instanceof HttpException) {
-                throw err;
-            };
-
-            throw new UnauthorizedException();  
-
+        if (!requiredPermissions) {
+            return true;
         }
-    };   
+
+        const {
+            CveAplicacion,
+            CveModulo,
+            CveSubmodulo,
+            CveAccion
+        } = requiredPermissions;
+
+        const request = context.switchToHttp().getRequest();
+
+   const refLlave = request.headers['x-ref-llave'];
+
+        const payloadToken =
+            this.JwtServiceCustom.payloadToken as payLoadToken;
+
+        const { GrupoPermisoId } = payloadToken;
+
+        const permiso = {
+            GrupoPermisoId,
+            CveAplicacion,
+            CveModulo,
+            CveSubmodulo,
+            CveAccion
+        };
+
+        const resTienePermiso =
+            await this.validarPermiso(permiso) as returnTienePermiso;
+
+        if (!resTienePermiso.tienePermiso) {
+
+            if (!refLlave || refLlave.trim() === '') {
+                this.ApiJson.customeHttpExeption(
+                    'Se requiere una llave de autorización.',
+                    HttpStatus.UNAUTHORIZED,
+                );
+
+                // Si customeHttpExeption NO hace throw:
+                return false;
+            }
+
+            const query = `
+                EXEC [dbo].[SP_GV_DarBajaLlaveAcceso]
+                    @FolMov = @0,
+                    @SerMov = @1,
+                    @FolPag = @2
+            `;
+
+            const res: any[] = await this.manager.query(query, [
+                refLlave
+            ]);
+
+            if (!res?.[0] || res[0].error) {
+                this.ApiJson.customeHttpExeption(
+                    res?.[0]?.mensaje || 'Llave no se dio de baja',
+                    res?.[0]?.estatus || HttpStatus.INTERNAL_SERVER_ERROR
+                );
+
+                return false;
+            }
+
+            // Si la llave fue procesada correctamente,
+            // permitimos continuar con el endpoint.
+            return true;
+        }
+
+        // Ya tiene el permiso
+        return true;
+
+    } catch (err) {
+
+        if (err instanceof HttpException) {
+            throw err;
+        }
+
+        throw new UnauthorizedException();
+    }
+}  
 
     async validarPermiso(permisos: permisosBody) : Promise<returnTienePermiso | undefined> {   
 
@@ -125,25 +165,7 @@ return true;
         }
     }; 
 
-   async validarKey(refLlave: string): Promise<boolean> {
-    try {
 
-       const result = await this.dataSource.query(
-            'EXEC SP_ValidarLlaveAccesoCancelacion @RefLlave = @0',
-            [refLlave],
-        );
-
-        return result[0]?.LlaveValida ?? false;
-
-    } catch (err) {
-
-        this.ApiJson.customeHttpExeption(
-            'Error al validar la llave de autorización.',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-        return false;
-    }
-}
 
 
 }; 

@@ -6,6 +6,8 @@ import { CreateApartadoDto } from './dto/createApartado.dto';
 import { CreatePagoApartadoProgramadoDto } from './dto/pagoApartadoProgramado';
 import { CancelarApartadoDto } from './dto/cancelacionApartado';
 import { CambiotipoPagoApartadoDto } from './dto/cambiarPagoApartado';
+import { UsePermisos } from 'src/guards/permisosGuard/permisosGuard';
+import { UsePermisosGuarLlave } from 'src/guards/permisosGuardLlave/permisosGuardLlave';
 
 
 
@@ -180,15 +182,17 @@ export class ApartadosController {
     description: 'Serie del movimiento (opcional)',
   })
 
-  @Get('reimpresionValePagoApartado/:Folmov/:SerMov')
+  @Get('reimpresionValePagoApartado/:Folmov/:SerMov/:Motivo')
   ObtenerValeReimPresion(
     @Param('Folmov', ParseIntPipe) Folmov: number,
     @Query('SerMov') SerMov: string = '',
+      @Param('Motivo',  new ParseIntPipe({ optional: false })) Motivo: string,
   ) {
 
     return this.apartadosService.obtenerValesReimpresionCancelacionApartado(
       Folmov,
-      SerMov ?? ''
+      SerMov ?? '',
+      Motivo
     );
   }
 
@@ -216,7 +220,7 @@ export class ApartadosController {
     );
   }
 
-
+    @UsePermisosGuarLlave(2,2,3,1)
     @Post('CancelarApartado')
   @ApiOperation({
     summary: 'Cancelar un apartado',
@@ -279,6 +283,22 @@ export class ApartadosController {
       //IsPago
     );
   }
+
+
+      @UsePermisos(2,2,3,1)
+    @ApiOperation({ summary: 'Validar llave acceso' })
+  @Get('validarLlaveAcceso/:refLlave')
+  
+  validarLlaveAcceso(
+        @Param('refLlave', ParseIntPipe) refLlave: string,
+  ) {
+    return this.apartadosService.validarLlaveAcceso(refLlave);
+  }
+
+
+
+
+
 
 
 
