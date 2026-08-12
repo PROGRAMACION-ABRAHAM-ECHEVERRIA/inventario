@@ -220,7 +220,7 @@ export class ApartadosController {
     );
   }
 
-    @UsePermisosGuarLlave(2,2,3,1)
+    //@UsePermisosGuarLlave(2,2,3,1) 
     @Post('CancelarApartado')
   @ApiOperation({
     summary: 'Cancelar un apartado',
