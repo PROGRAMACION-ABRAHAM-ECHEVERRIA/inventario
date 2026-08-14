@@ -1479,6 +1479,12 @@ entityManager,100, FolMov,CveMov,SerMov,FolPag, true, false//isPago,//false
   Motivo: string
 ) {
   try {
+
+/*       console.log('===== GET VALE =====');
+
+    console.log('FolMov:', FolMov);
+    console.log('SerMov:', JSON.stringify(SerMovOrg));
+        console.log('Motivo:', JSON.stringify(Motivo)); */
     const entityManager = this.manager;
   
     const payloadToken: payLoadToken =
@@ -1497,7 +1503,9 @@ entityManager,100, FolMov,CveMov,SerMov,FolPag, true, false//isPago,//false
       SerMovOrg,
       true,
     );
-
+/*   console.log('VALE COMPLETO:', JSON.stringify(vale, null, 2));
+console.log('VALE ARRAY:', vale?.Vale);
+console.log('VALE LENGTH:', vale?.Vale?.length); */
     // El apartado cancelado no generó vale
     if (!vale?.Vale || vale.Vale.length === 0) {
       this.ApiJson.customeHttpExeption(
@@ -1506,7 +1514,7 @@ entityManager,100, FolMov,CveMov,SerMov,FolPag, true, false//isPago,//false
       );
     }
 
-    console.log('Vales encontrados:', vale);
+/*     console.log('Vales encontrados:', vale); */
 
 
     // ==========================================
@@ -1538,6 +1546,7 @@ entityManager,100, FolMov,CveMov,SerMov,FolPag, true, false//isPago,//false
     // ==========================================
     const validacion = resultadoReimpresion?.[0];
 
+/*     console.log(validacion) */
     if (!validacion) {
       this.ApiJson.customeHttpExeption(
         'No se obtuvo respuesta al validar la reimpresion',

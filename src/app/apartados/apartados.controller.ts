@@ -181,13 +181,22 @@ export class ApartadosController {
     type: String,
     description: 'Serie del movimiento (opcional)',
   })
+  @ApiQuery({
+  name: 'Motivo',
+  required: false,
+  type: String,
+  description: 'Motivo de la reimpresión (opcional)',
+})
 
-  @Get('reimpresionValePagoApartado/:Folmov/:SerMov/:Motivo')
+  @Get('reimpresionVale/:Folmov/:SerMov/:Motivo')
   ObtenerValeReimPresion(
     @Param('Folmov', ParseIntPipe) Folmov: number,
     @Query('SerMov') SerMov: string = '',
-      @Param('Motivo',  new ParseIntPipe({ optional: false })) Motivo: string,
+    @Query('Motivo') Motivo: string = '',
   ) {
+/*   console.log('FolMov:', Folmov);
+  console.log('SerMov:', SerMov);
+  console.log('Motivo:', Motivo); */
 
     return this.apartadosService.obtenerValesReimpresionCancelacionApartado(
       Folmov,
