@@ -1093,7 +1093,7 @@ for(const art of articulo){
     try {
 
       
-      const query = `SELECT  [CveMot]
+/*       const query = `SELECT  [CveMot]
       ,[DesMot]
       ,[Habilitado]
       ,[GeneraNC]
@@ -1105,7 +1105,10 @@ for(const art of articulo){
       ,[UsuarioBaja]
       ,[FechaBaja]
       ,[CveEstatus]
-  FROM [SICAVI].[dbo].[VW_GV_CatMotCancApar_AC]`;
+  FROM [SICAVI].[dbo].[VW_GV_CatMotCancApar_AC]`; */
+
+
+    let query = `EXEC  [dbo].[SP_GV_Obtener_CatMotCancApar_AC]`
 
       const res: any[] = await this.manager.query(query);
 
@@ -1144,7 +1147,7 @@ for(const art of articulo){
     //await queryRunner.connect();
     //await queryRunner.startTransaction();
     try {
-       const query = `SELECT [CveMot]
+/*        const query = `SELECT [CveMot]
       ,[DesMot]
       ,[Habilitado]
       ,[GeneraNC]
@@ -1156,7 +1159,10 @@ for(const art of articulo){
       ,[UsuarioBaja]
       ,[FechaBaja]
       ,[CveEstatus]
-  FROM [SICAVI].[dbo].[VW_GV_CatMotCancApar_BA]`;
+  FROM [SICAVI].[dbo].[VW_GV_CatMotCancApar_BA]`; */
+
+  let query = `EXEC  [dbo].[SP_GV_Obtener_CatMotCancApar_BA]
+`
 
       const res: any[] = await this.manager.query(query);
 
