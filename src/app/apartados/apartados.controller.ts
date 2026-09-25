@@ -175,33 +175,34 @@ export class ApartadosController {
 
 
   @ApiOperation({ summary: 'Reimpresion Vale' })
-  @ApiQuery({
-    name: 'SerMov',
-    required: false,
-    type: String,
-    description: 'Serie del movimiento (opcional)',
-  })
-  @ApiQuery({
+  @Get('reimpresionVale/:CveBod/:CveMov/:Folmov/:SerMov/:Motivo')
+   @ApiQuery({
+  name: 'SerMov',
+  required: false,
+  type: String,
+})
+@ApiQuery({
   name: 'Motivo',
   required: false,
   type: String,
-  description: 'Motivo de la reimpresión (opcional)',
 })
-
-  @Get('reimpresionVale/:Folmov/:SerMov/:Motivo')
   ObtenerValeReimPresion(
+     @Param('CveBod', ParseIntPipe) CveBod: number,
+  @Param('CveMov', ParseIntPipe) CveMov: number,
     @Param('Folmov', ParseIntPipe) Folmov: number,
-    @Query('SerMov') SerMov: string = '',
-    @Query('Motivo') Motivo: string = '',
+   @Query('SerMov') SerMov?: string,
+@Query('Motivo') Motivo?: string,
   ) {
 /*   console.log('FolMov:', Folmov);
   console.log('SerMov:', SerMov);
   console.log('Motivo:', Motivo); */
 
-    return this.apartadosService.obtenerValesReimpresionCancelacionApartado(
+        return this.apartadosService.obtenerValesReimpresionCancelacionApartado(
+        CveBod,
+    CveMov,
       Folmov,
       SerMov ?? '',
-      Motivo
+      Motivo ?? ''
     );
   }
 

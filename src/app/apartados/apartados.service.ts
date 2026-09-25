@@ -1480,11 +1480,21 @@ entityManager,100, FolMov,CveMov,SerMov,FolPag, true, false//isPago,//false
 } */
 
   async obtenerValesReimpresionCancelacionApartado(
+CveBod: number,
+      CveMov: number,
   FolMov: number,
   SerMovOrg: string,
   Motivo: string
 ) {
   try {
+    if (CveMov !== 16) {
+      this.ApiJson.customeHttpExeption(
+        'El Cvemov debe ser de un apartado',
+        400,
+      );
+    }
+
+    console.log(CveBod)
 
 /*       console.log('===== GET VALE =====');
 
@@ -1503,9 +1513,9 @@ entityManager,100, FolMov,CveMov,SerMov,FolPag, true, false//isPago,//false
     // ==========================================
     const vale = await this.valeService.getVale(
       entityManager,
-      100,
+      CveBod,
       FolMov,
-      16,
+      CveMov,
       SerMovOrg,
       true,
     );
@@ -1537,14 +1547,16 @@ console.log('VALE LENGTH:', vale?.Vale?.length); */
         @UsuarioReimpresion = @5
       `,
       [
-        100,                 // CveBod
-        16,                  // CveMov
+        CveBod,                 // CveBod
+        CveMov,                  // CveMov
         FolMov,              // FolMov
         SerMovOrg,           // SerMov
         Motivo,
-         usuario,           // aquí tu usuario real
+         usuario,           //UsuarioId
       ],
-    );
+    ); 
+
+    console.log(resultadoReimpresion); 
 
 
     // ==========================================
@@ -1576,7 +1588,9 @@ console.log('VALE LENGTH:', vale?.Vale?.length); */
       vale,
     );
 
-  } catch (error: any) {
+  } catch (error: any) { 
+
+    console.log(error); 
 
     if (error instanceof HttpException) {
       throw error;
@@ -1587,6 +1601,7 @@ console.log('VALE LENGTH:', vale?.Vale?.length); */
     );
   }
 }
+  
 
 
 
@@ -1956,6 +1971,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
       ]
     );
 
+    console.log(isIntentoValido)
    console.log(isIntentoValido[0].IntentoValido)
 
     if(!isIntentoValido[0].IntentoValido){
@@ -2020,6 +2036,8 @@ if (
   );
 }
 
+console.log(vale)
+
 return {
 /*   resCancelacionApartado, */
   vale
@@ -2029,6 +2047,7 @@ return {
 
     }  catch (err: any) {
 
+      console.log(err); 
    if (err instanceof HttpException) {
       throw err;
     }
