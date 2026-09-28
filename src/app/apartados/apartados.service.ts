@@ -1982,6 +1982,8 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
         );
     }
 
+
+
      // =====================================================
     // 1. CREAR ENCABEZADO
     // =====================================================
@@ -2189,17 +2191,18 @@ async obtenerPagoByFolPag(
   async validarLlaveAcceso( refLlave : string){
    
     try {
-
+            //const TipLlaveId: number = 2; // Tipo de llave debe de ser apartado
             const query = `
      EXEC [dbo].[SP_GV_ValidadarLlaveAcceso]
 
-    @FolMov = @0,
-    @SerMov = @1,
-    @FolPag = @2
+      @RefLlave  = @0,
+      @TipLlaveId = @1
     `;
+  
 
      const res: any[] = await this.manager.query(query, [
-     refLlave
+     refLlave,
+     2
       ]);
 
 

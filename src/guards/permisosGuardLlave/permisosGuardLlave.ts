@@ -90,11 +90,12 @@ async canActivate(context: ExecutionContext): Promise<boolean> {
         const resTienePermiso =
             await this.validarPermiso(permiso) as returnTienePermiso;
 
+            // Si no tiene permiso
         if (!resTienePermiso.tienePermiso) {
 
             if (!refLlave || refLlave.trim() === '') {
                 this.ApiJson.customeHttpExeption(
-                    'Se requiere una llave de autorización.',
+                    'Se requiere una llave de autorización ya que el usuario no tiene acceso a esta endpoint',
                     HttpStatus.UNAUTHORIZED,
                 );
 

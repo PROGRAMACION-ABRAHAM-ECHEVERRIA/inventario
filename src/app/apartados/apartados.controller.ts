@@ -230,7 +230,8 @@ export class ApartadosController {
     );
   }
 
-    //@UsePermisosGuarLlave(2,2,3,1) 
+   // Permisos Llave
+    @UsePermisosGuarLlave(2,8,70,40) //Gema Ventas // PV // Apartados // Sin llave
     @Post('CancelarApartado')
   @ApiOperation({
     summary: 'Cancelar un apartado',
@@ -294,13 +295,13 @@ export class ApartadosController {
     );
   }
 
-
-      @UsePermisos(2,2,3,1)
+      // validar el permiso
+      @UsePermisos(2,8,70,40) //Gema Ventas // PV // Apartados // Sin llave
     @ApiOperation({ summary: 'Validar llave acceso' })
   @Get('validarLlaveAcceso/:refLlave')
   
   validarLlaveAcceso(
-        @Param('refLlave', ParseIntPipe) refLlave: string,
+        @Param('refLlave') refLlave: string,
   ) {
     return this.apartadosService.validarLlaveAcceso(refLlave);
   }
