@@ -15,6 +15,7 @@ import { Console } from 'console';
 
 
 
+
 interface returnIntento { 
     IntentoValido: boolean
     TotalIntentos:number
@@ -30,6 +31,7 @@ interface resApartadosMovtoResponse {
 export class ApartadosService {
 
   constructor(
+
     private JwtServiceCustom: JwtServiceCustom,
     private readonly ticketService: TicketService,
     private readonly valeService: ValeService,
@@ -2006,7 +2008,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
         observa
       ]
     );
-        console.log(resCancelacionApartado[0]);
+       // console.log('RESPUESTA SP:', resCancelacionApartado);
     if (!resCancelacionApartado?.[0] || resCancelacionApartado[0].error) {
 
  this.ApiJson.customeHttpExeption(
@@ -2015,9 +2017,8 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
   );
 }
 
-      // 6. COMMIT
-    // =====================================================
-    await queryRunner.commitTransaction();
+    
+
 
 
     // Vale
@@ -2040,23 +2041,25 @@ if (
 
 console.log(vale)
 
+  // 6. COMMIT
+    // =====================================================
+await queryRunner.commitTransaction();
 return {
-/*   resCancelacionApartado, */
+  res: resCancelacionApartado[0],
   vale
 };
     
 
 
     }  catch (err: any) {
-
-      console.log(err); 
-   if (err instanceof HttpException) {
-      throw err;
-    }
-
-    throw new InternalServerErrorException(
-      `Error ${err['mensaje'] || 'Ocurrió un error interno'}`
-    );
+  await queryRunner.rollbackTransaction();
+  console.log(err);
+  if (err instanceof HttpException) throw err;
+  throw new InternalServerErrorException(
+    `Error ${err?.message || 'Ocurrió un error interno'}`
+  );
+} finally {
+  await queryRunner.release();
 }
 
 }

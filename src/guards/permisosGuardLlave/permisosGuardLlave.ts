@@ -33,20 +33,21 @@ export const UsePermisosGuarLlave = (CveAplicacion: number, CveModulo: number, C
 );
 
 @Injectable()
-export class PermisosGuard implements CanActivate{
+export class PermisosGuardLlave implements CanActivate{
 
     constructor( 
         private reflector: Reflector,  
         private JwtServiceCustom: JwtServiceCustom,  
         private httpService: HttpService,
         private readonly dataSource: DataSource,
-            private readonly manager: EntityManager,
-        @InjectRepository(Repository) private Repository: Repository<any> 
+            private readonly manager: EntityManager
+        //@InjectRepository(Repository) private Repository: Repository<any> 
     ){}
 
     private ApiJson = new resJsonClass(); 
     
 async canActivate(context: ExecutionContext): Promise<boolean> {
+     console.log('PermisosGuard →', context.getHandler().name);
     try {
         const requiredPermissions = this.reflector.get<{
             CveAplicacion: number;
@@ -74,6 +75,8 @@ async canActivate(context: ExecutionContext): Promise<boolean> {
 
    const refLlave = request.headers['x-ref-llave'];
 
+   console.log('REF LLAVE:', refLlave);
+
         const payloadToken =
             this.JwtServiceCustom.payloadToken as payLoadToken;
 
@@ -89,7 +92,7 @@ async canActivate(context: ExecutionContext): Promise<boolean> {
 
         const resTienePermiso =
             await this.validarPermiso(permiso) as returnTienePermiso;
-
+  console.log(resTienePermiso)
             // Si no tiene permiso
         if (!resTienePermiso.tienePermiso) {
 
