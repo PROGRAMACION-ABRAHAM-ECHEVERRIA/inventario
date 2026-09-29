@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UseAuth } from 'src/guards/authGuard/authGuard';
+import { authGuard, UseAuth } from 'src/guards/authGuard/authGuard';
 import { ApartadosService } from './apartados.service';
 import { CreateApartadoDto } from './dto/createApartado.dto';
 import { CreatePagoApartadoProgramadoDto } from './dto/pagoApartadoProgramado';
@@ -232,10 +232,9 @@ export class ApartadosController {
 
 
    @Post('CancelarApartado')
-   @UseGuards(PermisosGuardLlave)
+   //@UseGuards(PermisosGuardLlave)
    // Permisos Llave
-    @UsePermisosGuarLlave(2,8,70,40) //Gema Ventas // PV // Apartados // Sin llave
-   
+    //@UsePermisosGuarLlave(2,8,70,40) //Gema Ventas // PV // Apartados // Sin llave
   @ApiOperation({
     summary: 'Cancelar un apartado',
     description: 'Cancelar un apartado',
@@ -297,11 +296,12 @@ export class ApartadosController {
       //IsPago
     );
   }
-
+        @Get('validarLlaveAcceso/:refLlave')
+           //@UseGuards(authGuard)
       // validar el permiso
-      @UsePermisos(2,8,70,40) //Gema Ventas // PV // Apartados // Sin llave
+    //  @UsePermisos(2,8,70,40) //Gema Ventas // PV // Apartados // Sin llave
     @ApiOperation({ summary: 'Validar llave acceso' })
-  @Get('validarLlaveAcceso/:refLlave')
+
   
   validarLlaveAcceso(
         @Param('refLlave') refLlave: string,

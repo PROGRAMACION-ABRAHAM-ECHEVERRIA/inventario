@@ -2079,7 +2079,8 @@ async cambiarTipoPago(cambiotipoPagoApartadoDto: CambiotipoPagoApartadoDto){
         cveTipPag,
         folpag,
          numPago,
-         refLlave
+         ID
+        // refLlave
     } = cambiotipoPagoApartadoDto;
 
      const res = await entityManager.query(
@@ -2090,23 +2091,23 @@ async cambiarTipoPago(cambiotipoPagoApartadoDto: CambiotipoPagoApartadoDto){
 	@CveTipPag = @3,
 	@NumPago = @4,
 	@UsuarioMod = @5,
-    @RefLlave = @6`,
+    @ID = @6`,
       [
         folMov,
         serMov,
         folpag,
         cveTipPag,
         numPago,
-       payloadToken.Usuario ?? 'sin usuario',//  payloadToken.Usuario ?? 'sin usuario' //  'IARCI'
-        refLlave
+       payloadToken.Usuario ?? 'sin usuario', //  payloadToken.Usuario ?? 'sin usuario' //  'IARCI'
+      ID
     
       ]
     );
-       console.log(res)
+       //console.log(res[0].mensaje)
     if (!res?.[0] || res[0].error) {
       this.ApiJson.customeHttpExeption(
-            res.mensaje || 'Error al crear existencia',
-            res.estatus || HttpStatus.INTERNAL_SERVER_ERROR,
+            res[0].mensaje || 'Error al cambiar el tipo de pago',
+            res[0].estatus || HttpStatus.INTERNAL_SERVER_ERROR,
           );
     }
 
@@ -2117,7 +2118,7 @@ async cambiarTipoPago(cambiotipoPagoApartadoDto: CambiotipoPagoApartadoDto){
 
      return this.ApiJson.customeResSuccess(
   res[0].mensaje || 'El tipo de pago se cambio de manera exitosa',
-  []
+    res[0].estatus
 );
   } catch (err: any) {
       // Rollback en caso de error

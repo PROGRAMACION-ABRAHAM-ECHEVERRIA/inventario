@@ -21,12 +21,16 @@ export class CambiotipoPagoApartadoDto{
       @ApiProperty({ description: 'Numero de Pago' })
       @IsNumber()
       numPago: number;
+            @ApiProperty({ description: 'ID' })
+      @IsNumber()
+      ID: number;
+
 
   
-    @ApiPropertyOptional({ description: 'Llave de autorización para la cancelación' })
+    /* @ApiPropertyOptional({ description: 'Llave de autorización para la cancelación' })
     @IsOptional()
     @IsString()
-    refLlave?: string;
+    refLlave?: string; */
   
 
     
