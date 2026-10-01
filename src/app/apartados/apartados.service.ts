@@ -2065,8 +2065,18 @@ return {
     `Error ${err?.message || 'Ocurrió un error interno'}`
   );
 } finally {
-  await queryRunner.release();
-}
+
+
+
+    if(!queryRunner.isReleased){
+
+      await queryRunner.release();
+
+    }
+
+
+
+  }
 
 }
 
@@ -2139,6 +2149,18 @@ async cambiarTipoPago(cambiotipoPagoApartadoDto: CambiotipoPagoApartadoDto){
       throw new InternalServerErrorException(
         `Error ${err['message'] || 'Ocurrió un error interno'}`,
       );
+  }finally {
+
+
+
+    if(!queryRunner.isReleased){
+
+      await queryRunner.release();
+
+    }
+
+
+
   }
 }
 
