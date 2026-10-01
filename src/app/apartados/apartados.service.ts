@@ -1010,6 +1010,11 @@ for(const art of articulo){
 
 
   } catch(err:any) {
+
+    if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction();
+    }
+    
     if (err instanceof HttpException) {
       throw err;
     }
@@ -1076,6 +1081,7 @@ for(const art of articulo){
       );
 
     } catch (error:any) {
+      
      if (error instanceof HttpException) {
       throw error;
     }
