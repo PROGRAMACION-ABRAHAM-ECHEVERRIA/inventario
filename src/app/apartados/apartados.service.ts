@@ -1496,7 +1496,7 @@ CveBod: number,
       );
     }
 
-    console.log(CveBod)
+    //console.log(CveBod)
 
 /*       console.log('===== GET VALE =====');
 
@@ -1515,7 +1515,7 @@ CveBod: number,
     // ==========================================
     const vale = await this.valeService.getVale(
       entityManager,
-      CveBod,
+      //100,
       FolMov,
       CveMov,
       SerMovOrg,
@@ -1549,7 +1549,7 @@ console.log('VALE LENGTH:', vale?.Vale?.length); */
         @UsuarioReimpresion = @5
       `,
       [
-        CveBod,                 // CveBod
+        CveBod,                 // CveBod origen
         CveMov,                  // CveMov
         FolMov,              // FolMov
         SerMovOrg,           // SerMov
@@ -1558,7 +1558,7 @@ console.log('VALE LENGTH:', vale?.Vale?.length); */
       ],
     ); 
 
-    console.log(resultadoReimpresion); 
+   // console.log(resultadoReimpresion); 
 
 
     // ==========================================
@@ -2031,7 +2031,7 @@ if (
 ) {
   vale = await this.valeService.getVale(
     entityManager,
-    100,
+    //100,
     folMov,
     16,
     serMovOrg,

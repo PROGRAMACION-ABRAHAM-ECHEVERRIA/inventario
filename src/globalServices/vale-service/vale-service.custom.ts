@@ -5,7 +5,7 @@ import { EntityManager } from "typeorm";
 export class ValeService{
   async getVale(
      manager: EntityManager,
-      CveBod: number,
+      //CveBod: number,
       FolMov: number,
       CveMov: number,
       SerMov: string,
@@ -27,16 +27,23 @@ export class ValeService{
     SerMov,
   ]); */
   
-     const queryVale = `
+/*      const queryVale = `
     EXEC [dbo].[SP_GV_Obtener_vale_Reimpresion] 
     @CveBod = @0,
     @CveMov = @1,
     @FolMov = @2,
     @SerMov = @3
-  `;
+  `; */
+
+  const queryVale = `
+    EXEC [dbo].[SP_GV_Obtener_vale_Reimpresion] 
+    @CveMov = @0,
+    @FolMov = @1,
+    @SerMov = @2
+  `
 
   const getVale = await manager.query(queryVale, [
-    CveBod,
+   // CveBod,
     CveMov,
     FolMov,
     SerMov,
