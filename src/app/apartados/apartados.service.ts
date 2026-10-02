@@ -362,7 +362,7 @@ async create(createApartadoDto: CreateApartadoDto) {
 
       );
 
-
+        console.log(resDetMov)
 
       if(resDetMov?.error){
 
@@ -401,7 +401,7 @@ async create(createApartadoDto: CreateApartadoDto) {
 
       );
 
-
+      console.log('Tiene pre',resPre)
 
      if (resPre?.TienePRE && Number(pre?.[0]?.idGar) !== 0) {
 
@@ -468,7 +468,7 @@ async create(createApartadoDto: CreateApartadoDto) {
 
 
 
-
+  console.log(resDetPRE)
 
         if(resDetPRE?.error){
 
@@ -511,7 +511,7 @@ async create(createApartadoDto: CreateApartadoDto) {
 
           [
 
-            BODEGA_APARTADO,
+            cvebodOrigen,
 
             serMov,
 
@@ -538,7 +538,7 @@ async create(createApartadoDto: CreateApartadoDto) {
 
 
 
-
+         console.log(resMovtosGar)
         if(resMovtosGar?.error){
 
 
