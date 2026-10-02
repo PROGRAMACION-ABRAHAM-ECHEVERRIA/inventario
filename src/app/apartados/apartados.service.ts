@@ -1733,7 +1733,7 @@ async createPagoApartadoProgramado(
       const payloadToken: payLoadToken = this.JwtServiceCustom.payloadToken as payLoadToken;
 
     const {
-     // cvebod,
+      cvebod,
       serMov,
       folMov,
       //cveMov,
@@ -1743,6 +1743,18 @@ async createPagoApartadoProgramado(
       impPagoProg,
       observ
     } = createPagoApartadoProgramadoDto;
+
+     const BODEGA_APARTADO = 100;
+
+         if (cvebod === BODEGA_APARTADO) {
+
+      throw new HttpException(
+        'La bodega origen no puede ser la bodega 100',
+        HttpStatus.BAD_REQUEST
+      );
+
+    }
+
 
     // =====================================================
     // 1. CREAR ENCABEZADO
@@ -1867,15 +1879,15 @@ async createPagoApartadoProgramado(
     // =====================================================
     const resFinal = await entityManager.query(
       `EXEC [dbo].[${spFinal}]
-    
-      @SerMov = @0,
-      @FolMov = @1,
-      @NumPago = @2,
-      @FolPagNuevo = @3,
-      @ImpPagoProg = @4,
-      @Login = @5`,
+      @CveBod = @0,
+      @SerMov = @1,
+      @FolMov = @2,
+      @NumPago = @3,
+      @FolPagNuevo = @4,
+      @ImpPagoProg = @5,
+      @Login = @6`,
       [
-      
+        cvebod,
         serMov,
         folMov,
         numPago,
