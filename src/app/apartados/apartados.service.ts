@@ -160,7 +160,7 @@ async create(createApartadoDto: CreateApartadoDto) {
 
       );
 
-
+       console.log(resValidacion)
 
       if(resValidacion?.error){
 
@@ -276,7 +276,7 @@ async create(createApartadoDto: CreateApartadoDto) {
 
 
 
-
+      console.log(resMovtos)
     if(!resMovtos[0] || resMovtos[0].error){
 
 
@@ -1997,7 +1997,7 @@ async cancelarApartado(cancelarApartado:CancelarApartadoDto){
     if(!isIntentoValido[0].IntentoValido){
      
          this.ApiJson.customeHttpExeption(
-            'No se puede cancelar, el apartado eccede el numero de intentos',
+            'No se puede cancelar, el apartado excede el numero de intentos',
                HttpStatus.BAD_REQUEST,
         );
     }
